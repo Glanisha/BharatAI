@@ -2,15 +2,75 @@
 @import "@fontsource/inter";
 @import "@fontsource/bricolage-grotesque";
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: "Bricolage Grotesque", sans-serif;
-}
+@layer base {
+  :root {
+    --color-primary: #222052;
+    --color-background-light: #f8f8f8;
+    --color-background-dark: #080808;
+    --color-text-light: #080808;
+    --color-text-dark: #f8f8f8;
+  }
 
-body {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
     font-family: "Inter", sans-serif;
-    background-color: #080808; 
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Apply background colors directly without @apply */
+  body {
+    background-color: #f8f8f8;
+    color: #080808;
+  }
+
+  body.dark {
+    background-color: #080808;
+    color: #f8f8f8;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Bricolage Grotesque", sans-serif;
+  }
+
+  button {
+    cursor: pointer;
+  }
 }
 
-button {
-    cursor: pointer;
+/* Glassmorphism utilities */
+.glass {
+  background: rgba(248, 248, 248, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(248, 248, 248, 0.2);
+}
+
+.glass-dark {
+  background: rgba(8, 8, 8, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(8, 8, 8, 0.2);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-[#222052]/30 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-[#222052]/50;
 }
