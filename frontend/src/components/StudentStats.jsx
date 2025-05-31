@@ -20,6 +20,7 @@ const StudentStats = () => {
             });
             const data = await response.json();
             if (data.success) {
+                console.log('Fetched stats:', data.stats);
                 setStats(data.stats);
                 setShareableLink(data.shareableLink);
             }

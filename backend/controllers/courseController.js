@@ -643,6 +643,61 @@ const submitQuizResult = async (req, res) => {
   }
 };
 
+const markCourseComplete = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const studentId = req.userId;
+
+    const progress = await Progress.findOneAndUpdate(
+      { student: studentId, course: courseId },
+      {
+        isCompleted: true,
+        completedAt: new Date(),
+        completedSlides: await getCourseSlideCount(courseId), // Set to total slides
+        lastAccessedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!progress) {
+      return res.status(404).json({
+        success: false,
+        message: 'Progress not found'
+      });
+    }
+
+    console.log(`Course ${courseId} marked as completed for student ${studentId}`);
+
+    res.json({
+      success: true,
+      message: 'Course marked as completed',
+      progress
+    });
+  } catch (error) {
+    console.error('Error marking course as completed:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Helper function to get total slide count
+const getCourseSlideCount = async (courseId) => {
+  try {
+    const course = await Course.findById(courseId);
+    if (course && Array.isArray(course.content)) {
+      return course.content.length;
+    } else if (course && course.pdfContent) {
+      const slides = convertPdfToSlides(course.pdfContent);
+      return slides.length;
+    }
+    return 1;
+  } catch (error) {
+    return 1;
+  }
+};
+
 // Helper functions
 const getEmojiForCategory = (category) => {
   const emojis = {
@@ -696,5 +751,6 @@ module.exports = {
   getUserProgress,
   updateProgress,
   submitQuizResult,
+  markCourseComplete,
   upload,
 };
