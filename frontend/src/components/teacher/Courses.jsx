@@ -13,7 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-const Courses = () => {
+const Courses = ({ setActiveTab }) => {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState([]);
   const [copiedId, setCopiedId] = useState(null);
@@ -59,7 +59,7 @@ const Courses = () => {
           My Courses
         </h1>
         <button
-          onClick={() => navigate("/teacher/courses/create")}
+          onClick={() => setActiveTab("create-course")}
           className="flex items-center gap-2 px-3 py-2 rounded bg-[#7c3aed] hover:bg-[#5b21b6] text-white text-sm font-medium transition"
         >
           <FaPlus /> New Course

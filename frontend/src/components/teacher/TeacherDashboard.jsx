@@ -6,6 +6,7 @@ import { SidebarProvider } from "../../context/SidebarContext";
 import DashboardLayout from "../DashboardLayout";
 import Overview from "./Overview";
 import Courses from "./Courses"; // Make sure the import path is correct
+import CreateCourse from "./CreateCourse"; // import at the top
 import "react-toastify/dist/ReactToastify.css";
 
 const TeacherDashboard = () => {
@@ -106,7 +107,9 @@ const TeacherDashboard = () => {
       case "overview":
         return <Overview />;
       case "courses":
-        return <Courses />; // <-- SHOW YOUR REAL COURSES COMPONENT
+        return <Courses setActiveTab={setActiveTab} />;
+      case "create-course":
+        return <CreateCourse setActiveTab={setActiveTab} />;
       case "analytics":
         // Replace with your Analytics component
         return <div className="text-[#f8f8f8]">Analytics coming soon...</div>;

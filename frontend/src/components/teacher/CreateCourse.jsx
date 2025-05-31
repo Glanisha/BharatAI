@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
-import { SidebarProvider } from "../../context/SidebarContext";
-import DashboardLayout from "../DashboardLayout";
 import "react-toastify/dist/ReactToastify.css";
 
 const categories = [
@@ -35,15 +33,15 @@ const CreateCourse = () => {
   });
 
   const [courseData, setCourseData] = useState({
-  title: "",
-  description: "",
-  category: "",
-  language: "Hindi",
-  isPrivate: false,
-  password: "",
-  tags: [],
-  estimatedTime: 60,
-});
+    title: "",
+    description: "",
+    category: "",
+    language: "Hindi",
+    isPrivate: false,
+    password: "",
+    tags: [],
+    estimatedTime: 60,
+  });
   const [pdfFile, setPdfFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
@@ -156,7 +154,7 @@ const CreateCourse = () => {
           toast.success("Course created successfully!");
         }
         setTimeout(() => {
-          navigate("/teacher-dashboard");
+          setActiveTab("courses");
         }, 2500);
       } else {
         toast.error(data.message || "Failed to create course");
@@ -299,23 +297,28 @@ const CreateCourse = () => {
             </div>
 
             <div>
-  <label className="block text-[#f8f8f8] mb-2 text-sm font-medium">
-    Estimated Time (minutes) *
-  </label>
-  <input
-    type="number"
-    min="15"
-    max="600"
-    value={courseData.estimatedTime}
-    onChange={(e) =>
-      setCourseData({ ...courseData, estimatedTime: parseInt(e.target.value) || 60 })
-    }
-    className="w-full px-4 py-3 rounded-lg bg-[#080808] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200"
-    placeholder="60"
-    required
-  />
-  <p className="text-[#f8f8f8]/60 text-xs mt-1">How long should this course take to complete?</p>
-</div>
+              <label className="block text-[#f8f8f8] mb-2 text-sm font-medium">
+                Estimated Time (minutes) *
+              </label>
+              <input
+                type="number"
+                min="15"
+                max="600"
+                value={courseData.estimatedTime}
+                onChange={(e) =>
+                  setCourseData({
+                    ...courseData,
+                    estimatedTime: parseInt(e.target.value) || 60,
+                  })
+                }
+                className="w-full px-4 py-3 rounded-lg bg-[#080808] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200"
+                placeholder="60"
+                required
+              />
+              <p className="text-[#f8f8f8]/60 text-xs mt-1">
+                How long should this course take to complete?
+              </p>
+            </div>
           </motion.div>
         );
       case 2:
@@ -552,69 +555,57 @@ const CreateCourse = () => {
   );
 
   return (
-    <SidebarProvider>
-      <DashboardLayout
-        user={user}
-        navItems={navItems}
-        activeKey="courses"
-        title="Create New Course"
-        subtitle="Design and upload your educational content"
-      >
-        <div className="max-w-2xl mx-auto py-8">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-3xl font-bold text-[#080808] dark:text-[#f8f8f8]">
-              Create New Course
-            </h1>
-            <span className="text-[#222] dark:text-[#aaa]">
-              Step {step} of 4
-            </span>
-          </div>
-          {renderStepper()}
-          <div className="bg-[#f8f8f8] dark:bg-[#181818] border border-[#e5e7eb] dark:border-[#23234a] rounded-lg p-6 md:p-8 shadow-lg">
-            {renderStep()}
-            {/* Navigation Buttons */}
-            <div className="flex justify-between items-center mt-8 pt-6 border-t border-[#e5e7eb] dark:border-[#23234a]">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handlePrev}
-                disabled={step === 1 || loading}
-                className="px-6 py-3 bg-[#ece9ff] dark:bg-[#23234a] text-[#7c3aed] dark:text-[#a78bfa] rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:bg-[#e0e7ff] dark:hover:bg-[#18182b]"
-              >
-                Previous
-              </motion.button>
-              {step < 4 ? (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleNext}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium transition-all duration-200 hover:bg-blue-700"
-                >
-                  Next Step
-                </motion.button>
+    <div className="max-w-2xl mx-auto py-8">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold text-[#080808] dark:text-[#f8f8f8]">
+          Create New Course
+        </h1>
+        <span className="text-[#222] dark:text-[#aaa]">Step {step} of 4</span>
+      </div>
+      {renderStepper()}
+      <div className="bg-[#f8f8f8] dark:bg-[#181818] border border-[#e5e7eb] dark:border-[#23234a] rounded-lg p-6 md:p-8 shadow-lg">
+        {renderStep()}
+        {/* Navigation Buttons */}
+        <div className="flex justify-between items-center mt-8 pt-6 border-t border-[#e5e7eb] dark:border-[#23234a]">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handlePrev}
+            disabled={step === 1 || loading}
+            className="px-6 py-3 bg-[#ece9ff] dark:bg-[#23234a] text-[#7c3aed] dark:text-[#a78bfa] rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:bg-[#e0e7ff] dark:hover:bg-[#18182b]"
+          >
+            Previous
+          </motion.button>
+          {step < 4 ? (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleNext}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium transition-all duration-200 hover:bg-blue-700"
+            >
+              Next Step
+            </motion.button>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleSubmit}
+              disabled={loading}
+              className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium disabled:opacity-50 transition-all duration-200 hover:bg-green-700"
+            >
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                  <span>Creating Course...</span>
+                </div>
               ) : (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium disabled:opacity-50 transition-all duration-200 hover:bg-green-700"
-                >
-                  {loading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
-                      <span>Creating Course...</span>
-                    </div>
-                  ) : (
-                    "Create Course"
-                  )}
-                </motion.button>
+                "Create Course"
               )}
-            </div>
-          </div>
+            </motion.button>
+          )}
         </div>
-      </DashboardLayout>
-    </SidebarProvider>
+      </div>
+    </div>
   );
 };
 
