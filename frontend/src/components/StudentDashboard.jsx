@@ -105,7 +105,7 @@ const StudentDashboard = () => {
       const frontendCode = LANGUAGE_MAPPING[selectedLanguageName];
 
       if (!frontendCode) {
-        toast.error(<TranslatedText>Invalid language selection</TranslatedText>);
+        toast.error("Invalid language selection");
         return;
       }
 
@@ -128,17 +128,16 @@ const StudentDashboard = () => {
 
       if (data.success) {
         setCurrentLanguage(selectedLanguageName);
-        toast.success(<TranslatedText>Language preference updated successfully!</TranslatedText>);
+        toast.success("Language preference updated successfully!");
       } else {
-        toast.error(data.message || <TranslatedText>Failed to update language preference</TranslatedText>);
+        toast.error(data.message || "Failed to update language preference");
       }
     } catch (error) {
-      toast.error(<TranslatedText>Something went wrong. Please try again.</TranslatedText>);
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsUpdatingLanguage(false);
     }
   };
-
   const fetchCourses = async () => {
     try {
       const response = await fetch(
@@ -158,25 +157,23 @@ const StudentDashboard = () => {
     }
   };
 
-  const fetchEnrolledCourses = async () => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/enrolled`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+    const fetchEnrolledCourses = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/enrolled`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                console.log('Enrolled courses:', data.courses);
+                setEnrolledCourses(data.courses);
+            }
+        } catch (error) {
+            console.error('Error fetching enrolled courses:', error);
         }
-      );
-      const data = await response.json();
-      if (data.success) {
-        console.log("Enrolled courses:", data.courses);
-        setEnrolledCourses(data.courses);
-      }
-    } catch (error) {
-      console.error("Error fetching enrolled courses:", error);
-    }
-  };
+    };
+ 
 
   const handleEnrollCourse = async (courseId) => {
     setLoading(true);
@@ -195,14 +192,14 @@ const StudentDashboard = () => {
 
       const data = await response.json();
       if (data.success) {
-        toast.success(<TranslatedText>Successfully enrolled in course!</TranslatedText>);
+        toast.success("Successfully enrolled in course!");
         fetchEnrolledCourses();
         fetchCourses(); // Refresh to update enrollment status
       } else {
-        toast.error(data.message || <TranslatedText>Failed to enroll</TranslatedText>);
+        toast.error(data.message || "Failed to enroll");
       }
     } catch (error) {
-      toast.error(<TranslatedText>Something went wrong. Please try again.</TranslatedText>);
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -210,7 +207,7 @@ const StudentDashboard = () => {
 
   const handlePrivateCourseJoin = async () => {
     if (!privateCourseData.code || !privateCourseData.password) {
-      toast.error(<TranslatedText>Please enter both course code and password</TranslatedText>);
+      toast.error("Please enter both course code and password");
       return;
     }
 
@@ -230,15 +227,15 @@ const StudentDashboard = () => {
 
       const data = await response.json();
       if (data.success) {
-        toast.success(<TranslatedText>Successfully joined private course!</TranslatedText>);
+        toast.success("Successfully joined private course!");
         setShowPrivateCourseModal(false);
         setPrivateCourseData({ code: "", password: "" });
         fetchEnrolledCourses();
       } else {
-        toast.error(data.message || <TranslatedText>Failed to join course</TranslatedText>);
+        toast.error(data.message || "Failed to join course");
       }
     } catch (error) {
-      toast.error(<TranslatedText>Something went wrong. Please try again.</TranslatedText>);
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -247,7 +244,7 @@ const StudentDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    toast.success(<TranslatedText>Logged out successfully!</TranslatedText>);
+    toast.success("Logged out successfully!");
     setTimeout(() => navigate("/login"), 1000);
   };
 
@@ -267,7 +264,7 @@ const StudentDashboard = () => {
           className="flex items-center space-x-2 text-[#f8f8f8]"
         >
           <div className="animate-spin h-6 w-6 border-2 border-[#222052] border-t-transparent rounded-full"></div>
-          <span><TranslatedText>Loading...</TranslatedText></span>
+          <span>Loading...</span>
         </motion.div>
       </div>
     );
@@ -290,13 +287,14 @@ const StudentDashboard = () => {
             whileHover={{ scale: 1.02 }}
             className="text-2xl font-bold text-[#f8f8f8]"
           >
-            <TranslatedText>EduPlatform - Student</TranslatedText>
+            EduPlatform - Student
           </motion.h1>
           <div className="flex items-center space-x-4">
             <motion.span className="text-[#f8f8f8] hidden sm:block">
-              <TranslatedText>Welcome, {user.name}!</TranslatedText>
+              Welcome, {user.name}!
             </motion.span>
 
+            {/* Language Dropdown */}
             {/* Language Dropdown */}
             <div className="relative group">
               <motion.div
@@ -304,12 +302,14 @@ const StudentDashboard = () => {
                 className="px-3 py-1 bg-[#f8f8f8]/10 text-[#f8f8f8] rounded-lg text-sm flex items-center space-x-1 cursor-pointer"
               >
                 <span>🌐</span>
-                <span><TranslatedText>{currentLanguage}</TranslatedText></span>
+                <span>{currentLanguage}</span>
                 <span>▼</span>
               </motion.div>
               <div className="absolute right-0 mt-1 w-40 bg-[#222052] border border-[#f8f8f8]/20 rounded-lg shadow-lg z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                 {Object.keys(LANGUAGE_MAPPING)
-                  .filter((name) => BACKEND_LANGUAGE_MAP[LANGUAGE_MAPPING[name]])
+                  .filter(
+                    (name) => BACKEND_LANGUAGE_MAP[LANGUAGE_MAPPING[name]]
+                  )
                   .map((languageName) => (
                     <div
                       key={languageName}
@@ -324,7 +324,8 @@ const StudentDashboard = () => {
                         }
                       }}
                     >
-                      {isUpdatingLanguage && currentLanguage === languageName ? (
+                      {isUpdatingLanguage &&
+                      currentLanguage === languageName ? (
                         <span className="flex items-center">
                           <svg
                             className="animate-spin -ml-1 mr-2 h-3 w-3 text-white"
@@ -346,10 +347,10 @@ const StudentDashboard = () => {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             ></path>
                           </svg>
-                          <TranslatedText>Updating...</TranslatedText>
+                          Updating...
                         </span>
                       ) : (
-                        <TranslatedText>{languageName}</TranslatedText>
+                        languageName
                       )}
                     </div>
                   ))}
@@ -361,15 +362,15 @@ const StudentDashboard = () => {
               onClick={() => navigate("/student-stats")}
               className="px-3 py-1 bg-[#f8f8f8]/10 text-[#f8f8f8] rounded-lg text-sm"
             >
-              <TranslatedText>📊 Stats</TranslatedText>
+              📊 Stats
             </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              onClick={() => navigate("/pdf-translator")}
-              className="px-3 py-1 bg-[#f8f8f8]/10 text-[#f8f8f8] rounded-lg text-sm"
-            >
-              <TranslatedText>📄🌐 Translate</TranslatedText>
-            </motion.button>
+<motion.button
+  whileHover={{ scale: 1.05 }}
+  onClick={() => navigate("/pdf-translator")}
+  className="px-3 py-1 bg-[#f8f8f8]/10 text-[#f8f8f8] rounded-lg text-sm"
+>
+  📄🌐 Translate
+</motion.button>
 
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -377,7 +378,7 @@ const StudentDashboard = () => {
               onClick={handleLogout}
               className="px-4 py-2 rounded-lg bg-[#f8f8f8] text-[#030303] font-medium transition-all duration-200"
             >
-              <TranslatedText>Logout</TranslatedText>
+              Logout
             </motion.button>
           </div>
         </div>
@@ -391,10 +392,12 @@ const StudentDashboard = () => {
           className="text-center mb-8"
         >
           <h2 className="text-4xl font-bold mb-4 text-[#f8f8f8]">
-            <TranslatedText>🎓 Student Dashboard</TranslatedText>
+            🎓 Student Dashboard
           </h2>
           <p className="text-xl text-[#f8f8f8]/70">
-            <TranslatedText>Discover and learn from amazing courses!</TranslatedText>
+  
+              Discover and learn from amazing courses!
+       
           </p>
         </motion.div>
 
@@ -406,7 +409,7 @@ const StudentDashboard = () => {
           className="mb-12"
         >
           <h3 className="text-2xl font-bold text-[#f8f8f8] mb-6">
-            <TranslatedText>📚 My Courses</TranslatedText>
+            📚 My Courses
           </h3>
           {enrolledCourses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -429,7 +432,7 @@ const StudentDashboard = () => {
                   </p>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-[#f8f8f8]/60">
-                      <TranslatedText>Progress:</TranslatedText> {course.progress || 0}%
+                      Progress: {course.progress || 0}%
                     </span>
                     <span className="text-sm text-[#f8f8f8]/60">
                       {course.language}
@@ -452,10 +455,10 @@ const StudentDashboard = () => {
             >
               <div className="text-6xl mb-4">📚</div>
               <h4 className="text-xl font-semibold text-[#f8f8f8] mb-2">
-                <TranslatedText>No courses yet</TranslatedText>
+                No courses yet
               </h4>
               <p className="text-[#f8f8f8]/70">
-                <TranslatedText>Start learning by enrolling in a course below!</TranslatedText>
+                Start learning by enrolling in a course below!
               </p>
             </motion.div>
           )}
@@ -469,7 +472,7 @@ const StudentDashboard = () => {
         >
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h3 className="text-2xl font-bold text-[#f8f8f8]">
-              <TranslatedText>🌟 Discover Courses</TranslatedText>
+              🌟 Discover Courses
             </h3>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -477,7 +480,7 @@ const StudentDashboard = () => {
               onClick={() => setShowPrivateCourseModal(true)}
               className="px-4 py-2 bg-[#222052] text-[#f8f8f8] rounded-lg border border-[#f8f8f8]/20 font-medium"
             >
-              <TranslatedText>🔐 Join Private Course</TranslatedText>
+              🔐 Join Private Course
             </motion.button>
           </div>
 
@@ -503,33 +506,25 @@ const StudentDashboard = () => {
               <div className="text-2xl font-bold text-[#f8f8f8]">
                 {filteredCourses.length}
               </div>
-              <div className="text-sm text-[#f8f8f8]/70">
-                <TranslatedText>Available Courses</TranslatedText>
-              </div>
+              <div className="text-sm text-[#f8f8f8]/70">Available Courses</div>
             </div>
             <div className="bg-[#222052] border border-[#f8f8f8]/20 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-[#f8f8f8]">
                 {enrolledCourses.length}
               </div>
-              <div className="text-sm text-[#f8f8f8]/70">
-                <TranslatedText>Enrolled</TranslatedText>
-              </div>
+              <div className="text-sm text-[#f8f8f8]/70">Enrolled</div>
             </div>
             <div className="bg-[#222052] border border-[#f8f8f8]/20 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-[#f8f8f8]">
                 {[...new Set(filteredCourses.map((c) => c.category))].length}
               </div>
-              <div className="text-sm text-[#f8f8f8]/70">
-                <TranslatedText>Categories</TranslatedText>
-              </div>
+              <div className="text-sm text-[#f8f8f8]/70">Categories</div>
             </div>
             <div className="bg-[#222052] border border-[#f8f8f8]/20 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-[#f8f8f8]">
                 {[...new Set(filteredCourses.map((c) => c.language))].length}
               </div>
-              <div className="text-sm text-[#f8f8f8]/70">
-                <TranslatedText>Languages</TranslatedText>
-              </div>
+              <div className="text-sm text-[#f8f8f8]/70">Languages</div>
             </div>
           </div>
 
@@ -566,14 +561,14 @@ const StudentDashboard = () => {
 
                   <div className="flex justify-between items-center mb-4 text-sm">
                     <span className="text-[#f8f8f8]/60">
-                      <TranslatedText>By:</TranslatedText> {course.teacher}
+                      By: {course.teacher}
                     </span>
                     <span className="text-[#f8f8f8]/60">{course.language}</span>
                   </div>
 
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-sm text-[#f8f8f8]/60">
-                      👥 {course.studentCount} <TranslatedText>students</TranslatedText>
+                      👥 {course.studentCount} students
                     </span>
                     {course.tags && course.tags.length > 0 && (
                       <div className="flex gap-1">
@@ -596,7 +591,7 @@ const StudentDashboard = () => {
                       onClick={() => navigate(`/course/${course._id}`)}
                       className="w-full py-2 bg-[#f8f8f8]/20 text-[#f8f8f8] rounded-lg font-medium border border-[#f8f8f8]/30"
                     >
-                      <TranslatedText>Continue Learning →</TranslatedText>
+                      Continue Learning →
                     </motion.button>
                   ) : (
                     <motion.button
@@ -606,7 +601,7 @@ const StudentDashboard = () => {
                       disabled={loading}
                       className="w-full py-2 bg-[#f8f8f8] text-[#030303] rounded-lg font-medium disabled:opacity-50"
                     >
-                      {loading ? <TranslatedText>Enrolling...</TranslatedText> : <TranslatedText>Enroll Now</TranslatedText>}
+                      {loading ? "Enrolling..." : "Enroll Now"}
                     </motion.button>
                   )}
                 </motion.div>
@@ -622,10 +617,10 @@ const StudentDashboard = () => {
             >
               <div className="text-6xl mb-4">🔍</div>
               <h4 className="text-xl font-semibold text-[#f8f8f8] mb-2">
-                <TranslatedText>No courses found</TranslatedText>
+                No courses found
               </h4>
               <p className="text-[#f8f8f8]/70">
-                <TranslatedText>Try adjusting your search terms</TranslatedText>
+                Try adjusting your search terms
               </p>
             </motion.div>
           )}
@@ -647,7 +642,7 @@ const StudentDashboard = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-2xl font-bold text-[#f8f8f8] mb-6">
-              <TranslatedText>🔐 Join Private Course</TranslatedText>
+              🔐 Join Private Course
             </h3>
             <div className="space-y-4">
               <input
@@ -682,7 +677,7 @@ const StudentDashboard = () => {
                 onClick={() => setShowPrivateCourseModal(false)}
                 className="flex-1 py-2 border border-[#f8f8f8]/30 text-[#f8f8f8] rounded-lg"
               >
-                <TranslatedText>Cancel</TranslatedText>
+                Cancel
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -691,7 +686,7 @@ const StudentDashboard = () => {
                 disabled={loading}
                 className="flex-1 py-2 bg-[#f8f8f8] text-[#030303] rounded-lg font-medium disabled:opacity-50"
               >
-                {loading ? <TranslatedText>Joining...</TranslatedText> : <TranslatedText>Join Course</TranslatedText>}
+                {loading ? "Joining..." : "Join Course"}
               </motion.button>
             </div>
           </motion.div>
