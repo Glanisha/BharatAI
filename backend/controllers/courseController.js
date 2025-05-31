@@ -646,6 +646,53 @@ const updateProgress = async (req, res) => {
   }
 };
 
+const updateStudyTime = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { timeSpent } = req.body; // in minutes
+    const studentId = req.userId;
+
+    if (!timeSpent || timeSpent <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid time spent value"
+      });
+    }
+
+    const progress = await Progress.findOneAndUpdate(
+      { student: studentId, course: courseId },
+      { 
+        $inc: { totalStudyTime: timeSpent },
+        lastAccessedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!progress) {
+      return res.status(404).json({
+        success: false,
+        message: "Progress not found"
+      });
+    }
+
+    // Check for new achievements after study time update
+    const { checkAchievements } = require('./achievementController');
+    await checkAchievements(studentId);
+
+    res.json({
+      success: true,
+      totalStudyTime: progress.totalStudyTime,
+      message: `Added ${timeSpent} minutes to study time`
+    });
+  } catch (error) {
+    console.error("Update study time error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 // Submit quiz result
 const submitQuizResult = async (req, res) => {
   try {
@@ -797,6 +844,7 @@ module.exports = {
   joinPrivateCourse,
   getCourseContent,
   getUserProgress,
+  updateStudyTime,
   updateProgress,
   submitQuizResult,
   markCourseComplete,

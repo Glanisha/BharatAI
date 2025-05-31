@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect,useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast, ToastContainer } from 'react-toastify';
@@ -13,11 +13,91 @@ const CourseViewer = () => {
     const [quizAnswers, setQuizAnswers] = useState({});
     const [userProgress, setUserProgress] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [sessionStartTime, setSessionStartTime] = useState(null);
+    const [totalSessionTime, setTotalSessionTime] = useState(0);
+    const [isActiveSession, setIsActiveSession] = useState(true);
 
     useEffect(() => {
         fetchCourseContent();
         fetchUserProgress();
     }, [courseId]);
+
+useEffect(() => {
+    // Start timing when component mounts
+    const startTime = Date.now();
+    setSessionStartTime(startTime);
+    setIsActiveSession(true);
+
+    // Track when user leaves/returns to tab
+    const handleVisibilityChange = () => {
+        if (document.hidden) {
+            setIsActiveSession(false);
+        } else {
+            const newStartTime = Date.now();
+            setSessionStartTime(newStartTime);
+            setIsActiveSession(true);
+        }
+    };
+
+    // Track when user leaves page
+    const handleBeforeUnload = () => {
+        const currentTime = Date.now();
+        const sessionTime = Math.floor((currentTime - startTime) / 1000 / 60); // minutes
+        if (sessionTime > 0) {
+            updateStudyTime(sessionTime);
+        }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Update every 30 seconds if active
+    const interval = setInterval(() => {
+        if (!document.hidden) {
+            const currentTime = Date.now();
+            const sessionTime = Math.floor((currentTime - startTime) / 1000 / 60); // minutes
+            if (sessionTime > 0) {
+                updateStudyTime(1); // Send 1 minute increment
+            }
+        }
+    }, 60000); // Every 1 minute instead of 30 seconds
+
+    return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        clearInterval(interval);
+        
+        // Final time update on unmount
+        const currentTime = Date.now();
+        const sessionTime = Math.floor((currentTime - startTime) / 1000 / 60);
+        if (sessionTime > 0) {
+            updateStudyTime(sessionTime);
+        }
+    };
+}, [courseId]); // ✅ Only courseId as dependency
+
+const updateStudyTime = useCallback(async (timeSpentMinutes) => {
+    if (timeSpentMinutes <= 0) return;
+    
+    try {
+        const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/study-time`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                timeSpent: timeSpentMinutes
+            })
+        });
+        
+        if (response.ok) {
+            console.log(`Updated study time: +${timeSpentMinutes} minutes`);
+        }
+    } catch (error) {
+        console.error('Error updating study time:', error);
+    }
+}, [courseId]);
 
     const fetchCourseContent = async () => {
         try {

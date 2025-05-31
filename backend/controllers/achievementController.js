@@ -179,10 +179,10 @@ const checkAchievements = async (userId) => {
 const calculateUserStats = async (userId) => {
   try {
     const progresses = await Progress.find({ student: userId })
-  .populate('course', 'category estimatedTime');
+      .populate('course', 'category estimatedTime');
 
     const completedCourses = progresses.filter(p => p.isCompleted).length;
-    const totalStudyTime = progresses.reduce((sum, p) => sum + p.totalStudyTime, 0) / 60; // Convert to hours
+    const totalStudyTime = progresses.reduce((sum, p) => sum + (p.totalStudyTime || 0), 0) / 60; // Convert to hours
     
     // Calculate average quiz score
     let totalQuizzes = 0;
@@ -190,11 +190,13 @@ const calculateUserStats = async (userId) => {
     let perfectQuizzes = 0;
     
     progresses.forEach(progress => {
-      progress.quizResults.forEach(quiz => {
-        totalQuizzes++;
-        totalScore += quiz.percentage;
-        if (quiz.percentage === 100) perfectQuizzes++;
-      });
+      if (progress.quizResults && progress.quizResults.length > 0) {
+        progress.quizResults.forEach(quiz => {
+          totalQuizzes++;
+          totalScore += quiz.percentage;
+          if (quiz.percentage === 100) perfectQuizzes++;
+        });
+      }
     });
     
     const averageScore = totalQuizzes > 0 ? totalScore / totalQuizzes : 0;
@@ -202,23 +204,32 @@ const calculateUserStats = async (userId) => {
     // Get unique categories
     const categories = [...new Set(
       progresses
-        .filter(p => p.isCompleted && p.course)
+        .filter(p => p.isCompleted && p.course && p.course.category)
         .map(p => p.course.category)
     )].length;
 
-    // Check for fast completions (courses completed in under target time)
+    // Check for fast completions (completed faster than estimated time)
     const fastCompletions = progresses.filter(p => {
-  if (!p.isCompleted || !p.course) return false;
-  
-  const estimatedTime = p.course.estimatedTime || 60; // minutes
-  const actualTime = p.totalStudyTime; // minutes
-  
-  // Completed in 75% or less of estimated time
-  return actualTime <= (estimatedTime * 0.75);
-}).length;
+      if (!p.isCompleted || !p.course || !p.course.estimatedTime) return false;
+      
+      const estimatedTimeMinutes = p.course.estimatedTime;
+      const actualTimeMinutes = p.totalStudyTime || 0;
+      
+      // Completed in 75% or less of estimated time
+      return actualTimeMinutes > 0 && actualTimeMinutes <= (estimatedTimeMinutes * 0.75);
+    }).length;
+
+    console.log('User Stats Calculated:', {
+      coursesCompleted,
+      totalStudyTime,
+      averageScore,
+      categories,
+      perfectQuizzes,
+      fastCompletions
+    });
 
     return {
-      coursesCompleted: completedCourses,
+      coursesCompleted,
       studyTime: totalStudyTime,
       averageScore,
       categories,

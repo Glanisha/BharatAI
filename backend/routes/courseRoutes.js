@@ -11,6 +11,7 @@ const {
   submitQuizResult,
   getEnrolledCourses,
   markCourseComplete,
+  updateStudyTime,
   upload,
 } = require("../controllers/courseController");
 const authMiddleware = require("../middleware/authMiddleware");
@@ -31,5 +32,6 @@ router.get("/:courseId/progress", authMiddleware, getUserProgress);
 router.put("/:courseId/progress", authMiddleware, updateProgress);
 router.put("/:courseId/complete", authMiddleware, markCourseComplete);
 router.post("/:courseId/quiz-result", authMiddleware, submitQuizResult);
+router.put('/:courseId/study-time', authMiddleware, updateStudyTime);
 
 module.exports = router;
