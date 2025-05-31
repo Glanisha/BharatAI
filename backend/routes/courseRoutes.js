@@ -10,6 +10,7 @@ const {
   updateProgress,
   submitQuizResult,
   getEnrolledCourses,
+  markCourseComplete,
   upload,
 } = require("../controllers/courseController");
 const authMiddleware = require("../middleware/authMiddleware");
@@ -28,6 +29,7 @@ router.post("/join-private", authMiddleware, joinPrivateCourse);
 router.get("/:courseId", authMiddleware, getCourseContent);
 router.get("/:courseId/progress", authMiddleware, getUserProgress);
 router.put("/:courseId/progress", authMiddleware, updateProgress);
+router.put("/:courseId/complete", authMiddleware, markCourseComplete);
 router.post("/:courseId/quiz-result", authMiddleware, submitQuizResult);
 
 module.exports = router;

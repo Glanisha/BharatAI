@@ -73,10 +73,33 @@ const CourseViewer = () => {
             await updateProgress(nextSlide);
         } else {
             // Course completed
+            await markCourseAsCompleted();
             toast.success('🎉 Course completed! Well done!');
             navigate('/student-dashboard');
         }
     };
+
+    const markCourseAsCompleted = async () => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/complete`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            console.log('Course marked as completed!');
+            setUserProgress(prev => ({ ...prev, isCompleted: true }));
+        } else {
+            console.error('Failed to mark course as completed:', data.message);
+        }
+    } catch (error) {
+        console.error('Error marking course as completed:', error);
+    }
+};
 
     const handlePrevSlide = () => {
         if (currentSlide > 0) {
