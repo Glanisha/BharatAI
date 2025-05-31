@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import AchievementCard from "./AchievementCard";
 
 const MyAchievements = () => {
   const [loading, setLoading] = useState(true);
@@ -85,7 +86,7 @@ const MyAchievements = () => {
           <div className="flex gap-2">
             <Link to="/achievements">
               <motion.button
-                className="flex items-center gap-2 px-4 py-2 bg-[#030303] border border-[#f8f8f8]/20 rounded-lg hover:border-[#4ade80]/30 text-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-[#222052] border border-[#f8f8f8]/20 rounded-lg hover:border-[#4ade80]/30 text-sm"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
@@ -94,11 +95,23 @@ const MyAchievements = () => {
             </Link>
             <Link to="/student-stats">
               <motion.button
-                className="flex items-center gap-2 px-4 py-2 bg-[#222052] border border-[#f8f8f8]/20 rounded-lg hover:border-[#4ade80]/30 text-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-[#030303] border border-[#f8f8f8]/20 rounded-lg hover:border-[#4ade80]/30 text-sm"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
-                📊 Back to Stats
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Back to Stats
               </motion.button>
             </Link>
           </div>
@@ -121,60 +134,60 @@ const MyAchievements = () => {
           </div>
         ) : (
           <>
-            {/* Category Filters */}
+            {/* Achievement Progress Section - Same as AllAchievements */}
             <div className="bg-[#222052] border border-[#f8f8f8]/20 rounded-xl p-6 mb-6">
-              <h2 className="text-xl font-bold mb-4">Filter by Category</h2>
-              <div className="flex flex-wrap gap-2">
-                {categories.map((category) => (
-                  <motion.button
-                    key={category}
-                    onClick={() => setSelectedFilter(category)}
-                    className={`px-4 py-2 text-sm rounded-lg capitalize ${
-                      selectedFilter === category
-                        ? "bg-[#4ade80] text-[#030303]"
-                        : "bg-[#030303] hover:bg-[#111] text-[#f8f8f8]/70"
-                    }`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {category} {category !== "all" && `(${achievements.filter(a => a.category === category).length})`}
-                  </motion.button>
-                ))}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                <h2 className="text-xl font-bold mb-2 sm:mb-0">
+                  Your Unlocked Achievements
+                </h2>
+                <div className="bg-[#4ade80]/10 rounded-full px-4 py-1">
+                  <span className="text-sm font-medium text-[#4ade80]">
+                    {achievementStats.totalPoints || 0} Points Earned
+                  </span>
+                </div>
+              </div>
+
+              {/* Category Filter Tabs - Same style as AllAchievements */}
+              <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                {categories.map((category) => {
+                  const count = category === "all" 
+                    ? achievements.length 
+                    : achievements.filter(a => a.category === category).length;
+
+                  return (
+                    <motion.button
+                      key={category}
+                      onClick={() => setSelectedFilter(category)}
+                      className={`px-4 py-2 text-sm rounded-lg capitalize ${
+                        selectedFilter === category
+                          ? "bg-[#4ade80] text-[#030303]"
+                          : "bg-[#030303] hover:bg-[#222052] text-[#f8f8f8]/70"
+                      }`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {category} ({count})
+                    </motion.button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Achievements Grid */}
+            {/* Achievements Grid - Using AchievementCard like AllAchievements */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {filteredAchievements.map((achievement) => (
-                <motion.div
-                  key={achievement.id}
-                  className="bg-[#222052] border border-[#4ade80]/30 rounded-lg p-6 text-center relative overflow-hidden"
-                  whileHover={{ y: -5, boxShadow: "0 20px 40px -10px rgba(74, 222, 128, 0.2)" }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {/* Unlocked glow effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#4ade80]/10 to-[#3b82f6]/10 rounded-lg"></div>
-                  
-                  <div className="relative z-10">
-                    <div className="text-4xl mb-3">{achievement.icon}</div>
-                    <h3 className="font-bold text-lg text-[#f8f8f8] mb-2">{achievement.name}</h3>
-                    <p className="text-[#f8f8f8]/70 text-sm mb-4">{achievement.description}</p>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#4ade80] font-bold text-lg">
-                        +{achievement.points} pts
-                      </span>
-                      <span className="text-[#f8f8f8]/60 text-xs">
-                        {new Date(achievement.unlockedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    
-                    <div className="mt-3 bg-[#4ade80]/10 text-[#4ade80] text-xs px-3 py-1 rounded-full uppercase font-semibold">
-                      {achievement.category}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+              {filteredAchievements.map((achievement) => {
+                // Transform the unlocked achievement to match AchievementCard props
+                const achievementForCard = {
+                  ...achievement,
+                  unlocked: true, // All achievements here are unlocked
+                  progress: 100, // They're completed
+                  total: 100 // Set total to 100 for completed achievements
+                };
+                
+                return (
+                  <AchievementCard key={achievement.id} achievement={achievementForCard} />
+                );
+              })}
             </div>
           </>
         )}
