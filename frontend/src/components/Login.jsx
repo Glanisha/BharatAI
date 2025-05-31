@@ -11,8 +11,12 @@ const Login = () => {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        if (token) {
-            navigate('/dashboard');
+        const role = localStorage.getItem('role');
+        // Redirect to dashboard if user is already logged in
+        if (token && role === 'teacher') {
+            navigate('/teacher-dashboard');
+        } else if (token && role === 'student') {
+            navigate('/student-dashboard'); 
         }
     }, [navigate]);
 
@@ -34,11 +38,17 @@ const Login = () => {
             if (response.ok) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('role', data.user.role); // Store user role
                 toast.success('Welcome back!');
-                
-                setTimeout(() => {
-                    navigate('/dashboard');
-                }, 1000);
+                // Redirect based on user role
+                if (data.user.role === 'teacher') {
+                    navigate('/teacher-dashboard');
+                } else if (data.user.role === 'student') {
+                    navigate('/student-dashboard');
+                } else {
+                    toast.error('Invalid user role');
+                    return;
+                }
             } else {
                 toast.error(data.message || 'Login failed');
             }
@@ -81,7 +91,7 @@ const Login = () => {
                                 placeholder="Email"
                                 value={formData.email}
                                 onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                className="w-full px-4 py-3 rounded-xl bg-[#080808] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
+                                className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
                                 required
                             />
                             
@@ -91,7 +101,7 @@ const Login = () => {
                                 placeholder="Password"
                                 value={formData.password}
                                 onChange={(e) => setFormData({...formData, password: e.target.value})}
-                                className="w-full px-4 py-3 rounded-xl bg-[#080808] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
+                                className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
                                 required
                             />
                             
@@ -100,11 +110,11 @@ const Login = () => {
                                 whileTap={{ scale: 0.98 }}
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-3 rounded-xl font-semibold bg-[#f8f8f8] text-[#080808] disabled:opacity-50 transition-all duration-200 hover:bg-[#f8f8f8]/90"
+                                className="w-full py-3 rounded-xl font-semibold bg-[#f8f8f8] text-[#030303] disabled:opacity-50 transition-all duration-200 hover:bg-[#f8f8f8]/90"
                             >
                                 {loading ? (
                                     <div className="flex items-center justify-center space-x-2">
-                                        <div className="animate-spin h-5 w-5 border-2 border-[#080808] border-t-transparent rounded-full"></div>
+                                        <div className="animate-spin h-5 w-5 border-2 border-[#030303] border-t-transparent rounded-full"></div>
                                         <span>Signing In...</span>
                                     </div>
                                 ) : (

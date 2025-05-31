@@ -24,8 +24,12 @@ const Signup = () => {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        if (token) {
-            navigate('/dashboard');
+        const role = localStorage.getItem('role');
+        // Redirect to dashboard if user is already logged in
+        if (token && role === 'teacher') {
+            navigate('/teacher-dashboard');
+        } else if (token && role === 'student') {
+            navigate('/student-dashboard'); 
         }
     }, [navigate]);
 
@@ -64,11 +68,17 @@ const Signup = () => {
             if (response.ok) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
-                toast.success('Account created successfully!');
-                
-                setTimeout(() => {
-                    navigate('/dashboard');
-                }, 1000);
+                localStorage.setItem('role', data.user.role); // Store user role
+                toast.success('Account created successfully! Welcome aboard!');
+                // Redirect based on user role
+                if (data.user.role === 'teacher') {
+                    navigate('/teacher-dashboard');
+                } else if (data.user.role === 'student') {
+                    navigate('/student-dashboard');
+                } else {
+                    toast.error('Invalid user role');
+                    return;
+                }
             } else {
                 toast.error(data.message || 'Signup failed');
             }
@@ -80,7 +90,7 @@ const Signup = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#080808]">
+        <div className="min-h-screen bg-[#030303]">
             <div className="min-h-screen flex items-center justify-center p-4">
                 <motion.div
                     initial={{ opacity: 0, y: 50 }}
@@ -111,11 +121,11 @@ const Signup = () => {
                                 <select
                                     value={formData.role}
                                     onChange={(e) => setFormData({...formData, role: e.target.value})}
-                                    className="w-full px-4 py-3 rounded-xl bg-[#080808] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200"
+                                    className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200"
                                     required
                                 >
                                     {roles.map(role => (
-                                        <option key={role.value} value={role.value} className="bg-[#080808]">
+                                        <option key={role.value} value={role.value} className="bg-[#030303]">
                                             {role.label}
                                         </option>
                                     ))}
@@ -138,7 +148,7 @@ const Signup = () => {
                                 placeholder="Email"
                                 value={formData.email}
                                 onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                className="w-full px-4 py-3 rounded-xl bg-[#080808] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
+                                className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
                                 required
                             />
                             
@@ -148,7 +158,7 @@ const Signup = () => {
                                 placeholder="Password"
                                 value={formData.password}
                                 onChange={(e) => setFormData({...formData, password: e.target.value})}
-                                className="w-full px-4 py-3 rounded-xl bg-[#080808] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
+                                className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
                                 required
                             />
                             
@@ -158,7 +168,7 @@ const Signup = () => {
                                 placeholder="Confirm Password"
                                 value={formData.confirmPassword}
                                 onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                                className="w-full px-4 py-3 rounded-xl bg-[#080808] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
+                                className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
                                 required
                             />
                             
@@ -167,10 +177,10 @@ const Signup = () => {
                                 <select
                                     value={formData.language}
                                     onChange={(e) => setFormData({...formData, language: e.target.value})}
-                                    className="w-full px-4 py-3 rounded-xl bg-[#080808] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200"
+                                    className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200"
                                 >
                                     {languages.map(lang => (
-                                        <option key={lang} value={lang} className="bg-[#080808]">{lang}</option>
+                                        <option key={lang} value={lang} className="bg-[#030303]">{lang}</option>
                                     ))}
                                 </select>
                             </motion.div>
@@ -180,11 +190,11 @@ const Signup = () => {
                                 whileTap={{ scale: 0.98 }}
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-3 rounded-xl font-semibold bg-[#f8f8f8] text-[#080808] disabled:opacity-50 transition-all duration-200 hover:bg-[#f8f8f8]/90"
+                                className="w-full py-3 rounded-xl font-semibold bg-[#f8f8f8] text-[#030303] disabled:opacity-50 transition-all duration-200 hover:bg-[#f8f8f8]/90"
                             >
                                 {loading ? (
                                     <div className="flex items-center justify-center space-x-2">
-                                        <div className="animate-spin h-5 w-5 border-2 border-[#080808] border-t-transparent rounded-full"></div>
+                                        <div className="animate-spin h-5 w-5 border-2 border-[#030303] border-t-transparent rounded-full"></div>
                                         <span>Creating Account...</span>
                                     </div>
                                 ) : (
