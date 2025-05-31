@@ -41,7 +41,9 @@ const Sidebar = ({ activeKey, setActiveTab }) => {
   }, []);
 
   const handleLogout = () => {
-    navigate("/login");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login"); // Hard redirect to clear all state
   };
 
   return (
