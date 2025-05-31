@@ -72,7 +72,6 @@ const getStudentStats = async (req, res) => {
     });
   }
 };
-
 const getPreferredLanguage = async (req, res) => {
     try {
         const user = await User.findById(req.userId).select('preferredLanguage');
@@ -89,9 +88,10 @@ const getPreferredLanguage = async (req, res) => {
             preferredLanguage: user.preferredLanguage
         });
     } catch (error) {
+        console.error('Error fetching language:', error);
         res.status(500).json({
             success: false,
-            message: error.message
+            message: 'Server error while fetching language'
         });
     }
 };
@@ -126,13 +126,15 @@ const updatePreferredLanguage = async (req, res) => {
             preferredLanguage: user.preferredLanguage
         });
     } catch (error) {
+        console.error('Error updating language:', error);
         res.status(500).json({
             success: false,
-            message: error.message
+            message: error.message.includes('validation failed') 
+                ? 'Invalid language selection' 
+                : 'Server error while updating language'
         });
     }
 };
-
 module.exports = {
   getStudentStats,
   getPreferredLanguage,
