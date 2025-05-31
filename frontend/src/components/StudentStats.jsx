@@ -125,7 +125,7 @@ const StudentStats = () => {
                         className="bg-[#222052] border border-[#f8f8f8]/20 rounded-2xl p-6 text-center"
                     >
                         <div className="text-3xl mb-2">⏱️</div>
-                        <h3 className="text-2xl font-bold text-[#f8f8f8]">{stats?.totalStudyTime || 0}h</h3>
+                        <h3 className="text-2xl font-bold text-[#f8f8f8]">{stats?.totalStudyTime || 0} min</h3>
                         <p className="text-[#f8f8f8]/70">Study Time</p>
                     </motion.div>
 
@@ -156,28 +156,6 @@ const StudentStats = () => {
                         </div>
                     </motion.div>
                 </div>
-
-                {/* Recent Activity */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="bg-[#222052] border border-[#f8f8f8]/20 rounded-2xl p-6 mb-8"
-                >
-                    <h2 className="text-2xl font-bold text-[#f8f8f8] mb-6">🕒 Recent Activity</h2>
-                    <div className="space-y-4">
-                        {stats?.recentActivity?.map((activity, index) => (
-                            <div key={index} className="flex items-center space-x-4 p-4 bg-[#030303] rounded-lg">
-                                <div className="text-2xl">{activity.emoji}</div>
-                                <div className="flex-1">
-                                    <h4 className="font-semibold text-[#f8f8f8]">{activity.title}</h4>
-                                    <p className="text-[#f8f8f8]/70 text-sm">{activity.description}</p>
-                                </div>
-                                <div className="text-[#f8f8f8]/60 text-sm">{activity.timestamp}</div>
-                            </div>
-                        )) || <p className="text-[#f8f8f8]/70 text-center py-8">No recent activity</p>}
-                    </div>
-                </motion.div>
 
                 <div className="flex justify-between items-center mb-6">
     <h2 className="text-2xl font-bold text-[#f8f8f8]">🏆 Achievement Progress</h2>
