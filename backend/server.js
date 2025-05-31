@@ -6,7 +6,7 @@ const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const achievementRoutes = require("./routes/achievementRoutes");
-const diagramRoutes = require("./routes/diagramRoutes");
+const diagramRoutes = require('./routes/diagramRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,7 +35,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/student", studentRoutes);
 app.use('/api/achievements', achievementRoutes);
-app.use("/api/diagram", diagramRoutes);
+app.use('/api/diagram', diagramRoutes);
 
 // Basic route
 app.get("/", (req, res) => {

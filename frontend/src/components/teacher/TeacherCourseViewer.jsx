@@ -16,6 +16,7 @@ import {
   FaChevronLeft,
   FaChevronRight
 } from 'react-icons/fa';
+import mermaid from 'mermaid';
 
 const TeacherCourseViewer = () => {
   const { courseId } = useParams();
@@ -73,7 +74,10 @@ const TeacherCourseViewer = () => {
             title: node.title,
             content: node.content || '<p>No content available</p>',
             type: node.quiz?.questions?.length > 0 ? 'quiz_checkpoint' : 'lesson',
-            quiz: node.quiz
+            quiz: node.quiz,
+            videoUrls: node.videoUrls || [],
+            imageUrls: node.imageUrls || [],
+            mermaid: node.mermaid || ''
           });
         }
         if (node.children && Array.isArray(node.children)) {
@@ -155,6 +159,90 @@ const TeacherCourseViewer = () => {
       }
     } catch (error) {
       toast.error('Failed to update course status');
+    }
+  };
+
+  // Helper function to render video player
+  const renderVideoPlayer = (url) => {
+    if (!url) return null;
+    
+    // YouTube video
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      const videoId = url.includes('youtu.be') 
+        ? url.split('/').pop().split('?')[0]
+        : url.split('v=')[1]?.split('&')[0];
+      
+      if (videoId) {
+        return (
+          <div className="aspect-video mb-4">
+            <iframe
+              src={`https://www.youtube.com/embed/${videoId}`}
+              title="Course Video"
+              className="w-full h-full rounded-lg"
+              allowFullScreen
+            />
+          </div>
+        );
+      }
+    }
+    
+    // Regular video file
+    return (
+      <div className="mb-4">
+        <video
+          src={url}
+          controls
+          className="w-full rounded-lg"
+          style={{ maxHeight: '400px' }}
+        >
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    );
+  };
+
+  // Helper function to render image
+  const renderImage = (url) => {
+    if (!url) return null;
+    
+    return (
+      <div className="mb-4">
+        <img
+          src={url}
+          alt="Course content"
+          className="w-full rounded-lg shadow-lg"
+          style={{ maxHeight: '500px', objectFit: 'contain' }}
+          onError={(e) => {
+            e.target.style.display = 'none';
+          }}
+        />
+      </div>
+    );
+  };
+
+  // Helper function to render Mermaid diagram
+  const renderMermaidDiagram = (code) => {
+    if (!code || code.trim().length === 0) return null;
+    
+    try {
+      const diagramId = `mermaid-teacher-${Date.now()}`;
+      const svg = mermaid.render(diagramId, code);
+      
+      return (
+        <div className="mb-4">
+          <div
+            className="bg-white p-4 rounded-lg shadow-lg"
+            dangerouslySetInnerHTML={{ __html: svg }}
+          />
+        </div>
+      );
+    } catch (error) {
+      console.error('Mermaid render error:', error);
+      return (
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+          Error rendering diagram: {error.message}
+        </div>
+      );
     }
   };
 
@@ -305,6 +393,40 @@ const TeacherCourseViewer = () => {
                     dangerouslySetInnerHTML={{ __html: currentContent.content }}
                   />
                 </div>
+
+                {/* Render Videos */}
+                {currentContent.videoUrls && currentContent.videoUrls.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-xl font-semibold text-[#080808] dark:text-[#f8f8f8] mb-4">📹 Videos</h3>
+                    {currentContent.videoUrls.map((url, index) => (
+                      <div key={index} className="mb-4">
+                        {url && url.trim() && renderVideoPlayer(url)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Render Images */}
+                {currentContent.imageUrls && currentContent.imageUrls.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-xl font-semibold text-[#080808] dark:text-[#f8f8f8] mb-4">🖼️ Images</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {currentContent.imageUrls.map((url, index) => (
+                        <div key={index}>
+                          {url && url.trim() && renderImage(url)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Render Mermaid Diagram */}
+                {currentContent.mermaid && (
+                  <div className="mt-6">
+                    <h3 className="text-xl font-semibold text-[#080808] dark:text-[#f8f8f8] mb-4">📊 Diagram</h3>
+                    {renderMermaidDiagram(currentContent.mermaid)}
+                  </div>
+                )}
 
                 {/* Navigation */}
                 <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200 dark:border-[#222]">

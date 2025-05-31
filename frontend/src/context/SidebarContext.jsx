@@ -1,6 +1,26 @@
-import { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 const SidebarContext = createContext();
+
+export const SidebarProvider = ({ children }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  return (
+    <SidebarContext.Provider
+      value={{
+        isSidebarOpen,
+        setIsSidebarOpen,
+        toggleSidebar,
+      }}
+    >
+      {children}
+    </SidebarContext.Provider>
+  );
+};
 
 export const useSidebar = () => {
   const context = useContext(SidebarContext);
@@ -8,22 +28,4 @@ export const useSidebar = () => {
     throw new Error("useSidebar must be used within a SidebarProvider");
   }
   return context;
-};
-
-export const SidebarProvider = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  const value = {
-    sidebarOpen,
-    setSidebarOpen,
-    toggleSidebar,
-  };
-
-  return (
-    <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
-  );
 };

@@ -16,6 +16,7 @@ import {
   FaFileAlt,
 } from 'react-icons/fa';
 import QuizEditor from './QuizEditor';
+import Mermaid from './Mermaid';
 
 const CourseEditor = () => {
   const { courseId } = useParams();
@@ -25,6 +26,7 @@ const CourseEditor = () => {
   const [saving, setSaving] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
   const [expandedNodes, setExpandedNodes] = useState(new Set());
+  const [activeContentTab, setActiveContentTab] = useState('content');
 
   useEffect(() => {
     fetchCourse();
@@ -101,6 +103,56 @@ const CourseEditor = () => {
       }
     }
     return null;
+  };
+
+  const addVideoUrl = (nodeId) => {
+    const node = findNodeById(course?.contentTree || [], nodeId);
+    if (node) {
+      const newVideoUrls = [...(node.videoUrls || []), ''];
+      updateNode(nodeId, 'videoUrls', newVideoUrls);
+    }
+  };
+
+  const updateVideoUrl = (nodeId, index, url) => {
+    const node = findNodeById(course?.contentTree || [], nodeId);
+    if (node) {
+      const newVideoUrls = [...(node.videoUrls || [])];
+      newVideoUrls[index] = url;
+      updateNode(nodeId, 'videoUrls', newVideoUrls);
+    }
+  };
+
+  const removeVideoUrl = (nodeId, index) => {
+    const node = findNodeById(course?.contentTree || [], nodeId);
+    if (node) {
+      const newVideoUrls = (node.videoUrls || []).filter((_, i) => i !== index);
+      updateNode(nodeId, 'videoUrls', newVideoUrls);
+    }
+  };
+
+  const addImageUrl = (nodeId) => {
+    const node = findNodeById(course?.contentTree || [], nodeId);
+    if (node) {
+      const newImageUrls = [...(node.imageUrls || []), ''];
+      updateNode(nodeId, 'imageUrls', newImageUrls);
+    }
+  };
+
+  const updateImageUrl = (nodeId, index, url) => {
+    const node = findNodeById(course?.contentTree || [], nodeId);
+    if (node) {
+      const newImageUrls = [...(node.imageUrls || [])];
+      newImageUrls[index] = url;
+      updateNode(nodeId, 'imageUrls', newImageUrls);
+    }
+  };
+
+  const removeImageUrl = (nodeId, index) => {
+    const node = findNodeById(course?.contentTree || [], nodeId);
+    if (node) {
+      const newImageUrls = (node.imageUrls || []).filter((_, i) => i !== index);
+      updateNode(nodeId, 'imageUrls', newImageUrls);
+    }
   };
 
   const saveCourse = async () => {
@@ -320,6 +372,49 @@ const CourseEditor = () => {
     );
   };
 
+  // Helper function to flatten contentTree into navigable slides
+  const flattenContentTree = (contentTree) => {
+    const flattened = [];
+    
+    const traverse = (nodes) => {
+      for (const node of nodes) {
+        if (node.type === 'topic') {
+          // Convert topic to slide format with all media
+          const slide = {
+            title: node.title,
+            content: node.content || '<p>No content available</p>',
+            type: node.quiz?.questions?.length > 0 ? 'quiz_checkpoint' : 'lesson',
+            difficulty: node.quiz?.difficulty || 'basic',
+            emoji: '📖',
+            videoUrls: node.videoUrls || [],
+            imageUrls: node.imageUrls || [],
+            mermaid: node.mermaid || '',
+            quiz: node.quiz?.questions?.length > 0 ? {
+              id: node.id,
+              questions: node.quiz.questions
+            } : null
+          };
+          flattened.push(slide);
+        }
+        if (node.children && Array.isArray(node.children)) {
+          traverse(node.children);
+        }
+      }
+    };
+    
+    traverse(contentTree);
+    return flattened.length > 0 ? flattened : [{
+      title: 'Welcome',
+      content: '<p>Course content will be available soon.</p>',
+      type: 'lesson',
+      difficulty: 'basic',
+      emoji: '👋',
+      videoUrls: [],
+      imageUrls: [],
+      mermaid: ''
+    }];
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f8f8f8] dark:bg-[#030303]">
@@ -425,51 +520,163 @@ const CourseEditor = () => {
 
                   {selectedNodeData.type === 'topic' && (
                     <>
-                      <div>
-                        <label className="block text-sm font-medium text-[#080808] dark:text-[#f8f8f8] mb-2">
-                          Content
-                        </label>
-                        <textarea
-                          value={selectedNodeData.content?.replace(/<[^>]*>/g, '') || ''}
-                          onChange={(e) => updateNode(selectedNode, 'content', `<p>${e.target.value.replace(/\n/g, '</p><p>')}</p>`)}
-                          rows={8}
-                          className="w-full px-4 py-3 border border-gray-300 dark:border-[#222] rounded-lg bg-white dark:bg-[#181818] text-[#080808] dark:text-[#f8f8f8] focus:ring-2 focus:ring-[#7c3aed] focus:border-transparent resize-none"
-                          placeholder="Enter your content here..."
-                        />
+                      {/* Content Tabs */}
+                      <div className="border-b border-gray-200 dark:border-[#222] mb-6">
+                        <div className="flex space-x-8">
+                          {[
+                            { id: 'content', label: 'Text Content', icon: '📝' },
+                            { id: 'media', label: 'Media', icon: '🎥' },
+                            { id: 'diagram', label: 'Diagrams', icon: '📊' },
+                            { id: 'quiz', label: 'Quiz', icon: '❓' }
+                          ].map(tab => (
+                            <button
+                              key={tab.id}
+                              onClick={() => setActiveContentTab(tab.id)}
+                              className={`flex items-center space-x-2 py-3 border-b-2 transition ${
+                                activeContentTab === tab.id
+                                  ? 'border-[#7c3aed] text-[#7c3aed] dark:text-[#a78bfa]'
+                                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-[#080808] dark:hover:text-[#f8f8f8]'
+                              }`}
+                            >
+                              <span>{tab.icon}</span>
+                              <span>{tab.label}</span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
-                      {/* Quiz Section */}
-                      <div className="border-t border-gray-200 dark:border-[#222] pt-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-semibold text-[#080808] dark:text-[#f8f8f8]">
-                            Quiz Questions
-                          </h3>
-                          {(!selectedNodeData.quiz?.questions || selectedNodeData.quiz.questions.length === 0) && (
-                            <button
-                              onClick={() => updateNode(selectedNode, 'quiz', {
-                                questions: [{
-                                  question: 'Sample question?',
-                                  type: 'mcq',
-                                  options: ['Option A', 'Option B', 'Option C', 'Option D'],
-                                  correctAnswer: 0
-                                }],
-                                difficulty: 'basic'
-                              })}
-                              className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                            >
-                              <FaQuestionCircle />
-                              <span>Add Quiz</span>
-                            </button>
+                      {/* Tab Content */}
+                      {activeContentTab === 'content' && (
+                        <div>
+                          <label className="block text-sm font-medium text-[#080808] dark:text-[#f8f8f8] mb-2">
+                            Content
+                          </label>
+                          <textarea
+                            value={selectedNodeData.content?.replace(/<[^>]*>/g, '') || ''}
+                            onChange={(e) => updateNode(selectedNode, 'content', `<p>${e.target.value.replace(/\n/g, '</p><p>')}</p>`)}
+                            rows={8}
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-[#222] rounded-lg bg-white dark:bg-[#181818] text-[#080808] dark:text-[#f8f8f8] focus:ring-2 focus:ring-[#7c3aed] focus:border-transparent resize-none"
+                            placeholder="Enter your content here..."
+                          />
+                        </div>
+                      )}
+
+                      {activeContentTab === 'media' && (
+                        <div className="space-y-6">
+                          {/* Video URLs */}
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <label className="block text-sm font-medium text-[#080808] dark:text-[#f8f8f8]">
+                                Video URLs
+                              </label>
+                              <button
+                                onClick={() => addVideoUrl(selectedNode)}
+                                className="flex items-center space-x-1 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition"
+                              >
+                                <span>+</span>
+                                <span>Add Video</span>
+                              </button>
+                            </div>
+                            <div className="space-y-2">
+                              {(selectedNodeData.videoUrls || []).map((url, index) => (
+                                <div key={index} className="flex items-center space-x-2">
+                                  <input
+                                    type="url"
+                                    value={url}
+                                    onChange={(e) => updateVideoUrl(selectedNode, index, e.target.value)}
+                                    placeholder="https://youtube.com/watch?v=..."
+                                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-[#222] rounded bg-white dark:bg-[#181818] text-[#080808] dark:text-[#f8f8f8] text-sm"
+                                  />
+                                  <button
+                                    onClick={() => removeVideoUrl(selectedNode, index)}
+                                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Image URLs */}
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <label className="block text-sm font-medium text-[#080808] dark:text-[#f8f8f8]">
+                                Image URLs
+                              </label>
+                              <button
+                                onClick={() => addImageUrl(selectedNode)}
+                                className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition"
+                              >
+                                <span>+</span>
+                                <span>Add Image</span>
+                              </button>
+                            </div>
+                            <div className="space-y-2">
+                              {(selectedNodeData.imageUrls || []).map((url, index) => (
+                                <div key={index} className="flex items-center space-x-2">
+                                  <input
+                                    type="url"
+                                    value={url}
+                                    onChange={(e) => updateImageUrl(selectedNode, index, e.target.value)}
+                                    placeholder="https://example.com/image.jpg"
+                                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-[#222] rounded bg-white dark:bg-[#181818] text-[#080808] dark:text-[#f8f8f8] text-sm"
+                                  />
+                                  <button
+                                    onClick={() => removeImageUrl(selectedNode, index)}
+                                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeContentTab === 'diagram' && (
+                        <div>
+                          <Mermaid
+                            code={selectedNodeData.mermaid || ''}
+                            onChange={(mermaid) => updateNode(selectedNode, 'mermaid', mermaid)}
+                          />
+                        </div>
+                      )}
+
+                      {activeContentTab === 'quiz' && (
+                        <div>
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-[#080808] dark:text-[#f8f8f8]">
+                              Quiz Questions
+                            </h3>
+                            {(!selectedNodeData.quiz?.questions || selectedNodeData.quiz.questions.length === 0) && (
+                              <button
+                                onClick={() => updateNode(selectedNode, 'quiz', {
+                                  questions: [{
+                                    question: 'Sample question?',
+                                    type: 'mcq',
+                                    options: ['Option A', 'Option B', 'Option C', 'Option D'],
+                                    correctAnswer: 0
+                                  }],
+                                  difficulty: 'basic'
+                                })}
+                                className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                              >
+                                <FaQuestionCircle />
+                                <span>Add Quiz</span>
+                              </button>
+                            )}
+                          </div>
+                          
+                          {selectedNodeData.quiz?.questions?.length > 0 && (
+                            <QuizEditor
+                              quiz={selectedNodeData.quiz}
+                              onChange={(quiz) => updateNode(selectedNode, 'quiz', quiz)}
+                            />
                           )}
                         </div>
-                        
-                        {selectedNodeData.quiz?.questions?.length > 0 && (
-                          <QuizEditor
-                            quiz={selectedNodeData.quiz}
-                            onChange={(quiz) => updateNode(selectedNode, 'quiz', quiz)}
-                          />
-                        )}
-                      </div>
+                      )}
                     </>
                   )}
                 </div>
