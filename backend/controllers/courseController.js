@@ -2,6 +2,7 @@ const Course = require("../models/Course");
 const User = require("../models/User");
 const multer = require("multer");
 const pdfParse = require("pdf-parse");
+const Progress = require("../models/Progress");
 
 // Configure multer for file upload
 const storage = multer.memoryStorage();
@@ -233,8 +234,397 @@ const getInstructorCourses = async (req, res) => {
   }
 };
 
+
+
+const getPublicCourses = async (req, res) => {
+  try {
+    const courses = await Course.find({ 
+      isPrivate: false, 
+      isPublished: true 
+    })
+      .populate('instructor', 'name')
+      .select('title description category language tags enrolledStudents createdAt')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      courses: courses.map(course => ({
+        _id: course._id,
+        title: course.title,
+        description: course.description,
+        category: course.category,
+        language: course.language,
+        tags: course.tags,
+        teacher: course.instructor?.name || 'Unknown',
+        studentCount: course.enrolledStudents?.length || 0,
+        emoji: getEmojiForCategory(course.category)
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Get enrolled courses for student
+const getEnrolledCourses = async (req, res) => {
+  try {
+    const studentId = req.userId;
+    
+    const progresses = await Progress.find({ student: studentId })
+      .populate({
+        path: 'course',
+        select: 'title description category language tags'
+      });
+
+    const enrolledCourses = progresses.map(progress => ({
+      _id: progress.course._id,
+      title: progress.course.title,
+      description: progress.course.description,
+      category: progress.course.category,
+      language: progress.course.language,
+      tags: progress.course.tags,
+      progress: progress.progressPercentage || 0,
+      emoji: getEmojiForCategory(progress.course.category)
+    }));
+
+    res.json({
+      success: true,
+      courses: enrolledCourses
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Enroll in a public course
+const enrollInCourse = async (req, res) => {
+
+  try {
+    const { courseId } = req.body;
+    const studentId = req.userId;
+
+    // Check if course exists and is public
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: 'Course not found'
+      });
+    }
+
+    if (course.isPrivate) {
+      return res.status(403).json({
+        success: false,
+        message: 'This is a private course. Use course code to join.'
+      });
+    }
+
+    // Check if already enrolled
+    const existingProgress = await Progress.findOne({
+      student: studentId,
+      course: courseId
+    });
+
+    if (existingProgress) {
+      return res.status(400).json({
+        success: false,
+        message: 'Already enrolled in this course'
+      });
+    }
+
+    // Create progress record
+    const progress = new Progress({
+      student: studentId,
+      course: courseId
+    });
+    await progress.save();
+
+    // Add student to course's enrolled list
+    course.enrolledStudents.push(studentId);
+    await course.save();
+
+    res.json({
+      success: true,
+      message: 'Successfully enrolled in course'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Join private course with code and password
+const joinPrivateCourse = async (req, res) => {
+  try {
+    const { code, password } = req.body;
+    const studentId = req.userId;
+
+    // Find course by code
+    const course = await Course.findOne({ courseCode: code });
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: 'Invalid course code'
+      });
+    }
+
+    // Check password
+    if (course.password !== password) {
+      return res.status(401).json({
+        success: false,
+        message: 'Incorrect password'
+      });
+    }
+
+    // Check if already enrolled
+    const existingProgress = await Progress.findOne({
+      student: studentId,
+      course: course._id
+    });
+
+    if (existingProgress) {
+      return res.status(400).json({
+        success: false,
+        message: 'Already enrolled in this course'
+      });
+    }
+
+    // Create progress record
+    const progress = new Progress({
+      student: studentId,
+      course: course._id
+    });
+    await progress.save();
+
+    // Add student to course's enrolled list
+    course.enrolledStudents.push(studentId);
+    await course.save();
+
+    res.json({
+      success: true,
+      message: 'Successfully joined private course'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Get course content for enrolled student
+const getCourseContent = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const studentId = req.userId;
+
+    // Check if student is enrolled
+    const progress = await Progress.findOne({
+      student: studentId,
+      course: courseId
+    }).populate('course');
+
+    if (!progress) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not enrolled in this course'
+      });
+    }
+
+    // Convert PDF content to slides (simplified)
+    const slides = convertPdfToSlides(progress.course.pdfContent);
+
+    res.json({
+      success: true,
+      course: {
+        _id: progress.course._id,
+        title: progress.course.title,
+        description: progress.course.description,
+        category: progress.course.category,
+        content: slides
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Get user progress
+const getUserProgress = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const studentId = req.userId;
+
+    const progress = await Progress.findOne({
+      student: studentId,
+      course: courseId
+    });
+
+    if (!progress) {
+      return res.status(404).json({
+        success: false,
+        message: 'Progress not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      progress: {
+        currentSlide: progress.currentSlide,
+        completedSlides: progress.completedSlides,
+        totalStudyTime: progress.totalStudyTime,
+        isCompleted: progress.isCompleted
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Update user progress
+const updateProgress = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { currentSlide, completedSlides } = req.body;
+    const studentId = req.userId;
+
+    const progress = await Progress.findOneAndUpdate(
+      { student: studentId, course: courseId },
+      {
+        currentSlide,
+        completedSlides,
+        lastAccessedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!progress) {
+      return res.status(404).json({
+        success: false,
+        message: 'Progress not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      progress
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Submit quiz result
+const submitQuizResult = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { quizId, score, percentage, answers } = req.body;
+    const studentId = req.userId;
+
+    const progress = await Progress.findOne({
+      student: studentId,
+      course: courseId
+    });
+
+    if (!progress) {
+      return res.status(404).json({
+        success: false,
+        message: 'Progress not found'
+      });
+    }
+
+    // Add quiz result
+    progress.quizResults.push({
+      quizId,
+      score,
+      totalQuestions: Object.keys(answers).length,
+      percentage,
+      answers
+    });
+
+    await progress.save();
+
+    res.json({
+      success: true,
+      message: 'Quiz result submitted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Helper functions
+const getEmojiForCategory = (category) => {
+  const emojis = {
+    'Mathematics': '🔢',
+    'Science': '🔬',
+    'History': '📚',
+    'Literature': '📖',
+    'Computer Science': '💻',
+    'Engineering': '⚙️',
+    'Medicine': '🏥',
+    'Other': '📋'
+  };
+  return emojis[category] || '📋';
+};
+
+const convertPdfToSlides = (pdfContent) => {
+  // Simple conversion - split by paragraphs
+  const paragraphs = pdfContent.split('\n\n').filter(p => p.trim().length > 50);
+  
+  return paragraphs.slice(0, 10).map((content, index) => ({
+    title: `Slide ${index + 1}`,
+    content: `<p>${content.replace(/\n/g, '<br>')}</p>`,
+    emoji: '📖',
+    type: index === 4 ? 'quiz_checkpoint' : 'lesson', // Add quiz at slide 5
+    difficulty: index < 3 ? 'basic' : index < 7 ? 'intermediate' : 'advanced',
+    ...(index === 4 && {
+      quiz: {
+        id: `quiz_${index}`,
+        questions: [
+          {
+            question: "What is the main topic of this section?",
+            options: ["Option A", "Option B", "Option C", "Option D"],
+            correctAnswer: 0
+          }
+        ]
+      }
+    })
+  }));
+};
+
+
+
 module.exports = {
   createCourse,
   getInstructorCourses,
+  getPublicCourses,
+  getEnrolledCourses,
+  enrollInCourse,
+  joinPrivateCourse,
+  getCourseContent,
+  getUserProgress,
+  updateProgress,
+  submitQuizResult,
   upload,
 };

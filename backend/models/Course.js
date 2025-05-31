@@ -55,11 +55,9 @@ const courseSchema = new mongoose.Schema(
         return this.isPrivate;
       },
     },
-    // Course code is only required for private courses (acts as access key)
+    // Course code is only for private courses
     courseCode: {
       type: String,
-      unique: true,
-      sparse: true, // Allows multiple null values, but unique when set
       required: function () {
         return this.isPrivate;
       },
@@ -82,7 +80,7 @@ const courseSchema = new mongoose.Schema(
     ],
     isPublished: {
       type: Boolean,
-      default: true, // Public courses are auto-published
+      default: true,
     },
     createdAt: {
       type: Date,
@@ -94,15 +92,46 @@ const courseSchema = new mongoose.Schema(
   }
 );
 
+// Create sparse unique index for courseCode
+courseSchema.index(
+  { courseCode: 1 }, 
+  { 
+    unique: true, 
+    sparse: true,
+    partialFilterExpression: { courseCode: { $exists: true, $ne: null } }
+  }
+);
+
 // Generate unique course code only for private courses
 courseSchema.pre("save", async function (next) {
   if (this.isPrivate && !this.courseCode) {
-    // Generate a shorter, more user-friendly code for private courses
-    const timestamp = Date.now().toString(36).slice(-4);
-    const randomPart = Math.random().toString(36).substring(2, 6);
-    this.courseCode = `${timestamp}${randomPart}`.toUpperCase();
+    let codeGenerated = false;
+    let attempts = 0;
+    
+    while (!codeGenerated && attempts < 10) {
+      // Generate a shorter, more user-friendly code
+      const timestamp = Date.now().toString(36).slice(-4);
+      const randomPart = Math.random().toString(36).substring(2, 6);
+      const newCode = `${timestamp}${randomPart}`.toUpperCase();
+      
+      try {
+        // Check if code already exists
+        const existingCourse = await this.constructor.findOne({ courseCode: newCode });
+        if (!existingCourse) {
+          this.courseCode = newCode;
+          codeGenerated = true;
+        }
+      } catch (error) {
+        // Continue to next attempt
+      }
+      attempts++;
+    }
+    
+    if (!codeGenerated) {
+      return next(new Error('Failed to generate unique course code'));
+    }
   } else if (!this.isPrivate) {
-    // Clear course code for public courses
+    // Ensure public courses don't have course codes
     this.courseCode = undefined;
   }
   next();
