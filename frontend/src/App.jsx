@@ -12,6 +12,8 @@ import StudentStats from "./components/StudentStats";
 import TeacherDashboard from "./components/teacher/TeacherDashboard";
 import CreateCourse from "./components/teacher/CreateCourse";
 import Landing from "./components/landing/Landing";
+import AllAchievements from "./components/AllAchievements";
+import MyAchievements from "./components/MyAchievements";
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
         <Route path="/student-dashboard" element={<StudentDashboard />} />
         <Route path="/course/:courseId" element={<CourseViewer />} />
         <Route path="/student-stats" element={<StudentStats />} />
+        <Route path="/my-achievements" element={<MyAchievements />} />
+        <Route path="/achievements" element={<AllAchievements />} />
         <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
         <Route path="/create-course" element={<CreateCourse />} />
         <Route path="/" element={<Landing />} />

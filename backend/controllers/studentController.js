@@ -1,6 +1,8 @@
 const Progress = require('../models/Progress');
 const Course = require('../models/Course');
 const User = require('../models/User');
+const { checkAchievements } = require('./achievementController');
+const UserAchievement = require('../models/UserAchievement');
 
 const getStudentStats = async (req, res) => {
   try {
@@ -32,6 +34,30 @@ const getStudentStats = async (req, res) => {
     });
     const averageScore = totalQuizzes > 0 ? Math.round(totalScore / totalQuizzes) : 0;
 
+    // Get recent achievements (last 5)
+    const recentAchievements = await UserAchievement.find({ user: studentId })
+      .populate('achievement')
+      .sort({ unlockedAt: -1 })
+      .limit(3);
+
+    const achievements = recentAchievements.map(ua => ({
+      title: ua.achievement.name,
+      description: ua.achievement.description,
+      emoji: ua.achievement.icon,
+      points: ua.achievement.points,
+      unlockedAt: ua.unlockedAt
+    }));
+
+    // Check for new achievements
+    await checkAchievements(studentId);
+
+    // Get total achievement points
+    const totalPoints = await UserAchievement.find({ user: studentId })
+      .populate('achievement')
+      .then(achievements => 
+        achievements.reduce((sum, ua) => sum + ua.achievement.points, 0)
+      );
+
     // Get recent activity
     const recentActivity = [
       {
@@ -45,6 +71,12 @@ const getStudentStats = async (req, res) => {
         title: 'Study Time',
         description: `${Math.round(totalStudyTime / 60)} hours total`,
         timestamp: 'This week'
+      },
+      {
+        emoji: '🏆',
+        title: 'Achievement Points',
+        description: `${totalPoints} points earned`,
+        timestamp: 'All time'
       }
     ];
 
@@ -55,13 +87,8 @@ const getStudentStats = async (req, res) => {
         totalCourses,
         totalStudyTime: Math.round(totalStudyTime / 60), // Convert to hours
         averageScore,
-        achievements: [
-          {
-            title: 'First Course',
-            description: 'Completed your first course',
-            emoji: '🎓'
-          }
-        ],
+        totalPoints,
+        achievements,
         recentActivity
       }
     });
@@ -72,6 +99,7 @@ const getStudentStats = async (req, res) => {
     });
   }
 };
+
 
 const getPreferredLanguage = async (req, res) => {
     try {
