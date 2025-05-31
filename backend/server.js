@@ -1,8 +1,9 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const connectDB = require('./config/db');
-const authRoutes = require('./routes/authRoutes');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const connectDB = require("./config/db");
+const authRoutes = require("./routes/authRoutes");
+const courseRoutes = require("./routes/courseRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -12,13 +13,13 @@ connectDB();
 
 // CORS configuration
 const corsOptions = {
-    origin: [
-        'http://localhost:3000',
-        'http://localhost:5173', // Vite default port
-        'http://localhost:4173'  // Vite preview port
-    ],
-    credentials: true,
-    optionsSuccessStatus: 200
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:5173", // Vite default port
+    "http://localhost:4173", // Vite preview port
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200,
 };
 
 // Middleware
@@ -27,23 +28,24 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/api/auth', authRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/courses", courseRoutes);
 
 // Basic route
-app.get('/', (req, res) => {
-    res.json({ message: 'Welcome to BharatAI API' });
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to BharatAI API" });
 });
 
 // Health check route
-app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'OK', 
-        message: 'Server is running',
-        timestamp: new Date().toISOString()
-    });
+app.get("/health", (req, res) => {
+  res.json({
+    status: "OK",
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
