@@ -432,7 +432,7 @@ const StudentDashboard = () => {
                   </p>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-[#f8f8f8]/60">
-                      Progress: {course.progress || 0}%
+                      Progress: {Math.round(course.progress || 0)}%
                     </span>
                     <span className="text-sm text-[#f8f8f8]/60">
                       {course.language}

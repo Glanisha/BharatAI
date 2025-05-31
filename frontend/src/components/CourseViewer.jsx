@@ -228,8 +228,18 @@ const updateStudyTime = useCallback(async (timeSpentMinutes) => {
         }
     };
 
-    const updateProgress = async (slideIndex) => {
+const updateProgress = async (slideIndex) => {
     try {
+        // Ensure we don't go beyond the total slides
+        const safeSlideIndex = Math.max(0, Math.min(slideIndex, flattenedContent.length - 1));
+        const completedSlides = Math.max(safeSlideIndex + 1, userProgress?.completedSlides || 0);
+
+        console.log('Updating progress:', {
+            currentSlide: safeSlideIndex,
+            completedSlides: completedSlides,
+            totalSlides: flattenedContent.length
+        });
+
         const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/progress`, {
             method: 'PUT',
             headers: {
@@ -237,80 +247,83 @@ const updateStudyTime = useCallback(async (timeSpentMinutes) => {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
             body: JSON.stringify({
-                currentSlide: slideIndex,
-                // completedSlides should be the highest slide reached + 1 (since it's a count, not index)
-                completedSlides: Math.max(slideIndex + 1, userProgress?.completedSlides || 0)
+                currentSlide: safeSlideIndex,
+                completedSlides: completedSlides
             })
         });
+        
         const data = await response.json();
+        console.log('Progress update response:', data); // Debug log
+        
         if (data.success) {
-            setUserProgress(data.progress); // Store full progress object
+            setUserProgress(data.progress);
+        } else {
+            console.error('Progress update failed:', data);
         }
     } catch (error) {
         console.error('Error updating progress:', error);
     }
 };
 
-    const handleQuizSubmit = async () => {
-        const score = calculateQuizScore();
-        const percentage = (score / quizData.questions.length) * 100;
+const handleQuizSubmit = async () => {
+    const score = calculateQuizScore();
+    const totalQuestions = quizData.questions.length;
+    const percentage = (score / totalQuestions) * 100;
 
-        try {
-            const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/quiz-result`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    quizId: quizData.id,
-                    score,
-                    percentage,
-                    answers: quizAnswers
-                })
-            });
+    try {
+        const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/quiz-result`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                quizId: quizData.id,
+                score: score,
+                percentage: percentage,
+                answers: quizAnswers
+            })
+        });
 
-            const data = await response.json();
-            if (data.success) {
-                toast.success(`Quiz completed! Score: ${score}/${quizData.questions.length} (${percentage.toFixed(1)}%)`);
-                
-                // Determine next content based on score
-                const nextSlideIndex = determineNextContent(percentage);
+        const data = await response.json();
+        console.log('Quiz submission response:', data); // Debug log
+        
+        if (data.success) {
+            toast.success(`Quiz completed! Score: ${score}/${totalQuestions} (${percentage.toFixed(1)}%)`);
+            
+            // Move to next slide after quiz completion
+            const nextSlideIndex = currentSlide + 1;
+            if (nextSlideIndex < flattenedContent.length) {
                 setCurrentSlide(nextSlideIndex);
-                setShowQuiz(false);
-                setQuizAnswers({});
                 await updateProgress(nextSlideIndex);
+            } else {
+                // Course completed
+                await markCourseAsCompleted();
+                toast.success('🎉 Course completed! Well done!');
+                navigate('/student-dashboard');
             }
-        } catch (error) {
-            toast.error('Failed to submit quiz');
-        }
-    };
-
-    const calculateQuizScore = () => {
-        return quizData.questions.reduce((score, question, index) => {
-            return quizAnswers[index] === question.correctAnswer ? score + 1 : score;
-        }, 0);
-    };
-
-    const determineNextContent = (percentage) => {
-        // Adaptive learning logic
-        if (percentage >= 80) {
-            // High score - skip basic content, go to advanced
-            return findNextContentByDifficulty('advanced');
-        } else if (percentage >= 60) {
-            // Medium score - standard progression
-            return findNextContentByDifficulty('intermediate');
+            
+            setShowQuiz(false);
+            setQuizAnswers({});
         } else {
-            // Low score - provide more foundational content
-            return findNextContentByDifficulty('basic');
+            console.error('Quiz submission failed:', data);
+            toast.error(data.message || 'Failed to submit quiz');
         }
-    };
+    } catch (error) {
+        console.error('Quiz submission error:', error);
+        toast.error('Failed to submit quiz - network error');
+    }
+};
 
-    const findNextContentByDifficulty = (difficulty) => {
-        const nextContents = course.content.slice(currentSlide + 1);
-        const targetContent = nextContents.find(content => content.difficulty === difficulty);
-        return targetContent ? course.content.indexOf(targetContent) : currentSlide + 1;
-    };
+const calculateQuizScore = () => {
+    let score = 0;
+    quizData.questions.forEach((question, index) => {
+        if (quizAnswers[index] === question.correctAnswer) {
+            score++;
+        }
+    });
+    return score;
+};
 
     if (loading) {
         return (
