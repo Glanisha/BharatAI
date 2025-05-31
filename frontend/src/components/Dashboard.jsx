@@ -61,7 +61,7 @@ const Dashboard = () => {
 
     if (!user) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#030303]">
+            <div className="min-h-screen flex items-center justify-center bg-[#080808]">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -78,7 +78,7 @@ const Dashboard = () => {
         <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="min-h-screen bg-[#030303]"
+            className="min-h-screen bg-[#080808]"
         >
             <motion.nav 
                 initial={{ y: -100 }}
@@ -105,8 +105,8 @@ const Dashboard = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
                                 user.role === 'teacher' 
-                                    ? 'bg-[#f8f8f8] text-[#030303]' 
-                                    : 'bg-[#f8f8f8]/80 text-[#030303]'
+                                    ? 'bg-[#f8f8f8] text-[#080808]' 
+                                    : 'bg-[#f8f8f8]/80 text-[#080808]'
                             }`}
                         >
                             {user.role === 'teacher' ? '👨‍🏫 Teacher' : '👨‍🎓 Student'}
@@ -115,7 +115,7 @@ const Dashboard = () => {
                             <motion.span 
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="px-2 py-1 rounded text-[#030303] bg-[#f8f8f8]/60 text-xs font-medium hidden md:block"
+                                className="px-2 py-1 rounded text-[#080808] bg-[#f8f8f8]/60 text-xs font-medium hidden md:block"
                             >
                                 {user.language}
                             </motion.span>
@@ -124,7 +124,7 @@ const Dashboard = () => {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleLogout}
-                            className="px-4 py-2 rounded-lg bg-[#f8f8f8] text-[#030303] font-medium transition-all duration-200 hover:bg-[#f8f8f8]/90"
+                            className="px-4 py-2 rounded-lg bg-[#f8f8f8] text-[#080808] font-medium transition-all duration-200 hover:bg-[#f8f8f8]/90"
                         >
                             Logout
                         </motion.button>
