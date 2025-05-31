@@ -26,7 +26,7 @@ const languages = [
   "English",
 ];
 
-const CreateCourse = () => {
+const CreateCourse = ({setActiveTab}) => {
   const [user] = useState(() => {
     const userData = localStorage.getItem("user");
     return userData ? JSON.parse(userData) : null;
@@ -155,7 +155,7 @@ const CreateCourse = () => {
         }
         setTimeout(() => {
           setActiveTab("courses");
-        }, 2500);
+        }, 500);
       } else {
         toast.error(data.message || "Failed to create course");
       }
