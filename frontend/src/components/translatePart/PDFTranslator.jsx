@@ -1,10 +1,12 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
+import { motion } from 'framer-motion';
+import { toast, ToastContainer } from 'react-toastify';
 
 const PDFTranslator = () => {
   const [file, setFile] = useState(null);
-  const [targetLanguage, setTargetLanguage] = useState('hi'); // Default to Hindi
-  const [sourceLanguage, setSourceLanguage] = useState('en'); // Default to English
+  const [targetLanguage, setTargetLanguage] = useState('hi');
+  const [sourceLanguage, setSourceLanguage] = useState('en');
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationResult, setTranslationResult] = useState(null);
   const [error, setError] = useState(null);
@@ -34,7 +36,6 @@ const PDFTranslator = () => {
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Handle file selection
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile && selectedFile.type === 'application/pdf') {
@@ -46,7 +47,6 @@ const PDFTranslator = () => {
     }
   };
 
-  // Handle translation
   const handleTranslate = async () => {
     if (!file) {
       setError('Please select a PDF file first');
@@ -72,39 +72,51 @@ const PDFTranslator = () => {
     } catch (err) {
       console.error('Translation error:', err);
       setError(err.response?.data?.error || err.message || 'Translation failed');
+      toast.error(err.response?.data?.error || err.message || 'Translation failed');
     } finally {
       setIsTranslating(false);
     }
   };
 
-  // Handle language selection
   const handleLanguageSelect = (langCode) => {
     setTargetLanguage(langCode);
     setShowLanguageDropdown(false);
   };
 
-  // Format text for display with line breaks
   const formatText = (text) => {
     return text.split('\n').map((paragraph, index) => (
-      <p key={index} className="mb-2">{paragraph}</p>
+      <p key={index} className="mb-2 text-[#f8f8f8]">{paragraph}</p>
     ));
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-extrabold text-gray-900 mb-2">PDF Translator</h1>
-          <p className="text-lg text-gray-600">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen bg-[#030303] py-8 px-4"
+    >
+      <div className="max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <h1 className="text-4xl font-bold text-[#f8f8f8] mb-4">📄 PDF Translator</h1>
+          <p className="text-lg text-[#f8f8f8]/70">
             Upload a PDF and get it translated to your preferred language
           </p>
-        </div>
+        </motion.div>
 
-        <div className="bg-white shadow rounded-lg p-6 mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-[#222052] border border-[#f8f8f8]/20 rounded-2xl p-6 mb-8"
+        >
           <div className="space-y-6">
             {/* File Upload */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-[#f8f8f8]/70 mb-2">
                 PDF File
               </label>
               <div className="flex items-center">
@@ -115,14 +127,16 @@ const PDFTranslator = () => {
                   className="hidden"
                   ref={fileInputRef}
                 />
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => fileInputRef.current.click()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="px-6 py-2 bg-[#222052] text-[#f8f8f8] rounded-lg border border-[#f8f8f8]/20"
                 >
-                  Select PDF
-                </button>
+                  📁 Select PDF
+                </motion.button>
                 {file && (
-                  <span className="ml-4 text-gray-700">
+                  <span className="ml-4 text-[#f8f8f8]/70">
                     {file.name} ({Math.round(file.size / 1024)} KB)
                   </span>
                 )}
@@ -130,18 +144,18 @@ const PDFTranslator = () => {
             </div>
 
             {/* Language Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#f8f8f8]/70 mb-2">
                   Source Language
                 </label>
                 <select
                   value={sourceLanguage}
                   onChange={(e) => setSourceLanguage(e.target.value)}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border"
+                  className="w-full bg-[#030303] border border-[#f8f8f8]/20 text-[#f8f8f8] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#f8f8f8]/50"
                 >
                   {Object.entries(availableLanguages).map(([code, name]) => (
-                    <option key={`source-${code}`} value={code}>
+                    <option key={`source-${code}`} value={code} className="bg-[#030303]">
                       {name}
                     </option>
                   ))}
@@ -149,30 +163,34 @@ const PDFTranslator = () => {
               </div>
 
               <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#f8f8f8]/70 mb-2">
                   Target Language
                 </label>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   type="button"
                   onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
-                  className="mt-1 w-full flex justify-between items-center px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full flex justify-between items-center px-4 py-2 bg-[#030303] border border-[#f8f8f8]/20 rounded-lg text-[#f8f8f8]"
                 >
                   <span>{availableLanguages[targetLanguage] || 'Select language'}</span>
                   <svg className="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
-                </button>
+                </motion.button>
 
                 {showLanguageDropdown && (
-                  <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                  <div className="absolute z-10 mt-1 w-full bg-[#030303] border border-[#f8f8f8]/20 shadow-lg max-h-60 rounded-lg py-1 text-base overflow-auto">
                     {Object.entries(availableLanguages).map(([code, name]) => (
-                      <button
+                      <motion.button
                         key={`target-${code}`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => handleLanguageSelect(code)}
-                        className={`w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-100 ${targetLanguage === code ? 'bg-blue-100 font-medium' : ''}`}
+                        className={`w-full text-left px-4 py-2 text-sm text-[#f8f8f8] hover:bg-[#222052] ${targetLanguage === code ? 'bg-[#222052] font-medium' : ''}`}
                       >
                         {name}
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
                 )}
@@ -180,28 +198,31 @@ const PDFTranslator = () => {
             </div>
 
             {/* Translate Button */}
-            <div>
-              <button
+            <div className="pt-2">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleTranslate}
                 disabled={!file || isTranslating}
-                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${!file || isTranslating ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'}`}
+                className={`w-full py-3 px-4 rounded-lg text-sm font-medium text-[#f8f8f8] ${!file || isTranslating ? 'bg-[#222052]/50 cursor-not-allowed' : 'bg-[#222052] hover:bg-[#222052]/90'}`}
               >
                 {isTranslating ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin h-5 w-5 border-2 border-[#f8f8f8] border-t-transparent rounded-full mr-3"></div>
                     Translating...
-                  </>
-                ) : 'Translate PDF'}
-              </button>
+                  </div>
+                ) : '🔀 Translate PDF'}
+              </motion.button>
             </div>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mt-4 p-4 bg-red-50 border-l-4 border-red-400">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-4 p-4 bg-[#300000] border-l-4 border-red-500"
+            >
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -209,55 +230,62 @@ const PDFTranslator = () => {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-red-700">{error}</p>
+                  <p className="text-sm text-[#f8f8f8]">{error}</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
         {/* Results */}
         {translationResult && (
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-200">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
-                Translation Results
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-[#222052] border border-[#f8f8f8]/20 rounded-2xl overflow-hidden"
+          >
+            <div className="px-6 py-5 border-b border-[#f8f8f8]/20">
+              <h3 className="text-lg font-medium text-[#f8f8f8]">
+                📝 Translation Results
               </h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-[#f8f8f8]/70">
                 Translated from {availableLanguages[sourceLanguage]} to {availableLanguages[targetLanguage]}
               </p>
             </div>
 
             <div className="px-6 py-4">
               <div className="mb-6">
-                <h4 className="text-sm font-medium text-gray-500 mb-2">Original Text ({translationResult.textLength} chars)</h4>
-                <div className="bg-gray-50 p-4 rounded-md max-h-60 overflow-y-auto">
+                <h4 className="text-sm font-medium text-[#f8f8f8]/70 mb-2">Original Text ({translationResult.textLength} chars)</h4>
+                <div className="bg-[#030303] p-4 rounded-lg max-h-60 overflow-y-auto">
                   {formatText(translationResult.originalText)}
                 </div>
               </div>
 
               <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
+                <h4 className="text-sm font-medium text-[#f8f8f8]/70 mb-2">
                   Translated Text ({translationResult.translatedLength} chars)
                   {translationResult.translationService && (
-                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      via {translationResult.translationService}
+                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/20">
+                      {/* via {translationResult.translationService} */}
                     </span>
                   )}
                 </h4>
-                <div className="bg-blue-50 p-4 rounded-md max-h-60 overflow-y-auto">
+                <div className="bg-[#030303] p-4 rounded-lg max-h-60 overflow-y-auto">
                   {formatText(translationResult.translatedText)}
                 </div>
               </div>
             </div>
 
-            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <div className="bg-[#030303] px-6 py-4 border-t border-[#f8f8f8]/20">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-[#f8f8f8]/70">
                   {translationResult.numPages} page{translationResult.numPages !== 1 ? 's' : ''} • 
                   {translationResult.translationApplied ? ' Translation applied' : ' No translation needed'}
                 </div>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => {
                     const blob = new Blob([translationResult.translatedText], { type: 'text/plain' });
                     const url = URL.createObjectURL(blob);
@@ -269,16 +297,26 @@ const PDFTranslator = () => {
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
                   }}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="inline-flex items-center px-4 py-2 border border-[#f8f8f8]/20 rounded-lg text-[#f8f8f8] bg-[#222052] hover:bg-[#222052]/90"
                 >
-                  Download Translation
-                </button>
+                  ⬇️ Download Translation
+                </motion.button>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
-    </div>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        theme="dark"
+        toastStyle={{
+          backgroundColor: '#222052',
+          color: '#f8f8f8'
+        }}
+      />
+    </motion.div>
   );
 };
 

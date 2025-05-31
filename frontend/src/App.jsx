@@ -13,6 +13,7 @@ import StudentStats from "./components/StudentStats";
 import TeacherDashboard from "./components/teacher/TeacherDashboard";
 import CreateCourse from "./components/teacher/CreateCourse";
 import Landing from "./components/landing/Landing";
+import PDFTranslator from "./components/translatePart/PDFTranslator";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/student-stats" element={<StudentStats />} />
         <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
         <Route path="/create-course" element={<CreateCourse />} />
+        <Route path="/pdf-translator" element={<PDFTranslator />} />
         <Route path="/" element={<Landing />} />
       </Routes>
     </Router>
