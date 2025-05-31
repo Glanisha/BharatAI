@@ -119,7 +119,11 @@ const courseSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    contentTree: [ContentNodeSchema], // <-- new field for nested content
+    contentTree: {
+      type: [ContentNodeSchema],
+      required: true,
+      default: [],
+    }, // Make this required and default to empty array
   },
   {
     timestamps: true,

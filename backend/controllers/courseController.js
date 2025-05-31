@@ -39,7 +39,7 @@ const createCourse = async (req, res) => {
       password,
       tags,
       contentTree, // new nested content structure
-      estimatedTime // Add this line
+      estimatedTime
     } = req.body;
     const instructorId = req.userId;
 
@@ -79,6 +79,9 @@ const createCourse = async (req, res) => {
         message: "Failed to parse PDF file. Please ensure it's a valid PDF.",
       });
     }
+
+    // Generate structured content from PDF and save it
+    const generatedContentTree = generateContentTreeFromPdf(pdfContent);
 
     // Parse tags if they exist
     let parsedTags = [];
@@ -132,9 +135,9 @@ const createCourse = async (req, res) => {
       instructor: instructorId,
       isPrivate: isPrivateCourse,
       tags: parsedTags,
-      pdfContent,
-      contentTree: contentTree || [], // use new structure if provided
-      estimatedTime: estimatedTime || 60 // Add this line
+      pdfContent, // Keep for reference
+      contentTree: contentTree || generatedContentTree, // Save generated content
+      estimatedTime: estimatedTime || 60
     };
 
     // Add private course specific fields
@@ -198,19 +201,40 @@ const createCourse = async (req, res) => {
 
 // Update an existing course (support both old and new structure)
 const updateCourse = async (req, res) => {
+  console.log("Updating course...");
   try {
-    const { id } = req.params;
+    const { courseId } = req.params; // Changed from 'id' to 'courseId'
+    const instructorId = req.userId;
     const {
       title,
       description,
       contentTree, // new structure
       content, // old structure
+      category,
+      language,
+      tags,
       ...otherFields
     } = req.body;
+
+    // Verify the instructor owns this course
+    const existingCourse = await Course.findOne({ 
+      _id: courseId, 
+      instructor: instructorId 
+    });
+    
+    if (!existingCourse) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found or access denied"
+      });
+    }
 
     const updateFields = {
       title,
       description,
+      category,
+      language,
+      tags,
       ...otherFields,
     };
 
@@ -219,14 +243,29 @@ const updateCourse = async (req, res) => {
     // Only update old content if provided (for old courses)
     if (content !== undefined) updateFields.content = content;
 
-    const course = await Course.findByIdAndUpdate(id, updateFields, {
+    const course = await Course.findByIdAndUpdate(courseId, updateFields, {
       new: true,
+      runValidators: true
     });
-    if (!course) return res.status(404).json({ error: "Course not found" });
 
-    res.json(course);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Course updated successfully",
+      course
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Update course error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
   }
 };
 
@@ -313,33 +352,23 @@ const getEnrolledCourses = async (req, res) => {
 
     const progresses = await Progress.find({ student: studentId }).populate({
       path: "course",
-      select: "title description category language tags pdfContent content", // ✅ Fixed!
+      select: "title description category language tags contentTree",
     });
 
     const enrolledCourses = progresses.map((progress) => {
       console.log(`Course: ${progress.course.title}`);
-      console.log(`Has pdfContent: ${!!progress.course.pdfContent}`);
-      console.log(`Has content: ${!!progress.course.content}`);
+      console.log(`Has contentTree: ${!!progress.course.contentTree}`);
       console.log(`Completed slides: ${progress.completedSlides}`);
 
-      // Calculate progress percentage properly
+      // Calculate progress percentage using saved contentTree
       let totalSlides = 1;
-      if (progress.course.content && Array.isArray(progress.course.content)) {
-        totalSlides = progress.course.content.length;
-        console.log(`Using content array: ${totalSlides} slides`);
-      } else if (progress.course.pdfContent) {
-        const slides = convertPdfToSlides(progress.course.pdfContent);
-        totalSlides = slides.length;
-        console.log(`Using PDF conversion: ${totalSlides} slides`);
-      } else {
-        console.log(`No content found, using default: ${totalSlides} slide`);
+      if (progress.course.contentTree && Array.isArray(progress.course.contentTree)) {
+        totalSlides = countTotalSlides(progress.course.contentTree);
+        console.log(`Using contentTree: ${totalSlides} slides`);
       }
 
       const progressPercentage = Math.round(
         (progress.completedSlides / totalSlides) * 100
-      );
-      console.log(
-        `Final calculation: ${progress.completedSlides}/${totalSlides} = ${progressPercentage}%`
       );
 
       return {
@@ -488,38 +517,97 @@ const joinPrivateCourse = async (req, res) => {
 const getCourseContent = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const studentId = req.userId;
+    const userId = req.userId;
 
-    // Check if student is enrolled
-    const progress = await Progress.findOne({
-      student: studentId,
-      course: courseId,
-    }).populate("course");
-
-    if (!progress) {
-      return res.status(403).json({
+    // Get user to check role
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
         success: false,
-        message: "Not enrolled in this course",
+        message: "User not found"
       });
     }
 
-    // Convert PDF content to slides (simplified)
-    const slides = convertPdfToSlides(progress.course.pdfContent);
+    let course;
+
+    if (user.role === 'teacher') {
+      // Teachers can access their own courses
+      course = await Course.findOne({ 
+        _id: courseId, 
+        instructor: userId 
+      }).populate('instructor', 'name email');
+      
+      if (!course) {
+        return res.status(404).json({
+          success: false,
+          message: "Course not found or access denied"
+        });
+      }
+    } else {
+      // Students need to be enrolled
+      const progress = await Progress.findOne({
+        student: userId,
+        course: courseId
+      });
+
+      if (!progress) {
+        return res.status(403).json({
+          success: false,
+          message: "You are not enrolled in this course"
+        });
+      }
+
+      course = await Course.findById(courseId).populate('instructor', 'name email');
+      if (!course) {
+        return res.status(404).json({
+          success: false,
+          message: "Course not found"
+        });
+      }
+    }
+
+    // Use saved contentTree instead of dynamic generation
+    let content = course.contentTree || [];
+    if (content.length === 0) {
+      content = [
+        {
+          id: 'welcome-1',
+          title: 'Welcome',
+          type: 'topic',
+          content: '<p>Course content will be available soon.</p>',
+        }
+      ];
+    }
+
+    const courseData = {
+      _id: course._id,
+      title: course.title,
+      description: course.description,
+      category: course.category,
+      language: course.language,
+      isPrivate: course.isPrivate,
+      isPublished: course.isPublished,
+      tags: course.tags,
+      contentTree: content, // Return saved contentTree
+      instructor: course.instructor,
+      estimatedTime: course.estimatedTime
+    };
+
+    // Include course code for private courses (teachers only)
+    if (user.role === 'teacher' && course.isPrivate) {
+      courseData.courseCode = course.courseCode;
+    }
 
     res.json({
       success: true,
-      course: {
-        _id: progress.course._id,
-        title: progress.course.title,
-        description: progress.course.description,
-        category: progress.course.category,
-        content: slides,
-      },
+      course: courseData
     });
+
   } catch (error) {
+    console.error("Error fetching course content:", error);
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message
     });
   }
 };
@@ -575,19 +663,11 @@ const updateProgress = async (req, res) => {
     let totalSlides = 1;
 
     console.log("Course found:", course ? course.title : "No course found");
-    console.log("Course content is:", course.content);
 
-    if (course && Array.isArray(course.content)) {
-      // Course has structured content
-      console.log("Course content is an array");
-      console.log("Content length:", course.content.length);
-      totalSlides = course.content.length;
-    } else if (course && course.pdfContent) {
-      // Convert PDF to slides to get the count
-      console.log("Converting PDF content to slides...");
-      const slides = convertPdfToSlides(course.pdfContent);
-      totalSlides = slides.length;
-      console.log("Total slides from PDF conversion:", totalSlides);
+    if (course && course.contentTree && Array.isArray(course.contentTree)) {
+      // Use saved contentTree
+      totalSlides = countTotalSlides(course.contentTree);
+      console.log("Total slides from contentTree:", totalSlides);
     }
 
     // Clamp values
@@ -780,11 +860,8 @@ const markCourseComplete = async (req, res) => {
 const getCourseSlideCount = async (courseId) => {
   try {
     const course = await Course.findById(courseId);
-    if (course && Array.isArray(course.content)) {
-      return course.content.length;
-    } else if (course && course.pdfContent) {
-      const slides = convertPdfToSlides(course.pdfContent);
-      return slides.length;
+    if (course && course.contentTree && Array.isArray(course.contentTree)) {
+      return countTotalSlides(course.contentTree);
     }
     return 1;
   } catch (error) {
@@ -792,46 +869,203 @@ const getCourseSlideCount = async (courseId) => {
   }
 };
 
-// Helper functions
-const getEmojiForCategory = (category) => {
-  const emojis = {
-    Mathematics: "🔢",
-    Science: "🔬",
-    History: "📚",
-    Literature: "📖",
-    "Computer Science": "💻",
-    Engineering: "⚙️",
-    Medicine: "🏥",
-    Other: "📋",
+// Helper function to count total slides in contentTree
+const countTotalSlides = (contentTree) => {
+  let count = 0;
+  
+  const traverse = (nodes) => {
+    for (const node of nodes) {
+      if (node.type === 'topic') {
+        count++;
+      }
+      if (node.children && Array.isArray(node.children)) {
+        traverse(node.children);
+      }
+    }
   };
-  return emojis[category] || "📋";
+  
+  traverse(contentTree);
+  return Math.max(count, 1); // Ensure at least 1 slide
 };
 
-const convertPdfToSlides = (pdfContent) => {
-  // Simple conversion - split by paragraphs
+// Helper function to generate contentTree from PDF
+const generateContentTreeFromPdf = (pdfContent) => {
+  // Split PDF content into sections
   const paragraphs = pdfContent
     .split("\n\n")
     .filter((p) => p.trim().length > 50);
 
-  return paragraphs.slice(0, 10).map((content, index) => ({
-    title: `Slide ${index + 1}`,
-    content: `<p>${content.replace(/\n/g, "<br>")}</p>`,
-    emoji: "📖",
-    type: index === 4 ? "quiz_checkpoint" : "lesson",
-    difficulty: index < 3 ? "basic" : index < 7 ? "intermediate" : "advanced",
-    ...(index === 4 && {
+  const sections = [];
+  let currentSection = null;
+  let topicCounter = 0;
+
+  paragraphs.slice(0, 20).forEach((content, index) => {
+    // Every 5 topics, create a new section
+    if (index % 5 === 0) {
+      if (currentSection) {
+        sections.push(currentSection);
+      }
+      currentSection = {
+        id: `section-${Math.floor(index / 5) + 1}`,
+        title: `Section ${Math.floor(index / 5) + 1}`,
+        type: 'section',
+        content: '',
+        children: []
+      };
+    }
+
+    topicCounter++;
+    const topic = {
+      id: `topic-${topicCounter}`,
+      title: `Topic ${topicCounter}`,
+      type: 'topic',
+      content: content.replace(/\n/g, "<br>"),
+      videoUrls: [],
+      imageUrls: [],
+      mermaid: '',
       quiz: {
-        id: `quiz_${index}`,
-        questions: [
+        questions: index % 5 === 4 ? [
           {
-            question: "What is the main topic of this section?",
-            options: ["Option A", "Option B", "Option C", "Option D"],
+            question: "What is the main concept discussed in this topic?",
+            type: "mcq",
+            options: ["Concept A", "Concept B", "Concept C", "Concept D"],
             correctAnswer: 0,
-          },
-        ],
+          }
+        ] : [],
+        difficulty: index < 5 ? "basic" : index < 10 ? "intermediate" : "advanced",
       },
-    }),
-  }));
+      children: []
+    };
+
+    currentSection.children.push(topic);
+  });
+
+  if (currentSection) {
+    sections.push(currentSection);
+  }
+
+  return sections;
+};
+
+const getCourseStudents = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const instructorId = req.userId;
+
+    // Verify the instructor owns this course
+    const course = await Course.findOne({ _id: courseId, instructor: instructorId });
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found or access denied"
+      });
+    }
+
+    const progresses = await Progress.find({ course: courseId })
+      .populate('student', 'name email')
+      .select('student currentSlide completedSlides isCompleted lastAccessedAt totalStudyTime');
+
+    const students = progresses.map(progress => {
+      const totalSlides = course.contentTree ? countTotalSlides(course.contentTree) : 1;
+      const progressPercentage = Math.round((progress.completedSlides / totalSlides) * 100);
+      
+      return {
+        _id: progress.student._id,
+        name: progress.student.name,
+        email: progress.student.email,
+        progress: {
+          currentSlide: progress.currentSlide,
+          completedSlides: progress.completedSlides,
+          progressPercentage,
+          isCompleted: progress.isCompleted,
+          lastAccessedAt: progress.lastAccessedAt,
+          totalStudyTime: progress.totalStudyTime
+        }
+      };
+    });
+
+    res.json({
+      success: true,
+      students
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Get course analytics (teacher only)
+const getCourseAnalytics = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const instructorId = req.userId;
+
+    // Verify the instructor owns this course
+    const course = await Course.findOne({ _id: courseId, instructor: instructorId });
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found or access denied"
+      });
+    }
+
+    const progresses = await Progress.find({ course: courseId });
+    const totalSlides = course.contentTree ? countTotalSlides(course.contentTree) : 1;
+    
+    const analytics = {
+      totalStudents: progresses.length,
+      completedStudents: progresses.filter(p => p.isCompleted).length,
+      averageProgress: progresses.length > 0 
+        ? Math.round(progresses.reduce((acc, p) => acc + p.completedSlides, 0) / progresses.length)
+        : 0,
+      totalSlides: totalSlides,
+      averageStudyTime: progresses.length > 0
+        ? Math.round(progresses.reduce((acc, p) => acc + (p.totalStudyTime || 0), 0) / progresses.length)
+        : 0
+    };
+
+    res.json({
+      success: true,
+      analytics
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Toggle course publish status
+const toggleCoursePublish = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const instructorId = req.userId;
+
+    const course = await Course.findOne({ _id: courseId, instructor: instructorId });
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found or access denied"
+      });
+    }
+
+    course.isPublished = !course.isPublished;
+    await course.save();
+
+    res.json({
+      success: true,
+      message: `Course ${course.isPublished ? 'published' : 'unpublished'} successfully`,
+      isPublished: course.isPublished
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 };
 
 module.exports = {
@@ -848,5 +1082,8 @@ module.exports = {
   updateProgress,
   submitQuizResult,
   markCourseComplete,
+  getCourseStudents,
+  getCourseAnalytics,
+  toggleCoursePublish,
   upload,
 };

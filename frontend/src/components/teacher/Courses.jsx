@@ -139,7 +139,7 @@ const Courses = ({ setActiveTab }) => {
                 </button>
                 <button
                   onClick={() =>
-                    navigate(`/courses/${course.id || course._id}`)
+                    navigate(`/teacher/courses/${course.id || course._id}/view`)
                   }
                   className="flex items-center gap-1 px-3 py-1.5 rounded bg-[#f8f8f8] dark:bg-[#222] text-[#080808] dark:text-[#f8f8f8] hover:bg-gray-100 dark:hover:bg-[#181818] text-xs font-medium transition"
                 >

@@ -16,6 +16,8 @@ import Landing from "./components/landing/Landing";
 import AllAchievements from "./components/AllAchievements";
 import MyAchievements from "./components/MyAchievements";
 import PDFTranslator from "./components/translatePart/PDFTranslator";
+import TeacherCourseViewer from './components/teacher/TeacherCourseViewer';
+import CourseEditor from './components/teacher/CourseEditor';
 
 function App() {
   return (
@@ -33,6 +35,8 @@ function App() {
         <Route path="/create-course" element={<CreateCourse />} />
         <Route path="/pdf-translator" element={<PDFTranslator />} />
         <Route path="/" element={<Landing />} />
+        <Route path="/teacher/courses/:courseId/edit" element={<CourseEditor />} />
+        <Route path="/teacher/courses/:courseId/view" element={<TeacherCourseViewer />} />
       </Routes>
     </Router>
     </LanguageProvider>
