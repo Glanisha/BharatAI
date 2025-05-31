@@ -11,7 +11,7 @@ const generateToken = (userId) => {
 // Register user (signup)
 const signup = async (req, res) => {
     try {
-        const { name, email, password, language } = req.body;
+        const { name, email, password, language, role } = req.body;
 
         // Check if user already exists
         const existingUser = await User.findOne({ email });
@@ -27,7 +27,8 @@ const signup = async (req, res) => {
             name, 
             email, 
             password, 
-            preferredLanguage: language 
+            preferredLanguage: language,
+            role: role || 'student'
         });
         
         const token = generateToken(user._id);
@@ -40,7 +41,8 @@ const signup = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                language: user.preferredLanguage
+                language: user.preferredLanguage,
+                role: user.role
             }
         });
     } catch (error) {
@@ -84,7 +86,8 @@ const login = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                language: user.preferredLanguage
+                language: user.preferredLanguage,
+                role: user.role
             }
         });
     } catch (error) {

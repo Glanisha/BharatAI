@@ -23,6 +23,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: 'Hindi',
         enum: ['Hindi', 'Marathi', 'Kannada', 'Bengali', 'Tamil', 'Telugu', 'Gujarati', 'English']
+    },
+    role: {
+        type: String,
+        required: [true, 'Role is required'],
+        enum: ['student', 'teacher'],
+        default: 'student'
     }
 }, {
     timestamps: true
