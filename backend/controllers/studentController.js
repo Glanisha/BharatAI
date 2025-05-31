@@ -85,7 +85,7 @@ const getStudentStats = async (req, res) => {
       stats: {
         coursesCompleted: completedCourses,
         totalCourses,
-        totalStudyTime: Math.round(totalStudyTime / 60), // Convert to hours
+        totalStudyTime: totalStudyTime, // Convert to hours
         averageScore,
         totalPoints,
         achievements,

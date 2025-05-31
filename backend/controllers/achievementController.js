@@ -182,7 +182,7 @@ const calculateUserStats = async (userId) => {
       .populate('course', 'category estimatedTime');
 
     const completedCourses = progresses.filter(p => p.isCompleted).length;
-    const totalStudyTime = progresses.reduce((sum, p) => sum + (p.totalStudyTime || 0), 0) / 60; // Convert to hours
+    const totalStudyTime = progresses.reduce((sum, p) => sum + (p.totalStudyTime || 0), 0); // Keep in minutes
     
     // Calculate average quiz score
     let totalQuizzes = 0;
@@ -219,8 +219,9 @@ const calculateUserStats = async (userId) => {
       return actualTimeMinutes > 0 && actualTimeMinutes <= (estimatedTimeMinutes * 0.75);
     }).length;
 
+    // Log after all variables are declared
     console.log('User Stats Calculated:', {
-      coursesCompleted,
+      completedCourses,
       totalStudyTime,
       averageScore,
       categories,
@@ -229,7 +230,7 @@ const calculateUserStats = async (userId) => {
     });
 
     return {
-      coursesCompleted,
+      coursesCompleted: completedCourses,
       studyTime: totalStudyTime,
       averageScore,
       categories,
