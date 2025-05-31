@@ -157,24 +157,23 @@ const StudentDashboard = () => {
     }
   };
 
-  const fetchEnrolledCourses = async () => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/enrolled`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+    const fetchEnrolledCourses = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/enrolled`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                console.log('Enrolled courses:', data.courses);
+                setEnrolledCourses(data.courses);
+            }
+        } catch (error) {
+            console.error('Error fetching enrolled courses:', error);
         }
-      );
-      const data = await response.json();
-      if (data.success) {
-        setEnrolledCourses(data.courses);
-      }
-    } catch (error) {
-      console.error("Error fetching enrolled courses:", error);
-    }
-  };
+    };
+ 
 
   const handleEnrollCourse = async (courseId) => {
     setLoading(true);
