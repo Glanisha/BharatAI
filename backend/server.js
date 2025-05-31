@@ -5,6 +5,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const studentRoutes = require("./routes/studentRoutes");
+const achievementRoutes = require("./routes/achievementRoutes");
 const diagramRoutes = require("./routes/diagramRoutes");
 
 const app = express();
@@ -33,6 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/student", studentRoutes);
+app.use('/api/achievements', achievementRoutes);
 app.use("/api/diagram", diagramRoutes);
 
 // Basic route

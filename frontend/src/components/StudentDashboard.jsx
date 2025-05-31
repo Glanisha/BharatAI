@@ -157,25 +157,23 @@ const StudentDashboard = () => {
     }
   };
 
-  const fetchEnrolledCourses = async () => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/enrolled`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+    const fetchEnrolledCourses = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/enrolled`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                console.log('Enrolled courses:', data.courses);
+                setEnrolledCourses(data.courses);
+            }
+        } catch (error) {
+            console.error('Error fetching enrolled courses:', error);
         }
-      );
-      const data = await response.json();
-      if (data.success) {
-        console.log("Enrolled courses:", data.courses);
-        setEnrolledCourses(data.courses);
-      }
-    } catch (error) {
-      console.error("Error fetching enrolled courses:", error);
-    }
-  };
+    };
+ 
 
   const handleEnrollCourse = async (courseId) => {
     setLoading(true);
@@ -366,13 +364,13 @@ const StudentDashboard = () => {
             >
               📊 Stats
             </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              onClick={() => navigate("/pdf-translator")}
-              className="px-3 py-1 bg-[#f8f8f8]/10 text-[#f8f8f8] rounded-lg text-sm"
-            >
-              📄🌐 Translate
-            </motion.button>
+<motion.button
+  whileHover={{ scale: 1.05 }}
+  onClick={() => navigate("/pdf-translator")}
+  className="px-3 py-1 bg-[#f8f8f8]/10 text-[#f8f8f8] rounded-lg text-sm"
+>
+  📄🌐 Translate
+</motion.button>
 
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -394,12 +392,12 @@ const StudentDashboard = () => {
           className="text-center mb-8"
         >
           <h2 className="text-4xl font-bold mb-4 text-[#f8f8f8]">
-            <TranslatedText>🎓 Student Dashboard</TranslatedText>
+            🎓 Student Dashboard
           </h2>
           <p className="text-xl text-[#f8f8f8]/70">
-            <TranslatedText>
+  
               Discover and learn from amazing courses!
-            </TranslatedText>
+       
           </p>
         </motion.div>
 
