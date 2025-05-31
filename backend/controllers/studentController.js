@@ -73,6 +73,68 @@ const getStudentStats = async (req, res) => {
   }
 };
 
+const getPreferredLanguage = async (req, res) => {
+    try {
+        const user = await User.findById(req.userId).select('preferredLanguage');
+        
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            preferredLanguage: user.preferredLanguage
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+const updatePreferredLanguage = async (req, res) => {
+    try {
+        const { preferredLanguage } = req.body;
+
+        if (!preferredLanguage) {
+            return res.status(400).json({
+                success: false,
+                message: 'Preferred language is required'
+            });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.userId,
+            { preferredLanguage },
+            { new: true, runValidators: true }
+        ).select('preferredLanguage');
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Preferred language updated successfully',
+            preferredLanguage: user.preferredLanguage
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 module.exports = {
-  getStudentStats
+  getStudentStats,
+  getPreferredLanguage,
+  updatePreferredLanguage
 };
