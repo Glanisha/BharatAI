@@ -438,6 +438,11 @@ const StudentDashboard = () => {
                       {course.language}
                     </span>
                   </div>
+                  <div className="flex items-center gap-2 text-[#f8f8f8]/60 text-sm">
+                    <span>⏱️ {course.estimatedTime || 60} min</span>
+                    <span>•</span>
+                    <span>{course.category}</span>
+                  </div>
                   <div className="w-full bg-[#030303] rounded-full h-2 mt-3">
                     <div
                       className="bg-[#f8f8f8] h-2 rounded-full transition-all duration-300"

@@ -179,7 +179,7 @@ const checkAchievements = async (userId) => {
 const calculateUserStats = async (userId) => {
   try {
     const progresses = await Progress.find({ student: userId })
-      .populate('course', 'category');
+  .populate('course', 'category estimatedTime');
 
     const completedCourses = progresses.filter(p => p.isCompleted).length;
     const totalStudyTime = progresses.reduce((sum, p) => sum + p.totalStudyTime, 0) / 60; // Convert to hours
@@ -207,9 +207,15 @@ const calculateUserStats = async (userId) => {
     )].length;
 
     // Check for fast completions (courses completed in under target time)
-    const fastCompletions = progresses.filter(p => 
-      p.isCompleted && (p.totalStudyTime / 60) <= 30 // 30 minutes
-    ).length;
+    const fastCompletions = progresses.filter(p => {
+  if (!p.isCompleted || !p.course) return false;
+  
+  const estimatedTime = p.course.estimatedTime || 60; // minutes
+  const actualTime = p.totalStudyTime; // minutes
+  
+  // Completed in 75% or less of estimated time
+  return actualTime <= (estimatedTime * 0.75);
+}).length;
 
     return {
       coursesCompleted: completedCourses,

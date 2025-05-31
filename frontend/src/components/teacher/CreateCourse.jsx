@@ -13,14 +13,15 @@ const CreateCourse = () => {
   });
 
   const [courseData, setCourseData] = useState({
-    title: "",
-    description: "",
-    category: "",
-    language: "Hindi",
-    isPrivate: false,
-    password: "",
-    tags: [],
-  });
+  title: "",
+  description: "",
+  category: "",
+  language: "Hindi",
+  isPrivate: false,
+  password: "",
+  tags: [],
+  estimatedTime: 60,
+});
   const [pdfFile, setPdfFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
@@ -134,6 +135,7 @@ const CreateCourse = () => {
       formData.append("password", courseData.password);
       formData.append("tags", JSON.stringify(courseData.tags));
       formData.append("pdf", pdfFile);
+      formData.append("estimatedTime", courseData.estimatedTime);
 
       const token = localStorage.getItem("token");
       const response = await fetch(
@@ -302,6 +304,25 @@ const CreateCourse = () => {
                 </div>
               )}
             </div>
+
+            <div>
+  <label className="block text-[#f8f8f8] mb-2 text-sm font-medium">
+    Estimated Time (minutes) *
+  </label>
+  <input
+    type="number"
+    min="15"
+    max="600"
+    value={courseData.estimatedTime}
+    onChange={(e) =>
+      setCourseData({ ...courseData, estimatedTime: parseInt(e.target.value) || 60 })
+    }
+    className="w-full px-4 py-3 rounded-lg bg-[#080808] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200"
+    placeholder="60"
+    required
+  />
+  <p className="text-[#f8f8f8]/60 text-xs mt-1">How long should this course take to complete?</p>
+</div>
           </motion.div>
         );
 
@@ -488,6 +509,12 @@ const CreateCourse = () => {
                     {courseData.tags.length > 0
                       ? courseData.tags.join(", ")
                       : "None"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[#f8f8f8]/70">Estimated Time:</span>
+                  <p className="text-[#f8f8f8] font-medium">
+                    {courseData.estimatedTime} minutes
                   </p>
                 </div>
               </div>

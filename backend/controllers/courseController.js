@@ -39,6 +39,7 @@ const createCourse = async (req, res) => {
       password,
       tags,
       contentTree, // new nested content structure
+      estimatedTime // Add this line
     } = req.body;
     const instructorId = req.userId;
 
@@ -133,6 +134,7 @@ const createCourse = async (req, res) => {
       tags: parsedTags,
       pdfContent,
       contentTree: contentTree || [], // use new structure if provided
+      estimatedTime: estimatedTime || 60 // Add this line
     };
 
     // Add private course specific fields

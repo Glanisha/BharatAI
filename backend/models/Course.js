@@ -101,6 +101,10 @@ const courseSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    estimatedTime: {
+      type: Number, // in minutes
+      required: true,
+    },
     enrolledStudents: [
       {
         type: mongoose.Schema.Types.ObjectId,
