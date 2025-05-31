@@ -1,124 +1,150 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { useSidebar } from "../context/SidebarContext";
+import React, { useState, useEffect } from "react";
+import {
+  FaBars,
+  FaBook,
+  FaChartBar,
+  FaSignOutAlt,
+  FaHome,
+  FaMoon,
+  FaSun,
+} from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import Courses from "../components/teacher/Courses";
+import Overview from "../components/teacher/Overview";
 
-const Sidebar = ({ user, navItems, onLogout }) => {
-  const { sidebarOpen, toggleSidebar } = useSidebar();
+const navItems = [
+  { key: "overview", label: "Overview", icon: <FaHome /> },
+  { key: "courses", label: "Courses", icon: <FaBook /> },
+  { key: "analytics", label: "Analytics", icon: <FaChartBar /> },
+];
+
+const Sidebar = ({ activeKey, setActiveTab }) => {
+  const [collapsed, setCollapsed] = useState(window.innerWidth < 768);
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("theme") || "light"
+  );
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    localStorage.setItem("theme", theme);
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
+
+  useEffect(() => {
+    const handleResize = () => setCollapsed(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const handleLogout = () => {
+    navigate("/login");
+  };
 
   return (
-    <motion.aside
-      initial={{ x: -100 }}
-      animate={{ x: 0 }}
-      className={`${
-        sidebarOpen ? "w-64" : "w-20"
-      } bg-[#222052] border-r border-[#f8f8f8]/20 transition-all duration-300 flex flex-col min-h-screen`}
+    <aside
+      className={`sticky top-0 flex flex-col justify-between h-screen bg-white dark:bg-[#101010] border-r border-gray-200 dark:border-[#222] transition-all duration-200
+      ${collapsed ? "w-16" : "w-56"} z-30`}
     >
-      {/* Sidebar Header */}
-      <div className="p-6 border-b border-[#f8f8f8]/20">
-        <div className="flex items-center justify-between">
-          <motion.h1
-            className={`font-bold text-[#f8f8f8] transition-all duration-200 ${
-              sidebarOpen ? "text-xl" : "text-lg"
-            }`}
-            layout
+      <div>
+        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-[#222]">
+          <div />
+          <button
+            className="ml-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-[#181818] transition text-[#080808] dark:text-[#f8f8f8]"
+            onClick={() => setCollapsed((c) => !c)}
           >
-            {sidebarOpen ? "BharatAI" : "BAI"}
-          </motion.h1>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={toggleSidebar}
-            className="text-[#f8f8f8] hover:text-[#f8f8f8]/70 transition-colors duration-200"
-            aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-          >
-            {sidebarOpen ? "◀" : "▶"}
-          </motion.button>
+            <FaBars />
+          </button>
         </div>
-      </div>
-
-      {/* Navigation Items */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-        {navItems.map((item, index) => (
-          <motion.button
-            key={item.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ scale: 1.02 }}
-            onClick={item.onClick}
-            className={`w-full flex items-center rounded-xl transition-all duration-200 ${
-              sidebarOpen ? "p-3 space-x-3" : "p-3 justify-center"
-            } ${
-              item.active
-                ? "bg-[#f8f8f8] text-[#080808]"
-                : "text-[#f8f8f8] hover:bg-[#f8f8f8]/10"
-            }`}
-            title={!sidebarOpen ? item.label : ""}
-          >
-            <span className="text-xl flex-shrink-0">{item.icon}</span>
-            <AnimatePresence>
-              {sidebarOpen && (
-                <motion.div
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: "auto" }}
-                  exit={{ opacity: 0, width: 0 }}
-                  className="flex flex-col items-start min-w-0"
-                >
-                  <span className="font-medium text-sm truncate">
-                    {item.label}
-                  </span>
-                  <span className="text-xs opacity-70 truncate">
-                    {item.desc}
-                  </span>
-                </motion.div>
+        <nav className="mt-4 flex flex-col gap-1">
+          {navItems.map((item) => (
+            <button
+              key={item.key}
+              className={`
+                group flex items-center gap-4 px-3 py-2 text-left rounded-lg transition
+                relative
+                ${
+                  activeKey === item.key
+                    ? "mx-2 my-1 bg-[#ece9ff] dark:bg-[#18182b] font-semibold border-l-4 border-[#7c3aed] dark:border-[#a78bfa] shadow-sm"
+                    : "hover:bg-gray-100 dark:hover:bg-[#181818]"
+                }
+                ${collapsed ? "justify-center px-0" : ""}
+                text-[#080808] dark:text-[#f8f8f8]
+              `}
+              onClick={() => setActiveTab(item.key)} // <-- Only this!
+              title={item.label}
+              style={{
+                marginLeft: activeKey === item.key && !collapsed ? "2px" : 0,
+                marginRight: activeKey === item.key && !collapsed ? "2px" : 0,
+              }}
+            >
+              <span className="text-lg text-[#080808] dark:text-[#f8f8f8]">
+                {item.icon}
+              </span>
+              {!collapsed && (
+                <span className="sidebar-label text-base text-[#080808] dark:text-[#f8f8f8]">
+                  {item.label}
+                </span>
               )}
-            </AnimatePresence>
-          </motion.button>
-        ))}
-      </nav>
-
-      {/* User Info & Logout */}
-      <div className="p-4 border-t border-[#f8f8f8]/20 flex-shrink-0">
-        <div
-          className={`flex items-center mb-3 ${
-            sidebarOpen ? "space-x-3" : "justify-center"
-          }`}
-        >
-          <div className="w-8 h-8 bg-[#f8f8f8] rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-[#080808] font-bold text-sm">
-              {user?.name?.charAt(0) || "U"}
-            </span>
-          </div>
-          <AnimatePresence>
-            {sidebarOpen && (
-              <motion.div
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: "auto" }}
-                exit={{ opacity: 0, width: 0 }}
-                className="flex flex-col min-w-0"
-              >
-                <span className="text-[#f8f8f8] font-medium text-sm truncate">
-                  {user?.name || "User"}
-                </span>
-                <span className="text-[#f8f8f8]/70 text-xs capitalize">
-                  {user?.role || "Teacher"}
-                </span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onLogout}
-          className={`w-full py-2 bg-[#f8f8f8] text-[#080808] rounded-lg font-medium transition-all duration-200 hover:bg-[#f8f8f8]/90 ${
-            sidebarOpen ? "px-4" : "px-2"
-          }`}
-          title={!sidebarOpen ? "Logout" : ""}
-        >
-          {sidebarOpen ? "Logout" : "🚪"}
-        </motion.button>
+            </button>
+          ))}
+        </nav>
       </div>
-    </motion.aside>
+      <div className="flex flex-col gap-2 px-2 pb-4">
+        <button
+          className="flex items-center justify-center md:justify-start gap-2 px-2 py-2 rounded hover:bg-gray-100 dark:hover:bg-[#181818] transition text-[#080808] dark:text-[#f8f8f8]"
+          onClick={() => setTheme((t) => (t === "light" ? "dark" : "light"))}
+          title="Toggle theme"
+        >
+          {theme === "light" ? <FaMoon /> : <FaSun />}
+          {!collapsed && (
+            <span className="sidebar-label text-base">
+              {theme === "light" ? "Dark" : "Light"} Mode
+            </span>
+          )}
+        </button>
+        <button
+          className="flex items-center justify-center md:justify-start gap-2 px-2 py-2 rounded hover:bg-red-50 dark:hover:bg-[#181818] text-red-600 dark:text-red-400 transition"
+          onClick={handleLogout}
+          title="Logout"
+        >
+          <FaSignOutAlt />
+          {!collapsed && (
+            <span className="sidebar-label text-base">Logout</span>
+          )}
+        </button>
+      </div>
+    </aside>
+  );
+};
+
+const TeacherDashboard = () => {
+  const [activeTab, setActiveTab] = useState("overview"); // or "courses", etc.
+
+  // ...other logic...
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "courses":
+        return <Courses />;
+      case "overview":
+        return <Overview />;
+      // ...other cases...
+      default:
+        return <Overview />;
+    }
+  };
+
+  return (
+    <DashboardLayout
+      activeKey={activeTab}
+      // ...other props...
+    >
+      {renderContent()}
+    </DashboardLayout>
   );
 };
 

@@ -38,6 +38,7 @@ const createCourse = async (req, res) => {
       isPrivate,
       password,
       tags,
+      contentTree, // new nested content structure
     } = req.body;
     const instructorId = req.userId;
 
@@ -131,6 +132,7 @@ const createCourse = async (req, res) => {
       isPrivate: isPrivateCourse,
       tags: parsedTags,
       pdfContent,
+      contentTree: contentTree || [], // use new structure if provided
     };
 
     // Add private course specific fields
@@ -192,6 +194,40 @@ const createCourse = async (req, res) => {
   }
 };
 
+// Update an existing course (support both old and new structure)
+const updateCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      description,
+      contentTree, // new structure
+      content, // old structure
+      ...otherFields
+    } = req.body;
+
+    const updateFields = {
+      title,
+      description,
+      ...otherFields,
+    };
+
+    // Only update contentTree if provided (for new courses)
+    if (contentTree !== undefined) updateFields.contentTree = contentTree;
+    // Only update old content if provided (for old courses)
+    if (content !== undefined) updateFields.content = content;
+
+    const course = await Course.findByIdAndUpdate(id, updateFields, {
+      new: true,
+    });
+    if (!course) return res.status(404).json({ error: "Course not found" });
+
+    res.json(course);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // Get instructor's courses
 const getInstructorCourses = async (req, res) => {
   try {
@@ -234,36 +270,36 @@ const getInstructorCourses = async (req, res) => {
   }
 };
 
-
-
 const getPublicCourses = async (req, res) => {
   try {
-    const courses = await Course.find({ 
-      isPrivate: false, 
-      isPublished: true 
+    const courses = await Course.find({
+      isPrivate: false,
+      isPublished: true,
     })
-      .populate('instructor', 'name')
-      .select('title description category language tags enrolledStudents createdAt')
+      .populate("instructor", "name")
+      .select(
+        "title description category language tags enrolledStudents createdAt"
+      )
       .sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      courses: courses.map(course => ({
+      courses: courses.map((course) => ({
         _id: course._id,
         title: course.title,
         description: course.description,
         category: course.category,
         language: course.language,
         tags: course.tags,
-        teacher: course.instructor?.name || 'Unknown',
+        teacher: course.instructor?.name || "Unknown",
         studentCount: course.enrolledStudents?.length || 0,
-        emoji: getEmojiForCategory(course.category)
-      }))
+        emoji: getEmojiForCategory(course.category),
+      })),
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -272,19 +308,18 @@ const getPublicCourses = async (req, res) => {
 const getEnrolledCourses = async (req, res) => {
   try {
     const studentId = req.userId;
-    
-    const progresses = await Progress.find({ student: studentId })
-      .populate({
-        path: 'course',
-        select: 'title description category language tags pdfContent content' // ✅ Fixed!
-      });
 
-    const enrolledCourses = progresses.map(progress => {
+    const progresses = await Progress.find({ student: studentId }).populate({
+      path: "course",
+      select: "title description category language tags pdfContent content", // ✅ Fixed!
+    });
+
+    const enrolledCourses = progresses.map((progress) => {
       console.log(`Course: ${progress.course.title}`);
       console.log(`Has pdfContent: ${!!progress.course.pdfContent}`);
       console.log(`Has content: ${!!progress.course.content}`);
       console.log(`Completed slides: ${progress.completedSlides}`);
-      
+
       // Calculate progress percentage properly
       let totalSlides = 1;
       if (progress.course.content && Array.isArray(progress.course.content)) {
@@ -298,8 +333,12 @@ const getEnrolledCourses = async (req, res) => {
         console.log(`No content found, using default: ${totalSlides} slide`);
       }
 
-      const progressPercentage = Math.round((progress.completedSlides / totalSlides) * 100);
-      console.log(`Final calculation: ${progress.completedSlides}/${totalSlides} = ${progressPercentage}%`);
+      const progressPercentage = Math.round(
+        (progress.completedSlides / totalSlides) * 100
+      );
+      console.log(
+        `Final calculation: ${progress.completedSlides}/${totalSlides} = ${progressPercentage}%`
+      );
 
       return {
         _id: progress.course._id,
@@ -309,26 +348,25 @@ const getEnrolledCourses = async (req, res) => {
         language: progress.course.language,
         tags: progress.course.tags,
         progress: progressPercentage,
-        emoji: getEmojiForCategory(progress.course.category)
+        emoji: getEmojiForCategory(progress.course.category),
       };
     });
 
     res.json({
       success: true,
-      courses: enrolledCourses
+      courses: enrolledCourses,
     });
   } catch (error) {
-    console.error('Error in getEnrolledCourses:', error);
+    console.error("Error in getEnrolledCourses:", error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
 
 // Enroll in a public course
 const enrollInCourse = async (req, res) => {
-
   try {
     const { courseId } = req.body;
     const studentId = req.userId;
@@ -338,34 +376,34 @@ const enrollInCourse = async (req, res) => {
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found'
+        message: "Course not found",
       });
     }
 
     if (course.isPrivate) {
       return res.status(403).json({
         success: false,
-        message: 'This is a private course. Use course code to join.'
+        message: "This is a private course. Use course code to join.",
       });
     }
 
     // Check if already enrolled
     const existingProgress = await Progress.findOne({
       student: studentId,
-      course: courseId
+      course: courseId,
     });
 
     if (existingProgress) {
       return res.status(400).json({
         success: false,
-        message: 'Already enrolled in this course'
+        message: "Already enrolled in this course",
       });
     }
 
     // Create progress record
     const progress = new Progress({
       student: studentId,
-      course: courseId
+      course: courseId,
     });
     await progress.save();
 
@@ -375,12 +413,12 @@ const enrollInCourse = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Successfully enrolled in course'
+      message: "Successfully enrolled in course",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -396,7 +434,7 @@ const joinPrivateCourse = async (req, res) => {
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Invalid course code'
+        message: "Invalid course code",
       });
     }
 
@@ -404,27 +442,27 @@ const joinPrivateCourse = async (req, res) => {
     if (course.password !== password) {
       return res.status(401).json({
         success: false,
-        message: 'Incorrect password'
+        message: "Incorrect password",
       });
     }
 
     // Check if already enrolled
     const existingProgress = await Progress.findOne({
       student: studentId,
-      course: course._id
+      course: course._id,
     });
 
     if (existingProgress) {
       return res.status(400).json({
         success: false,
-        message: 'Already enrolled in this course'
+        message: "Already enrolled in this course",
       });
     }
 
     // Create progress record
     const progress = new Progress({
       student: studentId,
-      course: course._id
+      course: course._id,
     });
     await progress.save();
 
@@ -434,12 +472,12 @@ const joinPrivateCourse = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Successfully joined private course'
+      message: "Successfully joined private course",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -453,13 +491,13 @@ const getCourseContent = async (req, res) => {
     // Check if student is enrolled
     const progress = await Progress.findOne({
       student: studentId,
-      course: courseId
-    }).populate('course');
+      course: courseId,
+    }).populate("course");
 
     if (!progress) {
       return res.status(403).json({
         success: false,
-        message: 'Not enrolled in this course'
+        message: "Not enrolled in this course",
       });
     }
 
@@ -473,13 +511,13 @@ const getCourseContent = async (req, res) => {
         title: progress.course.title,
         description: progress.course.description,
         category: progress.course.category,
-        content: slides
-      }
+        content: slides,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -489,20 +527,19 @@ const getUserProgress = async (req, res) => {
   try {
     const { courseId } = req.params;
     const studentId = req.userId;
-    const progresses = await Progress.find({ student: studentId })
-    .populate({
-        path: 'course',
-        select: 'title description category language tags content'
+    const progresses = await Progress.find({ student: studentId }).populate({
+      path: "course",
+      select: "title description category language tags content",
     });
     const progress = await Progress.findOne({
       student: studentId,
-      course: courseId
+      course: courseId,
     });
 
     if (!progress) {
       return res.status(404).json({
         success: false,
-        message: 'Progress not found'
+        message: "Progress not found",
       });
     }
 
@@ -512,13 +549,13 @@ const getUserProgress = async (req, res) => {
         currentSlide: progress.currentSlide,
         completedSlides: progress.completedSlides,
         totalStudyTime: progress.totalStudyTime,
-        isCompleted: progress.isCompleted
-      }
+        isCompleted: progress.isCompleted,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -534,10 +571,10 @@ const updateProgress = async (req, res) => {
     // Get the course to know the number of slides
     const course = await Course.findById(courseId);
     let totalSlides = 1;
-    
+
     console.log("Course found:", course ? course.title : "No course found");
     console.log("Course content is:", course.content);
-    
+
     if (course && Array.isArray(course.content)) {
       // Course has structured content
       console.log("Course content is an array");
@@ -555,14 +592,18 @@ const updateProgress = async (req, res) => {
     currentSlide = Math.max(0, Math.min(currentSlide, totalSlides - 1));
     completedSlides = Math.max(0, Math.min(completedSlides, totalSlides));
 
-    console.log("Clamped values:", { currentSlide, completedSlides, totalSlides });
+    console.log("Clamped values:", {
+      currentSlide,
+      completedSlides,
+      totalSlides,
+    });
 
     const progress = await Progress.findOneAndUpdate(
       { student: studentId, course: courseId },
       {
         currentSlide,
         completedSlides,
-        lastAccessedAt: new Date()
+        lastAccessedAt: new Date(),
       },
       { new: true }
     );
@@ -570,18 +611,20 @@ const updateProgress = async (req, res) => {
     if (!progress) {
       return res.status(404).json({
         success: false,
-        message: 'Progress not found'
+        message: "Progress not found",
       });
     }
 
     // Calculate progress percentage
-    const progressPercentage = Math.round((completedSlides / totalSlides) * 100);
+    const progressPercentage = Math.round(
+      (completedSlides / totalSlides) * 100
+    );
 
-    console.log("Progress updated:", { 
-      currentSlide, 
-      completedSlides, 
-      totalSlides, 
-      progressPercentage 
+    console.log("Progress updated:", {
+      currentSlide,
+      completedSlides,
+      totalSlides,
+      progressPercentage,
     });
 
     res.json({
@@ -589,14 +632,14 @@ const updateProgress = async (req, res) => {
       progress: {
         ...progress.toObject(),
         progressPercentage,
-        totalSlides
-      }
+        totalSlides,
+      },
     });
   } catch (error) {
     console.error("Update progress error:", error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -610,13 +653,13 @@ const submitQuizResult = async (req, res) => {
 
     const progress = await Progress.findOne({
       student: studentId,
-      course: courseId
+      course: courseId,
     });
 
     if (!progress) {
       return res.status(404).json({
         success: false,
-        message: 'Progress not found'
+        message: "Progress not found",
       });
     }
 
@@ -626,19 +669,19 @@ const submitQuizResult = async (req, res) => {
       score,
       totalQuestions: Object.keys(answers).length,
       percentage,
-      answers
+      answers,
     });
 
     await progress.save();
 
     res.json({
       success: true,
-      message: 'Quiz result submitted successfully'
+      message: "Quiz result submitted successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -654,7 +697,7 @@ const markCourseComplete = async (req, res) => {
         isCompleted: true,
         completedAt: new Date(),
         completedSlides: await getCourseSlideCount(courseId), // Set to total slides
-        lastAccessedAt: new Date()
+        lastAccessedAt: new Date(),
       },
       { new: true }
     );
@@ -662,22 +705,24 @@ const markCourseComplete = async (req, res) => {
     if (!progress) {
       return res.status(404).json({
         success: false,
-        message: 'Progress not found'
+        message: "Progress not found",
       });
     }
 
-    console.log(`Course ${courseId} marked as completed for student ${studentId}`);
+    console.log(
+      `Course ${courseId} marked as completed for student ${studentId}`
+    );
 
     res.json({
       success: true,
-      message: 'Course marked as completed',
-      progress
+      message: "Course marked as completed",
+      progress,
     });
   } catch (error) {
-    console.error('Error marking course as completed:', error);
+    console.error("Error marking course as completed:", error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -701,28 +746,30 @@ const getCourseSlideCount = async (courseId) => {
 // Helper functions
 const getEmojiForCategory = (category) => {
   const emojis = {
-    'Mathematics': '🔢',
-    'Science': '🔬',
-    'History': '📚',
-    'Literature': '📖',
-    'Computer Science': '💻',
-    'Engineering': '⚙️',
-    'Medicine': '🏥',
-    'Other': '📋'
+    Mathematics: "🔢",
+    Science: "🔬",
+    History: "📚",
+    Literature: "📖",
+    "Computer Science": "💻",
+    Engineering: "⚙️",
+    Medicine: "🏥",
+    Other: "📋",
   };
-  return emojis[category] || '📋';
+  return emojis[category] || "📋";
 };
 
 const convertPdfToSlides = (pdfContent) => {
   // Simple conversion - split by paragraphs
-  const paragraphs = pdfContent.split('\n\n').filter(p => p.trim().length > 50);
-  
+  const paragraphs = pdfContent
+    .split("\n\n")
+    .filter((p) => p.trim().length > 50);
+
   return paragraphs.slice(0, 10).map((content, index) => ({
     title: `Slide ${index + 1}`,
-    content: `<p>${content.replace(/\n/g, '<br>')}</p>`,
-    emoji: '📖',
-    type: index === 4 ? 'quiz_checkpoint' : 'lesson', // Add quiz at slide 5
-    difficulty: index < 3 ? 'basic' : index < 7 ? 'intermediate' : 'advanced',
+    content: `<p>${content.replace(/\n/g, "<br>")}</p>`,
+    emoji: "📖",
+    type: index === 4 ? "quiz_checkpoint" : "lesson",
+    difficulty: index < 3 ? "basic" : index < 7 ? "intermediate" : "advanced",
     ...(index === 4 && {
       quiz: {
         id: `quiz_${index}`,
@@ -730,18 +777,17 @@ const convertPdfToSlides = (pdfContent) => {
           {
             question: "What is the main topic of this section?",
             options: ["Option A", "Option B", "Option C", "Option D"],
-            correctAnswer: 0
-          }
-        ]
-      }
-    })
+            correctAnswer: 0,
+          },
+        ],
+      },
+    }),
   }));
 };
 
-
-
 module.exports = {
   createCourse,
+  updateCourse,
   getInstructorCourses,
   getPublicCourses,
   getEnrolledCourses,

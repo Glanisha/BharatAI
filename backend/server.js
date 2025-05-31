@@ -5,6 +5,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const studentRoutes = require("./routes/studentRoutes");
+const diagramRoutes = require("./routes/diagramRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,6 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/student", studentRoutes);
+app.use("/api/diagram", diagramRoutes);
 
 // Basic route
 app.get("/", (req, res) => {
