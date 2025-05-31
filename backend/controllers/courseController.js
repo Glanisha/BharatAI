@@ -1068,6 +1068,20 @@ const toggleCoursePublish = async (req, res) => {
   }
 };
 
+const getEmojiForCategory = (category) => {
+  const emojis = {
+    "Programming": "💻",
+    "Design": "🎨",
+    "Marketing": "📈",
+    "Business": "🏢",
+    "Science": "🔬",
+    "Math": "➗",
+    "Language": "🗣️",
+    "Music": "🎵",
+    "Art": "🖼️",
+  };
+  return emojis[category] || "📚"; // Default to book emoji
+};
 module.exports = {
   createCourse,
   updateCourse,

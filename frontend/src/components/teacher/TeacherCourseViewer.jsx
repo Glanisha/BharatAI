@@ -27,6 +27,7 @@ const TeacherCourseViewer = () => {
   const [analytics, setAnalytics] = useState(null);
   const [activeTab, setActiveTab] = useState('content');
   const [copied, setCopied] = useState(false);
+  const [flattenedContent, setFlattenedContent] = useState([]);
 
   useEffect(() => {
     fetchCourse();
@@ -48,6 +49,9 @@ const TeacherCourseViewer = () => {
       const data = await response.json();
       if (data.success) {
         setCourse(data.course);
+        // Flatten contentTree for navigation
+        const flattened = flattenContentTree(data.course.contentTree || []);
+        setFlattenedContent(flattened);
       } else {
         toast.error('Failed to load course');
       }
@@ -56,6 +60,30 @@ const TeacherCourseViewer = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to flatten contentTree
+  const flattenContentTree = (contentTree) => {
+    const flattened = [];
+    
+    const traverse = (nodes) => {
+      for (const node of nodes) {
+        if (node.type === 'topic') {
+          flattened.push({
+            title: node.title,
+            content: node.content || '<p>No content available</p>',
+            type: node.quiz?.questions?.length > 0 ? 'quiz_checkpoint' : 'lesson',
+            quiz: node.quiz
+          });
+        }
+        if (node.children && Array.isArray(node.children)) {
+          traverse(node.children);
+        }
+      }
+    };
+    
+    traverse(contentTree);
+    return flattened;
   };
 
   const fetchStudents = async () => {
@@ -157,7 +185,7 @@ const TeacherCourseViewer = () => {
     );
   }
 
-  const currentContent = course.content?.[currentSlide] || {
+  const currentContent = flattenedContent[currentSlide] || {
     title: 'No Content',
     content: 'This course has no content yet.'
   };
@@ -255,7 +283,7 @@ const TeacherCourseViewer = () => {
       <div className="p-6">
         {activeTab === 'content' && (
           <div className="max-w-4xl mx-auto">
-            {course.content && course.content.length > 0 ? (
+            {flattenedContent.length > 0 ? (
               <motion.div
                 key={currentSlide}
                 initial={{ opacity: 0, x: 20 }}
@@ -267,7 +295,7 @@ const TeacherCourseViewer = () => {
                     {currentContent.title}
                   </h2>
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Slide {currentSlide + 1} of {course.content.length}
+                    Slide {currentSlide + 1} of {flattenedContent.length}
                   </span>
                 </div>
                 
@@ -298,8 +326,8 @@ const TeacherCourseViewer = () => {
                   </div>
                   
                   <button
-                    onClick={() => setCurrentSlide(Math.min(course.content.length - 1, currentSlide + 1))}
-                    disabled={currentSlide === course.content.length - 1}
+                    onClick={() => setCurrentSlide(Math.min(flattenedContent.length - 1, currentSlide + 1))}
+                    disabled={currentSlide === flattenedContent.length - 1}
                     className="flex items-center space-x-2 px-4 py-2 bg-[#7c3aed] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#5b21b6] transition"
                   >
                     <span>Next</span>
@@ -394,7 +422,7 @@ const TeacherCourseViewer = () => {
               </div>
               <div className="bg-white dark:bg-[#101010] p-6 rounded-lg shadow border border-gray-200 dark:border-[#222]">
                 <div className="text-3xl font-bold text-orange-600">
-                  {course.content?.length || 0}
+                  {flattenedContent.length || 0}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">Total Slides</div>
               </div>

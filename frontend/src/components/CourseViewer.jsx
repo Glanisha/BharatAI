@@ -8,6 +8,7 @@ const CourseViewer = () => {
     const navigate = useNavigate();
     const [course, setCourse] = useState(null);
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [flattenedContent, setFlattenedContent] = useState([]);
     const [showQuiz, setShowQuiz] = useState(false);
     const [quizData, setQuizData] = useState(null);
     const [quizAnswers, setQuizAnswers] = useState({});
@@ -109,6 +110,9 @@ const updateStudyTime = useCallback(async (timeSpentMinutes) => {
             const data = await response.json();
             if (data.success) {
                 setCourse(data.course);
+                // Flatten contentTree for navigation
+                const flattened = flattenContentTree(data.course.contentTree || []);
+                setFlattenedContent(flattened);
             }
             console.log('Course data:', data.course);
         } catch (error) {
@@ -116,6 +120,43 @@ const updateStudyTime = useCallback(async (timeSpentMinutes) => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Helper function to flatten contentTree into navigable slides
+    const flattenContentTree = (contentTree) => {
+        const flattened = [];
+        
+        const traverse = (nodes) => {
+            for (const node of nodes) {
+                if (node.type === 'topic') {
+                    // Convert topic to slide format
+                    const slide = {
+                        title: node.title,
+                        content: node.content || '<p>No content available</p>',
+                        type: node.quiz?.questions?.length > 0 ? 'quiz_checkpoint' : 'lesson',
+                        difficulty: node.quiz?.difficulty || 'basic',
+                        emoji: '📖',
+                        quiz: node.quiz?.questions?.length > 0 ? {
+                            id: node.id,
+                            questions: node.quiz.questions
+                        } : null
+                    };
+                    flattened.push(slide);
+                }
+                if (node.children && Array.isArray(node.children)) {
+                    traverse(node.children);
+                }
+            }
+        };
+        
+        traverse(contentTree);
+        return flattened.length > 0 ? flattened : [{
+            title: 'Welcome',
+            content: '<p>Course content will be available soon.</p>',
+            type: 'lesson',
+            difficulty: 'basic',
+            emoji: '👋'
+        }];
     };
 
     const fetchUserProgress = async () => {
@@ -136,19 +177,19 @@ const updateStudyTime = useCallback(async (timeSpentMinutes) => {
     };
 
     const handleNextSlide = async () => {
-        if (!course) return;
+        if (!flattenedContent.length) return;
 
         const nextSlide = currentSlide + 1;
         
         // Check if this is a quiz checkpoint
-        const currentContent = course.content[currentSlide];
-        if (currentContent.type === 'quiz_checkpoint') {
+        const currentContent = flattenedContent[currentSlide];
+        if (currentContent.type === 'quiz_checkpoint' && currentContent.quiz) {
             setQuizData(currentContent.quiz);
             setShowQuiz(true);
             return;
         }
 
-        if (nextSlide < course.content.length) {
+        if (nextSlide < flattenedContent.length) {
             setCurrentSlide(nextSlide);
             await updateProgress(nextSlide);
         } else {
@@ -298,24 +339,24 @@ const updateStudyTime = useCallback(async (timeSpentMinutes) => {
         );
     }
 
-    const safeCurrentSlide = Math.max(0, Math.min(currentSlide, course.content.length - 1));
-    const currentContent = course.content[safeCurrentSlide];
+    const safeCurrentSlide = Math.max(0, Math.min(currentSlide, flattenedContent.length - 1));
+    const currentContent = flattenedContent[safeCurrentSlide];
 
     if (!currentContent) {
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-[#030303]">
-            <div className="text-center text-[#f8f8f8]">
-                <h2 className="text-2xl font-bold mb-4">Content not found</h2>
-                <button
-                    onClick={() => navigate('/student-dashboard')}
-                    className="px-4 py-2 bg-[#f8f8f8] text-[#030303] rounded-lg"
-                >
-                    Back to Dashboard
-                </button>
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#030303]">
+                <div className="text-center text-[#f8f8f8]">
+                    <h2 className="text-2xl font-bold mb-4">Content not found</h2>
+                    <button
+                        onClick={() => navigate('/student-dashboard')}
+                        className="px-4 py-2 bg-[#f8f8f8] text-[#030303] rounded-lg"
+                    >
+                        Back to Dashboard
+                    </button>
+                </div>
             </div>
-        </div>
-    );
-}
+        );
+    }
 
     return (
         <motion.div
@@ -339,7 +380,7 @@ const updateStudyTime = useCallback(async (timeSpentMinutes) => {
                     </motion.button>
                     <h1 className="text-xl font-bold text-[#f8f8f8]">{course.title}</h1>
                     <div className="text-[#f8f8f8] text-sm">
-                        {currentSlide + 1} / {course.content.length}
+                        {currentSlide + 1} / {flattenedContent.length}
                     </div>
                 </div>
             </motion.nav>
@@ -348,7 +389,7 @@ const updateStudyTime = useCallback(async (timeSpentMinutes) => {
             <div className="w-full bg-[#222052] h-2">
                 <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${((currentSlide + 1) / course.content.length) * 100}%` }}
+                    animate={{ width: `${((currentSlide + 1) / flattenedContent.length) * 100}%` }}
                     className="h-full bg-[#f8f8f8]"
                     transition={{ duration: 0.5 }}
                 />
@@ -392,7 +433,7 @@ const updateStudyTime = useCallback(async (timeSpentMinutes) => {
                                 onClick={handleNextSlide}
                                 className="px-6 py-3 bg-[#f8f8f8] text-[#030303] rounded-lg font-medium"
                             >
-                                {currentSlide === course.content.length - 1 ? 'Complete Course' : 'Next →'}
+                                {currentSlide === flattenedContent.length - 1 ? 'Complete Course' : 'Next →'}
                             </motion.button>
                         </div>
                     </motion.div>

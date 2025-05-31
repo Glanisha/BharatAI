@@ -52,6 +52,26 @@ const Courses = ({ setActiveTab }) => {
     setTimeout(() => setCopiedId(null), 1500);
   };
 
+  // Helper function to count total topics in contentTree
+  const countTopics = (contentTree) => {
+    if (!contentTree || !Array.isArray(contentTree)) return 0;
+
+    let count = 0;
+    const traverse = (nodes) => {
+      for (const node of nodes) {
+        if (node.type === "topic") {
+          count++;
+        }
+        if (node.children && Array.isArray(node.children)) {
+          traverse(node.children);
+        }
+      }
+    };
+
+    traverse(contentTree);
+    return count;
+  };
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -99,14 +119,19 @@ const Courses = ({ setActiveTab }) => {
                     </span>
                   )}
                 </div>
-                <span className="flex items-center gap-1 text-[#7c3aed] dark:text-[#a78bfa] font-semibold text-sm">
-                  <FaUserGraduate />{" "}
-                  {typeof course.enrolledStudents === "number"
-                    ? course.enrolledStudents
-                    : Array.isArray(course.enrolledStudents)
-                    ? course.enrolledStudents.length
-                    : 0}
-                </span>
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="flex items-center gap-1 text-[#7c3aed] dark:text-[#a78bfa] font-semibold">
+                    <FaUserGraduate />{" "}
+                    {typeof course.enrolledStudents === "number"
+                      ? course.enrolledStudents
+                      : Array.isArray(course.enrolledStudents)
+                      ? course.enrolledStudents.length
+                      : 0}
+                  </span>
+                  <span className="text-gray-500 dark:text-gray-400">
+                    {countTopics(course.contentTree)} topics
+                  </span>
+                </div>
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">
                 {course.description}
