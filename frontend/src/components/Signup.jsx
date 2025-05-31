@@ -24,8 +24,12 @@ const Signup = () => {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        if (token) {
-            navigate('/dashboard');
+        const role = localStorage.getItem('role');
+        // Redirect to dashboard if user is already logged in
+        if (token && role === 'teacher') {
+            navigate('/teacher-dashboard');
+        } else if (token && role === 'student') {
+            navigate('/student-dashboard'); 
         }
     }, [navigate]);
 
@@ -64,11 +68,17 @@ const Signup = () => {
             if (response.ok) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
-                toast.success('Account created successfully!');
-                
-                setTimeout(() => {
-                    navigate('/dashboard');
-                }, 1000);
+                localStorage.setItem('role', data.user.role); // Store user role
+                toast.success('Account created successfully! Welcome aboard!');
+                // Redirect based on user role
+                if (data.user.role === 'teacher') {
+                    navigate('/teacher-dashboard');
+                } else if (data.user.role === 'student') {
+                    navigate('/student-dashboard');
+                } else {
+                    toast.error('Invalid user role');
+                    return;
+                }
             } else {
                 toast.error(data.message || 'Signup failed');
             }
