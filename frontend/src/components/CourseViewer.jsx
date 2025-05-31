@@ -30,6 +30,7 @@ const CourseViewer = () => {
             if (data.success) {
                 setCourse(data.course);
             }
+            console.log('Course data:', data.course);
         } catch (error) {
             toast.error('Failed to load course content');
         } finally {
@@ -189,7 +190,24 @@ const CourseViewer = () => {
         );
     }
 
-    const currentContent = course.content[currentSlide];
+    const safeCurrentSlide = Math.max(0, Math.min(currentSlide, course.content.length - 1));
+    const currentContent = course.content[safeCurrentSlide];
+
+    if (!currentContent) {
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-[#030303]">
+            <div className="text-center text-[#f8f8f8]">
+                <h2 className="text-2xl font-bold mb-4">Content not found</h2>
+                <button
+                    onClick={() => navigate('/student-dashboard')}
+                    className="px-4 py-2 bg-[#f8f8f8] text-[#030303] rounded-lg"
+                >
+                    Back to Dashboard
+                </button>
+            </div>
+        </div>
+    );
+}
 
     return (
         <motion.div
