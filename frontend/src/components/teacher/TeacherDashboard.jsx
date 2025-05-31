@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { SidebarProvider } from "../../context/SidebarContext";
 import DashboardLayout from "../DashboardLayout";
 import Overview from "./Overview";
+import Courses from "./Courses"; // Make sure the import path is correct
 import "react-toastify/dist/ReactToastify.css";
 
 const TeacherDashboard = () => {
@@ -105,8 +106,7 @@ const TeacherDashboard = () => {
       case "overview":
         return <Overview />;
       case "courses":
-        // Replace with your Courses component
-        return <div className="text-[#f8f8f8]">Courses coming soon...</div>;
+        return <Courses />; // <-- SHOW YOUR REAL COURSES COMPONENT
       case "analytics":
         // Replace with your Analytics component
         return <div className="text-[#f8f8f8]">Analytics coming soon...</div>;
