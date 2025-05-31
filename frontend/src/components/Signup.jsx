@@ -80,7 +80,7 @@ const Signup = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#183B4E]">
+        <div className="min-h-screen bg-[#030303]">
             <div className="min-h-screen flex items-center justify-center p-4">
                 <motion.div
                     initial={{ opacity: 0, y: 50 }}
@@ -94,28 +94,28 @@ const Signup = () => {
                         transition={{ duration: 0.6, delay: 0.2 }}
                         className="text-center mb-8"
                     >
-                        <h1 className="text-4xl font-bold text-[#F3F3E0] mb-2">EduPlatform</h1>
-                        <p className="text-lg text-[#DDA853]">Join us today</p>
+                        <h1 className="text-4xl font-bold text-[#f8f8f8] mb-2">EduPlatform</h1>
+                        <p className="text-lg text-[#f8f8f8]/70">Join us today</p>
                     </motion.div>
 
                     <motion.div
                         whileHover={{ y: -2 }}
-                        className="bg-[#27548A] border border-[#DDA853] rounded-2xl p-8 shadow-xl"
+                        className="bg-[#222052] border border-[#f8f8f8]/20 rounded-2xl p-8 shadow-xl"
                     >
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            <h2 className="text-2xl font-semibold text-[#F3F3E0] text-center">Create Account</h2>
+                            <h2 className="text-2xl font-semibold text-[#f8f8f8] text-center">Create Account</h2>
                             
                             {/* Role Selection */}
                             <motion.div whileFocus={{ scale: 1.02 }}>
-                                <label className="block text-[#F3F3E0] mb-2 text-sm font-medium">Select Role</label>
+                                <label className="block text-[#f8f8f8] mb-2 text-sm font-medium">Select Role</label>
                                 <select
                                     value={formData.role}
                                     onChange={(e) => setFormData({...formData, role: e.target.value})}
-                                    className="w-full px-4 py-3 rounded-xl bg-[#183B4E] text-[#F3F3E0] border border-[#DDA853] focus:ring-2 focus:ring-[#DDA853] focus:outline-none transition-all duration-200"
+                                    className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200"
                                     required
                                 >
                                     {roles.map(role => (
-                                        <option key={role.value} value={role.value} className="bg-[#183B4E]">
+                                        <option key={role.value} value={role.value} className="bg-[#030303]">
                                             {role.label}
                                         </option>
                                     ))}
@@ -128,7 +128,7 @@ const Signup = () => {
                                 placeholder="Full Name"
                                 value={formData.name}
                                 onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                className="w-full px-4 py-3 rounded-xl bg-[#183B4E] text-[#F3F3E0] border border-[#DDA853] focus:ring-2 focus:ring-[#DDA853] focus:outline-none transition-all duration-200 placeholder-[#F3F3E0]/60"
+                                className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
                                 required
                             />
                             
@@ -138,7 +138,7 @@ const Signup = () => {
                                 placeholder="Email"
                                 value={formData.email}
                                 onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                className="w-full px-4 py-3 rounded-xl bg-[#183B4E] text-[#F3F3E0] border border-[#DDA853] focus:ring-2 focus:ring-[#DDA853] focus:outline-none transition-all duration-200 placeholder-[#F3F3E0]/60"
+                                className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
                                 required
                             />
                             
@@ -148,7 +148,7 @@ const Signup = () => {
                                 placeholder="Password"
                                 value={formData.password}
                                 onChange={(e) => setFormData({...formData, password: e.target.value})}
-                                className="w-full px-4 py-3 rounded-xl bg-[#183B4E] text-[#F3F3E0] border border-[#DDA853] focus:ring-2 focus:ring-[#DDA853] focus:outline-none transition-all duration-200 placeholder-[#F3F3E0]/60"
+                                className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
                                 required
                             />
                             
@@ -158,19 +158,19 @@ const Signup = () => {
                                 placeholder="Confirm Password"
                                 value={formData.confirmPassword}
                                 onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                                className="w-full px-4 py-3 rounded-xl bg-[#183B4E] text-[#F3F3E0] border border-[#DDA853] focus:ring-2 focus:ring-[#DDA853] focus:outline-none transition-all duration-200 placeholder-[#F3F3E0]/60"
+                                className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200 placeholder-[#f8f8f8]/50"
                                 required
                             />
                             
                             <motion.div whileFocus={{ scale: 1.02 }}>
-                                <label className="block text-[#F3F3E0] mb-2 text-sm font-medium">Preferred Language</label>
+                                <label className="block text-[#f8f8f8] mb-2 text-sm font-medium">Preferred Language</label>
                                 <select
                                     value={formData.language}
                                     onChange={(e) => setFormData({...formData, language: e.target.value})}
-                                    className="w-full px-4 py-3 rounded-xl bg-[#183B4E] text-[#F3F3E0] border border-[#DDA853] focus:ring-2 focus:ring-[#DDA853] focus:outline-none transition-all duration-200"
+                                    className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none transition-all duration-200"
                                 >
                                     {languages.map(lang => (
-                                        <option key={lang} value={lang} className="bg-[#183B4E]">{lang}</option>
+                                        <option key={lang} value={lang} className="bg-[#030303]">{lang}</option>
                                     ))}
                                 </select>
                             </motion.div>
@@ -180,11 +180,11 @@ const Signup = () => {
                                 whileTap={{ scale: 0.98 }}
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-3 rounded-xl font-semibold bg-[#DDA853] text-[#183B4E] disabled:opacity-50 transition-all duration-200 hover:bg-[#DDA853]/90"
+                                className="w-full py-3 rounded-xl font-semibold bg-[#f8f8f8] text-[#030303] disabled:opacity-50 transition-all duration-200 hover:bg-[#f8f8f8]/90"
                             >
                                 {loading ? (
                                     <div className="flex items-center justify-center space-x-2">
-                                        <div className="animate-spin h-5 w-5 border-2 border-[#183B4E] border-t-transparent rounded-full"></div>
+                                        <div className="animate-spin h-5 w-5 border-2 border-[#030303] border-t-transparent rounded-full"></div>
                                         <span>Creating Account...</span>
                                     </div>
                                 ) : (
@@ -193,7 +193,7 @@ const Signup = () => {
                             </motion.button>
                             
                             <div className="text-center">
-                                <Link to="/login" className="text-[#DDA853] hover:text-[#DDA853]/80 transition-colors">
+                                <Link to="/login" className="text-[#f8f8f8]/70 hover:text-[#f8f8f8] transition-colors">
                                     Already have an account? Sign in
                                 </Link>
                             </div>
@@ -214,8 +214,9 @@ const Signup = () => {
                 pauseOnHover
                 theme="dark"
                 toastStyle={{
-                    backgroundColor: '#27548A',
-                    color: '#F3F3E0'
+                    backgroundColor: '#222052',
+                    color: '#f8f8f8',
+                    border: '1px solid rgba(248, 248, 248, 0.2)'
                 }}
             />
         </div>
