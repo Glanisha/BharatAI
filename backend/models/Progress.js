@@ -51,10 +51,18 @@ const progressSchema = new mongoose.Schema({
 
 // Calculate progress percentage
 progressSchema.virtual('progressPercentage').get(function() {
-    if (!this.course || !this.course.pdfContent) return 0;
-    // Assuming 10 slides per course for now
-    const totalSlides = 10;
-    return Math.round((this.completedSlides / totalSlides) * 100);
+    // Use the actual number of slides if available
+    if (this.populated('course') && this.course && Array.isArray(this.course.content)) {
+        const totalSlides = this.course.content.length;
+        if (!totalSlides) return 0;
+        return Math.round((this.completedSlides / totalSlides) * 100);
+    }
+    // fallback: try to estimate from pdfContent (not ideal)
+    if (this.course && this.course.pdfContent) {
+        const approxSlides = this.course.pdfContent.split(/\n\n+/).length;
+        return Math.round((this.completedSlides / approxSlides) * 100);
+    }
+    return 0;
 });
 
 module.exports = mongoose.model('Progress', progressSchema);

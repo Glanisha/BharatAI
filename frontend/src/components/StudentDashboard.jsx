@@ -59,6 +59,7 @@ const StudentDashboard = () => {
             });
             const data = await response.json();
             if (data.success) {
+                console.log('Enrolled courses:', data.courses);
                 setEnrolledCourses(data.courses);
             }
         } catch (error) {

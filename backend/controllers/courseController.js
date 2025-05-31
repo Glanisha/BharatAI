@@ -276,25 +276,49 @@ const getEnrolledCourses = async (req, res) => {
     const progresses = await Progress.find({ student: studentId })
       .populate({
         path: 'course',
-        select: 'title description category language tags'
+        select: 'title description category language tags pdfContent content' // ✅ Fixed!
       });
 
-    const enrolledCourses = progresses.map(progress => ({
-      _id: progress.course._id,
-      title: progress.course.title,
-      description: progress.course.description,
-      category: progress.course.category,
-      language: progress.course.language,
-      tags: progress.course.tags,
-      progress: progress.progressPercentage || 0,
-      emoji: getEmojiForCategory(progress.course.category)
-    }));
+    const enrolledCourses = progresses.map(progress => {
+      console.log(`Course: ${progress.course.title}`);
+      console.log(`Has pdfContent: ${!!progress.course.pdfContent}`);
+      console.log(`Has content: ${!!progress.course.content}`);
+      console.log(`Completed slides: ${progress.completedSlides}`);
+      
+      // Calculate progress percentage properly
+      let totalSlides = 1;
+      if (progress.course.content && Array.isArray(progress.course.content)) {
+        totalSlides = progress.course.content.length;
+        console.log(`Using content array: ${totalSlides} slides`);
+      } else if (progress.course.pdfContent) {
+        const slides = convertPdfToSlides(progress.course.pdfContent);
+        totalSlides = slides.length;
+        console.log(`Using PDF conversion: ${totalSlides} slides`);
+      } else {
+        console.log(`No content found, using default: ${totalSlides} slide`);
+      }
+
+      const progressPercentage = Math.round((progress.completedSlides / totalSlides) * 100);
+      console.log(`Final calculation: ${progress.completedSlides}/${totalSlides} = ${progressPercentage}%`);
+
+      return {
+        _id: progress.course._id,
+        title: progress.course.title,
+        description: progress.course.description,
+        category: progress.course.category,
+        language: progress.course.language,
+        tags: progress.course.tags,
+        progress: progressPercentage,
+        emoji: getEmojiForCategory(progress.course.category)
+      };
+    });
 
     res.json({
       success: true,
       courses: enrolledCourses
     });
   } catch (error) {
+    console.error('Error in getEnrolledCourses:', error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -465,7 +489,11 @@ const getUserProgress = async (req, res) => {
   try {
     const { courseId } = req.params;
     const studentId = req.userId;
-
+    const progresses = await Progress.find({ student: studentId })
+    .populate({
+        path: 'course',
+        select: 'title description category language tags content'
+    });
     const progress = await Progress.findOne({
       student: studentId,
       course: courseId
@@ -497,10 +525,37 @@ const getUserProgress = async (req, res) => {
 
 // Update user progress
 const updateProgress = async (req, res) => {
+  console.log("Updating progress...");
   try {
     const { courseId } = req.params;
-    const { currentSlide, completedSlides } = req.body;
+    let { currentSlide, completedSlides } = req.body;
     const studentId = req.userId;
+
+    // Get the course to know the number of slides
+    const course = await Course.findById(courseId);
+    let totalSlides = 1;
+    
+    console.log("Course found:", course ? course.title : "No course found");
+    console.log("Course content is:", course.content);
+    
+    if (course && Array.isArray(course.content)) {
+      // Course has structured content
+      console.log("Course content is an array");
+      console.log("Content length:", course.content.length);
+      totalSlides = course.content.length;
+    } else if (course && course.pdfContent) {
+      // Convert PDF to slides to get the count
+      console.log("Converting PDF content to slides...");
+      const slides = convertPdfToSlides(course.pdfContent);
+      totalSlides = slides.length;
+      console.log("Total slides from PDF conversion:", totalSlides);
+    }
+
+    // Clamp values
+    currentSlide = Math.max(0, Math.min(currentSlide, totalSlides - 1));
+    completedSlides = Math.max(0, Math.min(completedSlides, totalSlides));
+
+    console.log("Clamped values:", { currentSlide, completedSlides, totalSlides });
 
     const progress = await Progress.findOneAndUpdate(
       { student: studentId, course: courseId },
@@ -519,11 +574,26 @@ const updateProgress = async (req, res) => {
       });
     }
 
+    // Calculate progress percentage
+    const progressPercentage = Math.round((completedSlides / totalSlides) * 100);
+
+    console.log("Progress updated:", { 
+      currentSlide, 
+      completedSlides, 
+      totalSlides, 
+      progressPercentage 
+    });
+
     res.json({
       success: true,
-      progress
+      progress: {
+        ...progress.toObject(),
+        progressPercentage,
+        totalSlides
+      }
     });
   } catch (error) {
+    console.error("Update progress error:", error);
     res.status(500).json({
       success: false,
       message: error.message

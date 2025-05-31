@@ -85,22 +85,27 @@ const CourseViewer = () => {
     };
 
     const updateProgress = async (slideIndex) => {
-        try {
-            await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/progress`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    currentSlide: slideIndex,
-                    completedSlides: Math.max(slideIndex, userProgress?.completedSlides || 0)
-                })
-            });
-        } catch (error) {
-            console.error('Error updating progress:', error);
+    try {
+        const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/progress`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                currentSlide: slideIndex,
+                // completedSlides should be the highest slide reached + 1 (since it's a count, not index)
+                completedSlides: Math.max(slideIndex + 1, userProgress?.completedSlides || 0)
+            })
+        });
+        const data = await response.json();
+        if (data.success) {
+            setUserProgress(data.progress); // Store full progress object
         }
-    };
+    } catch (error) {
+        console.error('Error updating progress:', error);
+    }
+};
 
     const handleQuizSubmit = async () => {
         const score = calculateQuizScore();
