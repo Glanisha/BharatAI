@@ -26,4 +26,5 @@ const userAchievementSchema = new mongoose.Schema({
 // Compound index to prevent duplicate achievements
 userAchievementSchema.index({ user: 1, achievement: 1 }, { unique: true });
 
-module.exports = mongoose.model('UserAchievement', userAchievementSchema);
+module.exports = mongoose.models.UserAchievement || 
+                 mongoose.model('UserAchievement', userAchievementSchema);
