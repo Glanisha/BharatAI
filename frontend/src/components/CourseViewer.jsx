@@ -1,8 +1,39 @@
-import { useState, useEffect,useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast, ToastContainer } from 'react-toastify';
 import mermaid from 'mermaid';
+import { TranslatedText } from './TranslatedText';
+import { useTheme } from '../context/ThemeContext';
+
+// Maps frontend codes to backend full names
+const BACKEND_LANGUAGE_MAP = {
+  en: "English",
+  hi: "Hindi",
+  ta: "Tamil",
+  te: "Telugu",
+  bn: "Bengali",
+  mr: "Marathi",
+  gu: "Gujarati",
+  kn: "Kannada",
+};
+
+// Maps backend names to frontend codes
+const FRONTEND_LANGUAGE_MAP = Object.fromEntries(
+  Object.entries(BACKEND_LANGUAGE_MAP).map(([code, name]) => [name, code])
+);
+
+// Display mapping (name -> code)
+const LANGUAGE_MAPPING = {
+  English: "en",
+  Hindi: "hi",
+  Tamil: "ta",
+  Telugu: "te",
+  Bengali: "bn",
+  Marathi: "mr",
+  Gujarati: "gu",
+  Kannada: "kn",
+};
 
 const CourseViewer = () => {
     const { courseId } = useParams();
@@ -18,88 +49,154 @@ const CourseViewer = () => {
     const [sessionStartTime, setSessionStartTime] = useState(null);
     const [totalSessionTime, setTotalSessionTime] = useState(0);
     const [isActiveSession, setIsActiveSession] = useState(true);
+    const { isDark } = useTheme();
+    const [currentLanguage, setCurrentLanguage] = useState("English");
+    const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
 
     useEffect(() => {
         fetchCourseContent();
         fetchUserProgress();
+        fetchPreferredLanguage();
     }, [courseId]);
 
-useEffect(() => {
-    // Start timing when component mounts
-    const startTime = Date.now();
-    setSessionStartTime(startTime);
-    setIsActiveSession(true);
-
-    // Track when user leaves/returns to tab
-    const handleVisibilityChange = () => {
-        if (document.hidden) {
-            setIsActiveSession(false);
-        } else {
-            const newStartTime = Date.now();
-            setSessionStartTime(newStartTime);
-            setIsActiveSession(true);
+    const fetchPreferredLanguage = async () => {
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_NODE_BASE_API_URL}/api/student/language`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          const data = await response.json();
+    
+          if (data.success && data.preferredLanguage) {
+            const frontendCode = FRONTEND_LANGUAGE_MAP[data.preferredLanguage];
+            setCurrentLanguage(
+              Object.keys(LANGUAGE_MAPPING).find(
+                (name) => LANGUAGE_MAPPING[name] === frontendCode
+              ) || "English"
+            );
+          }
+        } catch (error) {
+          console.error("Error fetching preferred language:", error);
         }
     };
 
-    // Track when user leaves page
-    const handleBeforeUnload = () => {
-        const currentTime = Date.now();
-        const sessionTime = Math.floor((currentTime - startTime) / 1000 / 60); // minutes
-        if (sessionTime > 0) {
-            updateStudyTime(sessionTime);
+    const updateLanguagePreference = async (selectedLanguageName) => {
+        setIsUpdatingLanguage(true);
+    
+        try {
+          const frontendCode = LANGUAGE_MAPPING[selectedLanguageName];
+          if (!frontendCode) {
+            toast.error("Invalid language selection");
+            return;
+          }
+    
+          const backendName = BACKEND_LANGUAGE_MAP[frontendCode];
+          const response = await fetch(
+            `${import.meta.env.VITE_NODE_BASE_API_URL}/api/student/language`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({ preferredLanguage: backendName }),
+            }
+          );
+    
+          const data = await response.json();
+          if (data.success) {
+            setCurrentLanguage(selectedLanguageName);
+            toast.success(<TranslatedText>Language preference updated successfully!</TranslatedText>);
+          } else {
+            toast.error(data.message || <TranslatedText>Failed to update language preference</TranslatedText>);
+          }
+        } catch (error) {
+          toast.error(<TranslatedText>Something went wrong. Please try again.</TranslatedText>);
+        } finally {
+          setIsUpdatingLanguage(false);
         }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    useEffect(() => {
+        // Start timing when component mounts
+        const startTime = Date.now();
+        setSessionStartTime(startTime);
+        setIsActiveSession(true);
 
-    // Update every 30 seconds if active
-    const interval = setInterval(() => {
-        if (!document.hidden) {
+        // Track when user leaves/returns to tab
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                setIsActiveSession(false);
+            } else {
+                const newStartTime = Date.now();
+                setSessionStartTime(newStartTime);
+                setIsActiveSession(true);
+            }
+        };
+
+        // Track when user leaves page
+        const handleBeforeUnload = () => {
             const currentTime = Date.now();
             const sessionTime = Math.floor((currentTime - startTime) / 1000 / 60); // minutes
             if (sessionTime > 0) {
-                updateStudyTime(1); // Send 1 minute increment
+                updateStudyTime(sessionTime);
             }
-        }
-    }, 60000); // Every 1 minute instead of 30 seconds
+        };
 
-    return () => {
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-        clearInterval(interval);
-        
-        // Final time update on unmount
-        const currentTime = Date.now();
-        const sessionTime = Math.floor((currentTime - startTime) / 1000 / 60);
-        if (sessionTime > 0) {
-            updateStudyTime(sessionTime);
-        }
-    };
-}, [courseId]); // ✅ Only courseId as dependency
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('beforeunload', handleBeforeUnload);
 
-const updateStudyTime = useCallback(async (timeSpentMinutes) => {
-    if (timeSpentMinutes <= 0) return;
-    
-    try {
-        const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/study-time`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-                timeSpent: timeSpentMinutes
-            })
-        });
+        // Update every 30 seconds if active
+        const interval = setInterval(() => {
+            if (!document.hidden) {
+                const currentTime = Date.now();
+                const sessionTime = Math.floor((currentTime - startTime) / 1000 / 60); // minutes
+                if (sessionTime > 0) {
+                    updateStudyTime(1); // Send 1 minute increment
+                }
+            }
+        }, 60000); // Every 1 minute instead of 30 seconds
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            clearInterval(interval);
+            
+            // Final time update on unmount
+            const currentTime = Date.now();
+            const sessionTime = Math.floor((currentTime - startTime) / 1000 / 60);
+            if (sessionTime > 0) {
+                updateStudyTime(sessionTime);
+            }
+        };
+    }, [courseId]); // ✅ Only courseId as dependency
+
+    const updateStudyTime = useCallback(async (timeSpentMinutes) => {
+        if (timeSpentMinutes <= 0) return;
         
-        if (response.ok) {
-            console.log(`Updated study time: +${timeSpentMinutes} minutes`);
+        try {
+            const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/study-time`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    timeSpent: timeSpentMinutes
+                })
+            });
+            
+            if (response.ok) {
+                console.log(`Updated study time: +${timeSpentMinutes} minutes`);
+            }
+        } catch (error) {
+            console.error('Error updating study time:', error);
         }
-    } catch (error) {
-        console.error('Error updating study time:', error);
-    }
-}, [courseId]);
+    }, [courseId]);
 
     const fetchCourseContent = async () => {
         try {
@@ -117,7 +214,7 @@ const updateStudyTime = useCallback(async (timeSpentMinutes) => {
             }
             console.log('Course data:', data.course);
         } catch (error) {
-            toast.error('Failed to load course content');
+            toast.error(<TranslatedText>Failed to load course content</TranslatedText>);
         } finally {
             setLoading(false);
         }
@@ -202,32 +299,32 @@ const updateStudyTime = useCallback(async (timeSpentMinutes) => {
         } else {
             // Course completed
             await markCourseAsCompleted();
-            toast.success('🎉 Course completed! Well done!');
+            toast.success(<TranslatedText>🎉 Course completed! Well done!</TranslatedText>);
             navigate('/student-dashboard');
         }
     };
 
     const markCourseAsCompleted = async () => {
-    try {
-        const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/complete`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+        try {
+            const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/complete`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                console.log('Course marked as completed!');
+                setUserProgress(prev => ({ ...prev, isCompleted: true }));
+            } else {
+                console.error('Failed to mark course as completed:', data.message);
             }
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            console.log('Course marked as completed!');
-            setUserProgress(prev => ({ ...prev, isCompleted: true }));
-        } else {
-            console.error('Failed to mark course as completed:', data.message);
+        } catch (error) {
+            console.error('Error marking course as completed:', error);
         }
-    } catch (error) {
-        console.error('Error marking course as completed:', error);
-    }
-};
+    };
 
     const handlePrevSlide = () => {
         if (currentSlide > 0) {
@@ -235,102 +332,102 @@ const updateStudyTime = useCallback(async (timeSpentMinutes) => {
         }
     };
 
-const updateProgress = async (slideIndex) => {
-    try {
-        // Ensure we don't go beyond the total slides
-        const safeSlideIndex = Math.max(0, Math.min(slideIndex, flattenedContent.length - 1));
-        const completedSlides = Math.max(safeSlideIndex + 1, userProgress?.completedSlides || 0);
+    const updateProgress = async (slideIndex) => {
+        try {
+            // Ensure we don't go beyond the total slides
+            const safeSlideIndex = Math.max(0, Math.min(slideIndex, flattenedContent.length - 1));
+            const completedSlides = Math.max(safeSlideIndex + 1, userProgress?.completedSlides || 0);
 
-        console.log('Updating progress:', {
-            currentSlide: safeSlideIndex,
-            completedSlides: completedSlides,
-            totalSlides: flattenedContent.length
-        });
-
-        const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/progress`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
+            console.log('Updating progress:', {
                 currentSlide: safeSlideIndex,
-                completedSlides: completedSlides
-            })
-        });
-        
-        const data = await response.json();
-        console.log('Progress update response:', data); // Debug log
-        
-        if (data.success) {
-            setUserProgress(data.progress);
-        } else {
-            console.error('Progress update failed:', data);
-        }
-    } catch (error) {
-        console.error('Error updating progress:', error);
-    }
-};
+                completedSlides: completedSlides,
+                totalSlides: flattenedContent.length
+            });
 
-const handleQuizSubmit = async () => {
-    const score = calculateQuizScore();
-    const totalQuestions = quizData.questions.length;
-    const percentage = (score / totalQuestions) * 100;
-
-    try {
-        const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/quiz-result`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-                quizId: quizData.id,
-                score: score,
-                percentage: percentage,
-                answers: quizAnswers
-            })
-        });
-
-        const data = await response.json();
-        console.log('Quiz submission response:', data); // Debug log
-        
-        if (data.success) {
-            toast.success(`Quiz completed! Score: ${score}/${totalQuestions} (${percentage.toFixed(1)}%)`);
+            const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/progress`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    currentSlide: safeSlideIndex,
+                    completedSlides: completedSlides
+                })
+            });
             
-            // Move to next slide after quiz completion
-            const nextSlideIndex = currentSlide + 1;
-            if (nextSlideIndex < flattenedContent.length) {
-                setCurrentSlide(nextSlideIndex);
-                await updateProgress(nextSlideIndex);
+            const data = await response.json();
+            console.log('Progress update response:', data); // Debug log
+            
+            if (data.success) {
+                setUserProgress(data.progress);
             } else {
-                // Course completed
-                await markCourseAsCompleted();
-                toast.success('🎉 Course completed! Well done!');
-                navigate('/student-dashboard');
+                console.error('Progress update failed:', data);
             }
-            
-            setShowQuiz(false);
-            setQuizAnswers({});
-        } else {
-            console.error('Quiz submission failed:', data);
-            toast.error(data.message || 'Failed to submit quiz');
+        } catch (error) {
+            console.error('Error updating progress:', error);
         }
-    } catch (error) {
-        console.error('Quiz submission error:', error);
-        toast.error('Failed to submit quiz - network error');
-    }
-};
+    };
 
-const calculateQuizScore = () => {
-    let score = 0;
-    quizData.questions.forEach((question, index) => {
-        if (quizAnswers[index] === question.correctAnswer) {
-            score++;
+    const handleQuizSubmit = async () => {
+        const score = calculateQuizScore();
+        const totalQuestions = quizData.questions.length;
+        const percentage = (score / totalQuestions) * 100;
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/quiz-result`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    quizId: quizData.id,
+                    score: score,
+                    percentage: percentage,
+                    answers: quizAnswers
+                })
+            });
+
+            const data = await response.json();
+            console.log('Quiz submission response:', data); // Debug log
+            
+            if (data.success) {
+                toast.success(<TranslatedText>Quiz completed! Score: {score}/{totalQuestions} ({percentage.toFixed(1)}%)</TranslatedText>);
+                
+                // Move to next slide after quiz completion
+                const nextSlideIndex = currentSlide + 1;
+                if (nextSlideIndex < flattenedContent.length) {
+                    setCurrentSlide(nextSlideIndex);
+                    await updateProgress(nextSlideIndex);
+                } else {
+                    // Course completed
+                    await markCourseAsCompleted();
+                    toast.success(<TranslatedText>🎉 Course completed! Well done!</TranslatedText>);
+                    navigate('/student-dashboard');
+                }
+                
+                setShowQuiz(false);
+                setQuizAnswers({});
+            } else {
+                console.error('Quiz submission failed:', data);
+                toast.error(data.message || <TranslatedText>Failed to submit quiz</TranslatedText>);
+            }
+        } catch (error) {
+            console.error('Quiz submission error:', error);
+            toast.error(<TranslatedText>Failed to submit quiz - network error</TranslatedText>);
         }
-    });
-    return score;
-};
+    };
+
+    const calculateQuizScore = () => {
+        let score = 0;
+        quizData.questions.forEach((question, index) => {
+            if (quizAnswers[index] === question.correctAnswer) {
+                score++;
+            }
+        });
+        return score;
+    };
 
     useEffect(() => {
         // Initialize Mermaid
@@ -374,7 +471,7 @@ const calculateQuizScore = () => {
                     className="w-full rounded-lg"
                     style={{ maxHeight: '400px' }}
                 >
-                    Your browser does not support the video tag.
+                    <TranslatedText>Your browser does not support the video tag.</TranslatedText>
                 </video>
             </div>
         );
@@ -419,7 +516,7 @@ const calculateQuizScore = () => {
             console.error('Mermaid render error:', error);
             return (
                 <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-                    Error rendering diagram: {error.message}
+                    <TranslatedText>Error rendering diagram:</TranslatedText> {error.message}
                 </div>
             );
         }
@@ -427,10 +524,10 @@ const calculateQuizScore = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#030303]">
-                <motion.div className="flex items-center space-x-2 text-[#f8f8f8]">
-                    <div className="animate-spin h-6 w-6 border-2 border-[#222052] border-t-transparent rounded-full"></div>
-                    <span>Loading course...</span>
+            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#030303]' : 'bg-[#f8f8f8]'}`}>
+                <motion.div className={`flex items-center space-x-2 ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}`}>
+                    <div className={`animate-spin h-6 w-6 border-2 ${isDark ? 'border-[#222052]' : 'border-[#080808]'} border-t-transparent rounded-full`}></div>
+                    <span><TranslatedText>Loading course...</TranslatedText></span>
                 </motion.div>
             </div>
         );
@@ -438,14 +535,14 @@ const calculateQuizScore = () => {
 
     if (!course) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#030303]">
-                <div className="text-center text-[#f8f8f8]">
-                    <h2 className="text-2xl font-bold mb-4">Course not found</h2>
+            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#030303]' : 'bg-[#f8f8f8]'}`}>
+                <div className={`text-center ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}`}>
+                    <h2 className="text-2xl font-bold mb-4"><TranslatedText>Course not found</TranslatedText></h2>
                     <button
                         onClick={() => navigate('/student-dashboard')}
-                        className="px-4 py-2 bg-[#f8f8f8] text-[#030303] rounded-lg"
+                        className={`px-4 py-2 ${isDark ? 'bg-[#f8f8f8] text-[#030303]' : 'bg-[#080808] text-[#f8f8f8]'} rounded-lg`}
                     >
-                        Back to Dashboard
+                        <TranslatedText>Back to Dashboard</TranslatedText>
                     </button>
                 </div>
             </div>
@@ -457,14 +554,14 @@ const calculateQuizScore = () => {
 
     if (!currentContent) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#030303]">
-                <div className="text-center text-[#f8f8f8]">
-                    <h2 className="text-2xl font-bold mb-4">Content not found</h2>
+            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#030303]' : 'bg-[#f8f8f8]'}`}>
+                <div className={`text-center ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}`}>
+                    <h2 className="text-2xl font-bold mb-4"><TranslatedText>Content not found</TranslatedText></h2>
                     <button
                         onClick={() => navigate('/student-dashboard')}
-                        className="px-4 py-2 bg-[#f8f8f8] text-[#030303] rounded-lg"
+                        className={`px-4 py-2 ${isDark ? 'bg-[#f8f8f8] text-[#030303]' : 'bg-[#080808] text-[#f8f8f8]'} rounded-lg`}
                     >
-                        Back to Dashboard
+                        <TranslatedText>Back to Dashboard</TranslatedText>
                     </button>
                 </div>
             </div>
@@ -475,35 +572,101 @@ const calculateQuizScore = () => {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="min-h-screen bg-[#030303]"
+            className={`min-h-screen ${isDark ? 'bg-[#030303]' : 'bg-[#f8f8f8]'}`}
         >
             {/* Header */}
             <motion.nav
                 initial={{ y: -100 }}
                 animate={{ y: 0 }}
-                className="bg-[#222052] border-b border-[#f8f8f8]/20"
+                className={`${isDark ? 'bg-[#222052] border-[#f8f8f8]/20' : 'bg-[#f8f8f8] border-[#080808]/20'} border-b`}
             >
                 <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        onClick={() => navigate('/student-dashboard')}
-                        className="text-[#f8f8f8] hover:text-[#f8f8f8]/80"
-                    >
-                        ← Back to Dashboard
-                    </motion.button>
-                    <h1 className="text-xl font-bold text-[#f8f8f8]">{course.title}</h1>
-                    <div className="text-[#f8f8f8] text-sm">
-                        {currentSlide + 1} / {flattenedContent.length}
+                    <div className="flex items-center gap-4">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            onClick={() => navigate('/student-dashboard')}
+                            className={`${isDark ? 'text-[#f8f8f8] hover:text-[#f8f8f8]/80' : 'text-[#080808] hover:text-[#080808]/80'}`}
+                        >
+                            ← <TranslatedText>Back to Dashboard</TranslatedText>
+                        </motion.button>
+                    </div>
+                    
+                    <h1 className={`text-xl font-bold ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}`}>{course.title}</h1>
+                    
+                    <div className="flex items-center gap-2">
+                        <div className="relative group">
+                            <button
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#222] transition ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}`}
+                                title={<TranslatedText>Language</TranslatedText>}
+                            >
+                                <span>🌐</span>
+                                <span>{currentLanguage}</span>
+                                <span>▼</span>
+                            </button>
+                            <div className={`absolute top-full right-0 mt-2 w-48 ${isDark ? 'bg-[#181818] border-[#222]' : 'bg-white border-gray-200'} border rounded-lg shadow-lg z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200`}>
+                                {Object.keys(LANGUAGE_MAPPING)
+                                    .filter(
+                                        (name) => BACKEND_LANGUAGE_MAP[LANGUAGE_MAPPING[name]]
+                                    )
+                                    .map((languageName) => (
+                                        <div
+                                            key={languageName}
+                                            className={`px-4 py-2 text-sm cursor-pointer ${
+                                                currentLanguage === languageName
+                                                    ? "bg-[#ece9ff] dark:bg-[#18182b] text-[#7c3aed] dark:text-[#a78bfa]"
+                                                    : `${isDark ? 'text-[#f8f8f8] hover:bg-[#222]' : 'text-[#080808] hover:bg-gray-100'}`
+                                            }`}
+                                            onClick={() => {
+                                                if (currentLanguage !== languageName) {
+                                                    updateLanguagePreference(languageName);
+                                                }
+                                            }}
+                                        >
+                                            {isUpdatingLanguage &&
+                                            currentLanguage === languageName ? (
+                                                <span className="flex items-center">
+                                                    <svg
+                                                        className="animate-spin -ml-1 mr-2 h-3 w-3 text-[#7c3aed] dark:text-[#a78bfa]"
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <circle
+                                                            className="opacity-25"
+                                                            cx="12"
+                                                            cy="12"
+                                                            r="10"
+                                                            stroke="currentColor"
+                                                            strokeWidth="4"
+                                                        ></circle>
+                                                        <path
+                                                            className="opacity-75"
+                                                            fill="currentColor"
+                                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                        ></path>
+                                                    </svg>
+                                                    <TranslatedText>Updating...</TranslatedText>
+                                                </span>
+                                            ) : (
+                                                languageName
+                                            )}
+                                        </div>
+                                    ))}
+                            </div>
+                        </div>
+                        <div className={`text-sm ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}`}>
+                            {currentSlide + 1} / {flattenedContent.length}
+                        </div>
                     </div>
                 </div>
             </motion.nav>
 
             {/* Progress Bar */}
-            <div className="w-full bg-[#222052] h-2">
+            <div className={`w-full ${isDark ? 'bg-[#222052]' : 'bg-[#f8f8f8]'} h-2`}>
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${((currentSlide + 1) / flattenedContent.length) * 100}%` }}
-                    className="h-full bg-[#f8f8f8]"
+                    className={`h-full ${isDark ? 'bg-[#f8f8f8]' : 'bg-[#080808]'}`}
                     transition={{ duration: 0.5 }}
                 />
             </div>
@@ -516,15 +679,15 @@ const calculateQuizScore = () => {
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -50 }}
-                        className="bg-[#222052] border border-[#f8f8f8]/20 rounded-2xl p-8"
+                        className={`${isDark ? 'bg-[#222052] border-[#f8f8f8]/20' : 'bg-[#f8f8f8] border-[#080808]/20'} border rounded-2xl p-8`}
                     >
                         <div className="text-4xl mb-6 text-center">{currentContent.emoji || '📖'}</div>
-                        <h2 className="text-3xl font-bold text-[#f8f8f8] mb-6 text-center">
+                        <h2 className={`text-3xl font-bold ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'} mb-6 text-center`}>
                             {currentContent.title}
                         </h2>
                         <div className="prose prose-invert max-w-none">
                             <div 
-                                className="text-[#f8f8f8] leading-relaxed text-lg"
+                                className={`${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'} leading-relaxed text-lg`}
                                 dangerouslySetInnerHTML={{ __html: currentContent.content }}
                             />
                         </div>
@@ -532,7 +695,9 @@ const calculateQuizScore = () => {
                         {/* Render Videos */}
                         {currentContent.videoUrls && currentContent.videoUrls.length > 0 && (
                             <div className="mt-6">
-                                <h3 className="text-xl font-semibold text-[#f8f8f8] mb-4">📹 Videos</h3>
+                                <h3 className={`text-xl font-semibold ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'} mb-4`}>
+                                    📹 <TranslatedText>Videos</TranslatedText>
+                                </h3>
                                 {currentContent.videoUrls.map((url, index) => (
                                     <div key={index} className="mb-4">
                                         {url && url.trim() && renderVideoPlayer(url)}
@@ -544,7 +709,9 @@ const calculateQuizScore = () => {
                         {/* Render Images */}
                         {currentContent.imageUrls && currentContent.imageUrls.length > 0 && (
                             <div className="mt-6">
-                                <h3 className="text-xl font-semibold text-[#f8f8f8] mb-4">🖼️ Images</h3>
+                                <h3 className={`text-xl font-semibold ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'} mb-4`}>
+                                    🖼️ <TranslatedText>Images</TranslatedText>
+                                </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {currentContent.imageUrls.map((url, index) => (
                                         <div key={index}>
@@ -558,7 +725,9 @@ const calculateQuizScore = () => {
                         {/* Render Mermaid Diagram */}
                         {currentContent.mermaid && (
                             <div className="mt-6">
-                                <h3 className="text-xl font-semibold text-[#f8f8f8] mb-4">📊 Diagram</h3>
+                                <h3 className={`text-xl font-semibold ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'} mb-4`}>
+                                    📊 <TranslatedText>Diagram</TranslatedText>
+                                </h3>
                                 {renderMermaidDiagram(currentContent.mermaid)}
                             </div>
                         )}
@@ -570,17 +739,19 @@ const calculateQuizScore = () => {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handlePrevSlide}
                                 disabled={currentSlide === 0}
-                                className="px-6 py-3 border border-[#f8f8f8]/30 text-[#f8f8f8] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`px-6 py-3 border ${isDark ? 'border-[#f8f8f8]/30 text-[#f8f8f8]' : 'border-[#080808]/30 text-[#080808]'} rounded-lg disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
-                                ← Previous
+                                ← <TranslatedText>Previous</TranslatedText>
                             </motion.button>
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleNextSlide}
-                                className="px-6 py-3 bg-[#f8f8f8] text-[#030303] rounded-lg font-medium"
+                                className={`px-6 py-3 ${isDark ? 'bg-[#f8f8f8] text-[#030303]' : 'bg-[#080808] text-[#f8f8f8]'} rounded-lg font-medium`}
                             >
-                                {currentSlide === flattenedContent.length - 1 ? 'Complete Course' : 'Next →'}
+                                {currentSlide === flattenedContent.length - 1 ? 
+                                    <TranslatedText>Complete Course</TranslatedText> : 
+                                    <TranslatedText>Next</TranslatedText>} →
                             </motion.button>
                         </div>
                     </motion.div>
@@ -589,19 +760,19 @@ const calculateQuizScore = () => {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-[#222052] border border-[#f8f8f8]/20 rounded-2xl p-8"
+                        className={`${isDark ? 'bg-[#222052] border-[#f8f8f8]/20' : 'bg-[#f8f8f8] border-[#080808]/20'} border rounded-2xl p-8`}
                     >
-                        <h2 className="text-3xl font-bold text-[#f8f8f8] mb-6 text-center">
-                            🧠 Quiz Time!
+                        <h2 className={`text-3xl font-bold ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'} mb-6 text-center`}>
+                            🧠 <TranslatedText>Quiz Time!</TranslatedText>
                         </h2>
-                        <p className="text-[#f8f8f8]/70 text-center mb-8">
-                            Test your understanding before moving forward
+                        <p className={`${isDark ? 'text-[#f8f8f8]/70' : 'text-[#080808]/70'} text-center mb-8`}>
+                            <TranslatedText>Test your understanding before moving forward</TranslatedText>
                         </p>
 
                         <div className="space-y-6">
                             {quizData.questions.map((question, index) => (
-                                <div key={index} className="border border-[#f8f8f8]/20 rounded-lg p-6">
-                                    <h3 className="text-xl font-semibold text-[#f8f8f8] mb-4">
+                                <div key={index} className={`border ${isDark ? 'border-[#f8f8f8]/20' : 'border-[#080808]/20'} rounded-lg p-6`}>
+                                    <h3 className={`text-xl font-semibold ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'} mb-4`}>
                                         {index + 1}. {question.question}
                                     </h3>
                                     <div className="space-y-3">
@@ -618,9 +789,9 @@ const calculateQuizScore = () => {
                                                         ...quizAnswers,
                                                         [index]: parseInt(e.target.value)
                                                     })}
-                                                    className="text-[#f8f8f8]"
+                                                    className={isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}
                                                 />
-                                                <span className="text-[#f8f8f8]">{option}</span>
+                                                <span className={isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}>{option}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -634,9 +805,9 @@ const calculateQuizScore = () => {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleQuizSubmit}
                                 disabled={Object.keys(quizAnswers).length !== quizData.questions.length}
-                                className="px-8 py-3 bg-[#f8f8f8] text-[#030303] rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`px-8 py-3 ${isDark ? 'bg-[#f8f8f8] text-[#030303]' : 'bg-[#080808] text-[#f8f8f8]'} rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
-                                Submit Quiz
+                                <TranslatedText>Submit Quiz</TranslatedText>
                             </motion.button>
                         </div>
                     </motion.div>
@@ -646,10 +817,11 @@ const calculateQuizScore = () => {
             <ToastContainer
                 position="top-right"
                 autoClose={3000}
-                theme="dark"
+                theme={isDark ? "dark" : "light"}
                 toastStyle={{
-                    backgroundColor: '#222052',
-                    color: '#f8f8f8'
+                    backgroundColor: isDark ? '#222052' : '#f8f8f8',
+                    color: isDark ? '#f8f8f8' : '#080808',
+                    border: isDark ? "1px solid #222" : "1px solid #e5e7eb",
                 }}
             />
         </motion.div>
