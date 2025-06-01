@@ -50,7 +50,7 @@ const Navbar = () => {
             className="flex items-center space-x-2"
           >
             <div className="w-8 h-8 bg-gradient-to-br from-[#222052] to-[#222052]/70 rounded-lg flex items-center justify-center">
-              <span className="text-[#f8f8f8] font-bold text-sm">E</span>
+              <img className="w-6 h-6" src="/logo.png" alt="Logo" />
             </div>
             <span
               className={`text-xl font-bold ${

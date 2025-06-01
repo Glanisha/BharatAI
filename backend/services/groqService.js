@@ -369,18 +369,11 @@ RESPOND WITH VALID JSON ONLY - NO MARKDOWN:
   enhanceVideoUrls(searchTerms, topicTitle) {
     // Real educational YouTube videos
     const educationalVideos = [
-      'https://www.youtube.com/watch?v=aircAruvnKk', // 3Blue1Brown - Neural Networks
-      'https://www.youtube.com/watch?v=WUvTyaaNkzM', // Crash Course - Introduction to Learning
-      'https://www.youtube.com/watch?v=fNk_zzaMoSs', // TED-Ed - How Learning Works
-      'https://www.youtube.com/watch?v=rStL7niR7gs', // MIT - Introduction to Algorithms
-      'https://www.youtube.com/watch?v=yQhC1kv7n90', // Khan Academy - Linear Algebra
-      'https://www.youtube.com/watch?v=nykKHdNPEQ4', // Veritasium - Science Learning
-      'https://www.youtube.com/watch?v=1HSdufftE9Y', // MinutePhysics - Physics Concepts
-      'https://www.youtube.com/watch?v=kp_ApQhOHwU', // CGP Grey - Educational Content
-      'https://www.youtube.com/watch?v=_NQqQjqXwEE', // SciShow - Science Education
-      'https://www.youtube.com/watch?v=H6SUhgiWNBk', // CrashCourse - History Learning
-      'https://www.youtube.com/watch?v=8nHBGFKLHZQ', // Numberphile - Mathematics
-      'https://www.youtube.com/watch?v=F8UFGu2M2gM', // VSauce - Educational Science
+      'https://youtu.be/pDX4NR4eY3A?feature=shared',
+      'https://youtu.be/DM2lAomoDrg?feature=shared',
+      'https://youtu.be/rZxETdO_KUQ?feature=shared',
+      'https://youtu.be/mf_PbWPo7VM?feature=shared',
+      'https://youtu.be/jxENwUU9j7w?feature=shared'
     ];
     
     // Return 2 random educational videos
