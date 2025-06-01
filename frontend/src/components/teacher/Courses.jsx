@@ -77,7 +77,7 @@ const Courses = ({ setActiveTab }) => {
   };
 
   return (
-    <div className={`p-6 min-h-[80vh] ${isDark ? 'bg-[#030303]' : 'bg-gray-50'}`}>
+    <div className={`p-6 min-h-[80vh]`}>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className={`text-3xl font-bold mb-1 ${isDark ? 'text-neutral-50' : 'text-gray-900'}`}>My Courses</h1>

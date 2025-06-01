@@ -47,7 +47,7 @@ const Overview = () => {
   }, []);
 
   return (
-    <div className={`p-6 min-h-[80vh] ${isDark ? 'bg-[#030303]' : 'bg-gray-50'}`}>
+    <div className={`p-6 min-h-[80vh]`}>
       <h1 className={`text-2xl font-bold mb-8 ${isDark ? 'text-neutral-50' : 'text-gray-900'}`}>Overview</h1>
       {loading ? (
         <div className="flex items-center justify-center min-h-[200px]">
