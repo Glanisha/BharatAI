@@ -272,7 +272,7 @@ const PDFTranslator = () => {
                   ))}
               </div>
             </div>
-            <ThemeToggle />
+         
           </div>
         </div>
 
