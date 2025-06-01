@@ -365,7 +365,10 @@ const getEnrolledCourses = async (req, res) => {
       select: "title description category language tags contentTree",
     });
 
-    const enrolledCourses = progresses.map((progress) => {
+    // Filter out progresses with null courses (deleted courses)
+    const validProgresses = progresses.filter(progress => progress.course !== null);
+
+    const enrolledCourses = validProgresses.map((progress) => {
       console.log(`Course: ${progress.course.title}`);
       console.log(`Has contentTree: ${!!progress.course.contentTree}`);
       console.log(`Completed slides: ${progress.completedSlides}`);
@@ -380,6 +383,8 @@ const getEnrolledCourses = async (req, res) => {
       const progressPercentage = Math.round(
         (progress.completedSlides / totalSlides) * 100
       );
+
+      console.log(`Progress: ${progressPercentage}%`);
 
       return {
         _id: progress.course._id,
