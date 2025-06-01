@@ -44,6 +44,7 @@ const StudentStats = () => {
     const { isDark } = useTheme();
     const [currentLanguage, setCurrentLanguage] = useState("English");
     const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
 
     useEffect(() => {
         fetchUserStats();
@@ -150,11 +151,93 @@ const StudentStats = () => {
     };
 
     const shareStats = async () => {
+        setShowShareModal(true);
+    };
+
+    const copyToClipboard = async () => {
         try {
             await navigator.clipboard.writeText(shareableLink);
-            toast.success(<TranslatedText>Shareable link copied to clipboard!</TranslatedText>);
+            toast.success(<TranslatedText>Link copied to clipboard!</TranslatedText>);
+            setShowShareModal(false);
         } catch (error) {
             toast.error(<TranslatedText>Failed to copy link</TranslatedText>);
+        }
+    };
+
+    const shareToSocial = (platform) => {
+        const message = `Check out my learning progress on BharatAI! 📚 ${stats?.coursesCompleted || 0} courses completed, ${stats?.totalStudyTime || 0} minutes of study time, and ${achievementStats?.unlocked || 0} achievements unlocked! 🎯`;
+        
+        const urls = {
+            twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}&url=${encodeURIComponent(shareableLink)}`,
+            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareableLink)}`,
+            whatsapp: `https://wa.me/?text=${encodeURIComponent(message + ' ' + shareableLink)}`,
+            telegram: `https://t.me/share/url?url=${encodeURIComponent(shareableLink)}&text=${encodeURIComponent(message)}`
+        };
+
+        window.open(urls[platform], '_blank', 'width=600,height=400');
+        setShowShareModal(false);
+    };
+
+    const generateImage = async () => {
+        try {
+            // Create a canvas for the stats image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 800;
+            canvas.height = 600;
+
+            // Background
+            ctx.fillStyle = isDark ? '#030303' : '#f8f8f8';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Title
+            ctx.fillStyle = isDark ? '#f8f8f8' : '#080808';
+            ctx.font = 'bold 32px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('My Learning Stats - BharatAI', canvas.width / 2, 80);
+
+            // Stats
+            const statsData = [
+                { icon: '📚', value: stats?.coursesCompleted || 0, label: 'Courses Completed' },
+                { icon: '⏱', value: `${stats?.totalStudyTime || 0} min`, label: 'Study Time' },
+                { icon: '🎯', value: `${stats?.averageScore || 0}%`, label: 'Average Score' },
+                { icon: '🏆', value: achievementStats?.unlocked || 0, label: 'Achievements' }
+            ];
+
+            let yPosition = 150;
+            statsData.forEach((stat, index) => {
+                const xPosition = (index % 2) * 400 + 200;
+                if (index === 2) yPosition = 350;
+
+                // Icon
+                ctx.font = '48px Arial';
+                ctx.fillText(stat.icon, xPosition, yPosition);
+                
+                // Value
+                ctx.font = 'bold 36px Arial';
+                ctx.fillStyle = '#222052';
+                ctx.fillText(stat.value.toString(), xPosition, yPosition + 60);
+                
+                // Label
+                ctx.font = '20px Arial';
+                ctx.fillStyle = isDark ? '#f8f8f8' : '#080808';
+                ctx.fillText(stat.label, xPosition, yPosition + 90);
+            });
+
+            // Convert to blob and download
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'my-learning-stats.png';
+                a.click();
+                URL.revokeObjectURL(url);
+                toast.success(<TranslatedText>Stats image downloaded!</TranslatedText>);
+            });
+
+            setShowShareModal(false);
+        } catch (error) {
+            toast.error(<TranslatedText>Failed to generate image</TranslatedText>);
         }
     };
 
@@ -323,6 +406,79 @@ const StudentStats = () => {
                     🔗 <TranslatedText>Share My Progress</TranslatedText>
                 </motion.button>
             </div>
+
+            {/* Share Modal */}
+            {showShareModal && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                    onClick={() => setShowShareModal(false)}
+                >
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className={`${isDark ? 'bg-[#181818]' : 'bg-white'} rounded-2xl p-6 max-w-md w-full mx-4`}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className={`text-2xl font-bold ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'} mb-4 text-center`}>
+                            🚀 <TranslatedText>Share Your Progress</TranslatedText>
+                        </h3>
+                        
+                        <div className="space-y-3">
+                            <button
+                                onClick={copyToClipboard}
+                                className={`w-full p-3 rounded-lg ${isDark ? 'bg-[#222052] hover:bg-[#2a2564]' : 'bg-[#222052] hover:bg-[#2a2564]'} text-white transition flex items-center justify-center gap-2`}
+                            >
+                                📋 <TranslatedText>Copy Link</TranslatedText>
+                            </button>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={() => shareToSocial('twitter')}
+                                    className="p-3 rounded-lg bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white transition flex items-center justify-center gap-2"
+                                >
+                                    🐦 Twitter
+                                </button>
+                                
+                                <button
+                                    onClick={() => shareToSocial('linkedin')}
+                                    className="p-3 rounded-lg bg-[#0077B5] hover:bg-[#006399] text-white transition flex items-center justify-center gap-2"
+                                >
+                                    💼 LinkedIn
+                                </button>
+                                
+                                <button
+                                    onClick={() => shareToSocial('whatsapp')}
+                                    className="p-3 rounded-lg bg-[#25D366] hover:bg-[#20b858] text-white transition flex items-center justify-center gap-2"
+                                >
+                                    💬 WhatsApp
+                                </button>
+                                
+                                <button
+                                    onClick={() => shareToSocial('telegram')}
+                                    className="p-3 rounded-lg bg-[#0088CC] hover:bg-[#0077b3] text-white transition flex items-center justify-center gap-2"
+                                >
+                                    ✈️ Telegram
+                                </button>
+                            </div>
+                            
+                            <button
+                                onClick={generateImage}
+                                className={`w-full p-3 rounded-lg ${isDark ? 'bg-[#030303] border border-[#f8f8f8]/20' : 'bg-[#f8f8f8] border border-[#080808]/20'} ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'} transition flex items-center justify-center gap-2`}
+                            >
+                                📸 <TranslatedText>Download as Image</TranslatedText>
+                            </button>
+                        </div>
+                        
+                        <div className="mt-4 p-3 rounded-lg bg-gray-100 dark:bg-[#222]">
+                            <p className="text-xs text-gray-600 dark:text-gray-400 break-all">
+                                {shareableLink}
+                            </p>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
 
             <ToastContainer
                 position="top-right"
