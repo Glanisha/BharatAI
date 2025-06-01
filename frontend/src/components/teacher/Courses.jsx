@@ -12,12 +12,14 @@ import {
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useTheme } from "../../context/ThemeContext";
 
 const Courses = ({ setActiveTab }) => {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState([]);
   const [copiedId, setCopiedId] = useState(null);
   const navigate = useNavigate();
+  const { isDark } = useTheme();
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -73,24 +75,30 @@ const Courses = ({ setActiveTab }) => {
   };
 
   return (
-    <div className="p-6">
+    <div className={`p-6 ${isDark ? "bg-neutral-900" : "bg-neutral-50"}`}>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-[#080808] dark:text-[#f8f8f8]">
+        <h1
+          className={`text-2xl font-bold ${
+            isDark ? "text-neutral-50" : "text-neutral-900"
+          }`}
+        >
           My Courses
         </h1>
         <button
           onClick={() => setActiveTab("create-course")}
-          className="flex items-center gap-2 px-3 py-2 rounded bg-[#7c3aed] hover:bg-[#5b21b6] text-white text-sm font-medium transition"
+          className="flex items-center gap-2 px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition"
         >
           <FaPlus /> New Course
         </button>
       </div>
       {loading ? (
         <div className="flex items-center justify-center min-h-[200px]">
-          <div className="animate-spin h-8 w-8 border-2 border-[#222052] border-t-transparent rounded-full"></div>
+          <div className="animate-spin h-8 w-8 border-2 border-indigo-700 border-t-transparent rounded-full"></div>
         </div>
       ) : courses.length === 0 ? (
-        <div className="text-gray-400 text-center py-12">No courses found.</div>
+        <div className="text-neutral-400 text-center py-12">
+          No courses found.
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {courses.map((course, i) => (
@@ -99,18 +107,26 @@ const Courses = ({ setActiveTab }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className="bg-[#f8f8f8] dark:bg-[#181818] rounded-lg shadow p-5 flex flex-col gap-3 border border-gray-100 dark:border-[#23234a]"
+              className={`${
+                isDark
+                  ? "bg-neutral-800 border border-neutral-700"
+                  : "bg-neutral-100 border border-neutral-200"
+              } rounded-lg shadow p-5 flex flex-col gap-3`}
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">
                     {course.isPrivate ? (
-                      <FaLock className="text-[#7c3aed]" />
+                      <FaLock className="text-indigo-500" />
                     ) : (
                       <FaUnlock className="text-green-500" />
                     )}
                   </span>
-                  <h2 className="text-lg font-semibold text-[#080808] dark:text-[#f8f8f8] truncate">
+                  <h2
+                    className={`text-lg font-semibold truncate ${
+                      isDark ? "text-neutral-50" : "text-neutral-900"
+                    }`}
+                  >
                     {course.title}
                   </h2>
                   {course.isPublished === false && (
@@ -120,7 +136,11 @@ const Courses = ({ setActiveTab }) => {
                   )}
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <span className="flex items-center gap-1 text-[#7c3aed] dark:text-[#a78bfa] font-semibold">
+                  <span
+                    className={`flex items-center gap-1 font-semibold ${
+                      isDark ? "text-indigo-200" : "text-indigo-700"
+                    }`}
+                  >
                     <FaUserGraduate />{" "}
                     {typeof course.enrolledStudents === "number"
                       ? course.enrolledStudents
@@ -128,26 +148,48 @@ const Courses = ({ setActiveTab }) => {
                       ? course.enrolledStudents.length
                       : 0}
                   </span>
-                  <span className="text-gray-500 dark:text-gray-400">
+                  <span
+                    className={isDark ? "text-neutral-400" : "text-neutral-500"}
+                  >
                     {countTopics(course.contentTree)} topics
                   </span>
                 </div>
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">
+              <div
+                className={`text-xs truncate max-w-xs ${
+                  isDark ? "text-neutral-400" : "text-neutral-500"
+                }`}
+              >
                 {course.description}
               </div>
               <div className="flex flex-wrap gap-2 mt-1">
-                <span className="px-2 py-0.5 rounded bg-[#ece9ff] dark:bg-[#18182b] text-[#7c3aed] dark:text-[#a78bfa] text-xs font-medium">
+                <span
+                  className={`px-2 py-0.5 rounded ${
+                    isDark
+                      ? "bg-indigo-900 text-indigo-200"
+                      : "bg-indigo-100 text-indigo-700"
+                  } text-xs font-medium`}
+                >
                   {course.category}
                 </span>
-                <span className="px-2 py-0.5 rounded bg-[#f8f8f8] dark:bg-[#23234a] text-[#080808] dark:text-[#f8f8f8] text-xs font-medium border border-gray-200 dark:border-[#23234a]">
+                <span
+                  className={`px-2 py-0.5 rounded ${
+                    isDark
+                      ? "bg-neutral-900 text-neutral-50 border border-neutral-700"
+                      : "bg-neutral-50 text-neutral-900 border border-neutral-200"
+                  } text-xs font-medium`}
+                >
                   {course.language}
                 </span>
                 {Array.isArray(course.tags) &&
                   course.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-2 py-0.5 rounded bg-[#f3f4f6] dark:bg-[#23234a] text-[#080808] dark:text-[#f8f8f8] text-xs"
+                      className={`px-2 py-0.5 rounded ${
+                        isDark
+                          ? "bg-neutral-800 text-neutral-200"
+                          : "bg-neutral-100 text-neutral-700"
+                      } text-xs`}
                     >
                       #{tag}
                     </span>
@@ -158,7 +200,11 @@ const Courses = ({ setActiveTab }) => {
                   onClick={() =>
                     navigate(`/teacher/courses/${course.id || course._id}/edit`)
                   }
-                  className="flex items-center gap-1 px-3 py-1.5 rounded bg-[#ece9ff] dark:bg-[#18182b] text-[#7c3aed] dark:text-[#a78bfa] hover:bg-[#e0e7ff] dark:hover:bg-[#23234a] text-xs font-medium transition"
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded ${
+                    isDark
+                      ? "bg-indigo-900 text-indigo-200 hover:bg-indigo-800"
+                      : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                  } text-xs font-medium transition`}
                 >
                   <FaEdit /> Edit
                 </button>
@@ -166,7 +212,11 @@ const Courses = ({ setActiveTab }) => {
                   onClick={() =>
                     navigate(`/teacher/courses/${course.id || course._id}/view`)
                   }
-                  className="flex items-center gap-1 px-3 py-1.5 rounded bg-[#f8f8f8] dark:bg-[#222] text-[#080808] dark:text-[#f8f8f8] hover:bg-gray-100 dark:hover:bg-[#181818] text-xs font-medium transition"
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded ${
+                    isDark
+                      ? "bg-neutral-900 text-neutral-50 hover:bg-neutral-800"
+                      : "bg-neutral-50 text-neutral-900 hover:bg-neutral-200"
+                  } text-xs font-medium transition`}
                 >
                   <FaEye /> View
                 </button>
@@ -175,7 +225,11 @@ const Courses = ({ setActiveTab }) => {
                     onClick={() =>
                       handleCopy(course.courseCode, course.id || course._id)
                     }
-                    className="flex items-center gap-1 px-3 py-1.5 rounded bg-[#f8f8f8] dark:bg-[#23234a] text-[#7c3aed] dark:text-[#a78bfa] hover:bg-[#ece9ff] dark:hover:bg-[#18182b] text-xs font-medium transition"
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded ${
+                      isDark
+                        ? "bg-neutral-900 text-indigo-200 hover:bg-indigo-800"
+                        : "bg-neutral-50 text-indigo-700 hover:bg-indigo-100"
+                    } text-xs font-medium transition`}
                   >
                     {copiedId === (course.id || course._id) ? (
                       <>
@@ -189,7 +243,11 @@ const Courses = ({ setActiveTab }) => {
                   </button>
                 )}
               </div>
-              <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
+              <div
+                className={`flex justify-between items-center mt-2 text-xs ${
+                  isDark ? "text-neutral-500" : "text-neutral-400"
+                }`}
+              >
                 <span>
                   Created:{" "}
                   {course.createdAt

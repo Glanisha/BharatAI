@@ -7,6 +7,7 @@ import DashboardLayout from "../DashboardLayout";
 import Overview from "./Overview";
 import Courses from "./Courses"; // Make sure the import path is correct
 import CreateCourse from "./CreateCourse"; // import at the top
+import { useTheme } from "../../context/ThemeContext"; // Add this import
 import "react-toastify/dist/ReactToastify.css";
 
 const TeacherDashboard = () => {
@@ -15,6 +16,7 @@ const TeacherDashboard = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { isDark } = useTheme(); // Use theme context
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -93,12 +95,6 @@ const TeacherDashboard = () => {
       active: activeTab === "analytics",
       onClick: () => setActiveTab("analytics"),
     },
-    {
-      id: "settings",
-      label: "Settings",
-      active: activeTab === "settings",
-      onClick: () => setActiveTab("settings"),
-    },
   ];
 
   // Render content based on active tab
@@ -112,10 +108,11 @@ const TeacherDashboard = () => {
         return <CreateCourse setActiveTab={setActiveTab} />;
       case "analytics":
         // Replace with your Analytics component
-        return <div className="text-[#f8f8f8]">Analytics coming soon...</div>;
-      case "settings":
-        // Replace with your Settings component
-        return <div className="text-[#f8f8f8]">Settings coming soon...</div>;
+        return (
+          <div className={isDark ? "text-neutral-50" : "text-neutral-900"}>
+            Analytics coming soon...
+          </div>
+        );
       default:
         return <Overview />;
     }
@@ -123,13 +120,23 @@ const TeacherDashboard = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#080808]">
+      <div
+        className={
+          isDark
+            ? "min-h-screen flex items-center justify-center bg-neutral-900"
+            : "min-h-screen flex items-center justify-center bg-neutral-50"
+        }
+      >
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex items-center space-x-3 text-[#f8f8f8]"
+          className={
+            isDark
+              ? "flex items-center space-x-3 text-neutral-50"
+              : "flex items-center space-x-3 text-neutral-900"
+          }
         >
-          <div className="animate-spin h-6 w-6 border-2 border-[#222052] border-t-transparent rounded-full"></div>
+          <div className="animate-spin h-6 w-6 border-2 border-indigo-700 border-t-transparent rounded-full"></div>
           <span className="font-medium">Loading dashboard...</span>
         </motion.div>
       </div>
