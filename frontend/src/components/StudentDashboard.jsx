@@ -15,6 +15,8 @@ import {
 } from "react-icons/fa";
 import WikipediaShortsLauncher from "./TikTok";
 import PDFTranslator from "./translatePart/PDFTranslator";
+import { useTheme } from "../context/ThemeContext";
+import { TranslatedText } from "./TranslatedText";
 
 // Maps frontend codes to backend full names
 const BACKEND_LANGUAGE_MAP = {
@@ -53,6 +55,7 @@ const navItems = [
 ];
 
 const StudentDashboard = () => {
+  const { isDark, toggleTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [courses, setCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
@@ -66,21 +69,8 @@ const StudentDashboard = () => {
   const [currentLanguage, setCurrentLanguage] = useState("English");
   const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
   const [collapsed, setCollapsed] = useState(window.innerWidth < 768);
-  const [darkMode, setDarkMode] = useState(
-    localStorage.getItem("darkMode") === "true" || false
-  );
   const [activeTab, setActiveTab] = useState("dashboard");
   const navigate = useNavigate();
-
-  // Apply dark mode class to document element
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    localStorage.setItem("darkMode", darkMode);
-  }, [darkMode]);
 
   useEffect(() => {
     const handleResize = () => setCollapsed(window.innerWidth < 768);
@@ -107,6 +97,7 @@ const StudentDashboard = () => {
     fetchCourses();
     fetchEnrolledCourses();
     fetchPreferredLanguage();
+    // eslint-disable-next-line
   }, [navigate]);
 
   const fetchPreferredLanguage = async () => {
@@ -310,7 +301,7 @@ const StudentDashboard = () => {
         return (
           <div className="p-6">
             <h2 className="text-2xl font-bold mb-6 text-[#080808] dark:text-[#f8f8f8]">
-              My Enrolled Courses
+              <TranslatedText>My Enrolled Courses</TranslatedText>
             </h2>
             {enrolledCourses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -438,7 +429,7 @@ const StudentDashboard = () => {
               <p className="text-[#080808] dark:text-[#f8f8f8] mb-4">
                 This feature allows you to translate PDF documents to your preferred language.
               </p>
-             <PDFTranslator/>
+              <PDFTranslator />
             </div>
           </div>
         );
@@ -447,15 +438,15 @@ const StudentDashboard = () => {
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-[#080808] dark:text-[#f8f8f8]">
-                Available Courses
+               <TranslatedText>Available Courses</TranslatedText> 
               </h2>
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => setDarkMode(!darkMode)}
+                  onClick={toggleTheme}
                   className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#222] transition"
-                  title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+                  title={isDark ? "Switch to light mode" : "Switch to dark mode"}
                 >
-                  {darkMode ? <FaSun className="text-yellow-400" /> : <FaMoon className="text-gray-600" />}
+                  {isDark ? <FaSun className="text-yellow-400" /> : <FaMoon className="text-gray-600" />}
                 </button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -555,7 +546,7 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className={`flex h-screen ${darkMode ? 'dark' : ''} bg-white dark:bg-[#101010] overflow-hidden`}>
+    <div className={`flex h-screen ${isDark ? 'dark' : ''} bg-white dark:bg-[#101010] overflow-hidden`}>
       {/* Sidebar */}
       <aside
         className={`sticky top-0 flex flex-col justify-between h-screen bg-white dark:bg-[#101010] border-r border-gray-200 dark:border-[#222] transition-all duration-200
@@ -759,11 +750,11 @@ const StudentDashboard = () => {
         position="top-right"
         autoClose={3000}
         hideProgressBar={false}
-        theme={darkMode ? "dark" : "light"}
+        theme={isDark ? "dark" : "light"}
         toastStyle={{
-          backgroundColor: darkMode ? "#181818" : "#ffffff",
-          color: darkMode ? "#f8f8f8" : "#080808",
-          border: darkMode ? "1px solid #222" : "1px solid #e5e7eb",
+          backgroundColor: isDark ? "#181818" : "#ffffff",
+          color: isDark ? "#f8f8f8" : "#080808",
+          border: isDark ? "1px solid #222" : "1px solid #e5e7eb",
         }}
       />
 
