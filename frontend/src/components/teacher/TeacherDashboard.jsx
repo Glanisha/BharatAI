@@ -10,6 +10,7 @@ import CreateCourse from "./CreateCourse"; // import at the top
 import Analytics from "./Analytics"; // <-- Add this import
 import { useTheme } from "../../context/ThemeContext"; // Add this import
 import "react-toastify/dist/ReactToastify.css";
+import PDFTranslator from "../translatePart/PDFTranslator";
 
 const TeacherDashboard = () => {
   const [user, setUser] = useState(null);
@@ -111,7 +112,9 @@ const TeacherDashboard = () => {
       case "create-course":
         return <CreateCourse setActiveTab={setActiveTab} />;
       case "analytics":
-        return <Analytics />; // <-- Use your Analytics component here
+        return <Analytics />; 
+        case "pdf-translator":
+        return <PDFTranslator />;
       default:
         return <Overview />;
     }
