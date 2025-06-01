@@ -12,11 +12,14 @@ import {
   FaMoon,
   FaSun,
   FaLanguage,
+  FaChartLine
 } from "react-icons/fa";
 import WikipediaShortsLauncher from "./TikTok";
 import PDFTranslator from "./translatePart/PDFTranslator";
 import { useTheme } from "../context/ThemeContext";
 import { TranslatedText } from "./TranslatedText";
+import AchievementCard from "./AchievementCard";
+import AllAchievements from "./AllAchievements";
 
 // Maps frontend codes to backend full names
 const BACKEND_LANGUAGE_MAP = {
@@ -51,6 +54,7 @@ const navItems = [
   { key: "dashboard", label: "Dashboard", icon: <FaHome /> },
   { key: "courses", label: "My Courses", icon: <FaBook /> },
   { key: "stats", label: "Stats", icon: <FaChartBar /> },
+{ key: "achievements", label: "Achievements", icon: <FaChartLine /> },
   { key: "translator", label: "Translator", icon: <FaLanguage /> },
 ];
 
@@ -435,6 +439,17 @@ const StudentDashboard = () => {
                 <TranslatedText>This feature allows you to translate PDF documents to your preferred language.</TranslatedText>
               </p>
               <PDFTranslator />
+            </div>
+          </div>
+        );
+        case "achievements":
+        return (
+          <div className="p-6">
+            <h2 className="text-2xl font-bold mb-6 text-[#080808] dark:text-[#f8f8f8]">
+              <TranslatedText>Achievements</TranslatedText>
+            </h2>
+            <div className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-6">
+              <AllAchievements/>
             </div>
           </div>
         );
