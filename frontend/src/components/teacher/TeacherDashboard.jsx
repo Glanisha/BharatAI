@@ -15,7 +15,7 @@ const TeacherDashboard = () => {
   const [user, setUser] = useState(null);
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(
-    location.state?.activeTab || "overview"
+    "overview"
   );
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
