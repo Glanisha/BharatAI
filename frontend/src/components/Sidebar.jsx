@@ -11,6 +11,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import Courses from "../components/teacher/Courses";
 import Overview from "../components/teacher/Overview";
+import { useTheme } from "../context/ThemeContext";
 
 const navItems = [
   { key: "overview", label: "Overview", icon: <FaHome /> },
@@ -20,19 +21,9 @@ const navItems = [
 
 const Sidebar = ({ activeKey, setActiveTab }) => {
   const [collapsed, setCollapsed] = useState(window.innerWidth < 768);
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem("theme") || "light"
-  );
-  const navigate = useNavigate();
+  const { isDark } = useTheme();
 
-  useEffect(() => {
-    localStorage.setItem("theme", theme);
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [theme]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleResize = () => setCollapsed(window.innerWidth < 768);
@@ -48,14 +39,24 @@ const Sidebar = ({ activeKey, setActiveTab }) => {
 
   return (
     <aside
-      className={`sticky top-0 flex flex-col justify-between h-screen bg-white dark:bg-[#101010] border-r border-gray-200 dark:border-[#222] transition-all duration-200
-      ${collapsed ? "w-16" : "w-56"} z-30`}
+      className={`sticky top-0 flex flex-col justify-between h-screen border-r transition-all duration-200
+        ${collapsed ? "w-16" : "w-56"} z-30
+        ${isDark ? "bg-[#101010] border-[#222]" : "bg-white border-gray-200"}
+      `}
     >
       <div>
-        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-[#222]">
+        <div
+          className={`flex items-center justify-between px-4 py-4 border-b ${
+            isDark ? "border-[#222]" : "border-gray-100"
+          }`}
+        >
           <div />
           <button
-            className="ml-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-[#181818] transition text-[#080808] dark:text-[#f8f8f8]"
+            className={`ml-2 p-2 rounded transition ${
+              isDark
+                ? "hover:bg-[#181818] text-[#f8f8f8]"
+                : "hover:bg-gray-100 text-[#080808]"
+            }`}
             onClick={() => setCollapsed((c) => !c)}
           >
             <FaBars />
@@ -66,28 +67,41 @@ const Sidebar = ({ activeKey, setActiveTab }) => {
             <button
               key={item.key}
               className={`
-                group flex items-center gap-4 px-3 py-2 text-left rounded-lg transition
-                relative
+                group flex items-center gap-4 px-3 py-2 text-left rounded-lg transition relative
                 ${
                   activeKey === item.key
-                    ? "mx-2 my-1 bg-[#ece9ff] dark:bg-[#18182b] font-semibold border-l-4 border-[#7c3aed] dark:border-[#a78bfa] shadow-sm"
-                    : "hover:bg-gray-100 dark:hover:bg-[#181818]"
+                    ? `${
+                        isDark
+                          ? "mx-2 my-1 bg-[#18182b] font-semibold border-l-4 border-[#a78bfa] shadow-sm"
+                          : "mx-2 my-1 bg-[#ece9ff] font-semibold border-l-4 border-[#7c3aed] shadow-sm"
+                      }`
+                    : isDark
+                    ? "hover:bg-[#181818]"
+                    : "hover:bg-gray-100"
                 }
                 ${collapsed ? "justify-center px-0" : ""}
-                text-[#080808] dark:text-[#f8f8f8]
+                ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}
               `}
-              onClick={() => setActiveTab(item.key)} // <-- Only this!
+              onClick={() => setActiveTab(item.key)}
               title={item.label}
               style={{
                 marginLeft: activeKey === item.key && !collapsed ? "2px" : 0,
                 marginRight: activeKey === item.key && !collapsed ? "2px" : 0,
               }}
             >
-              <span className="text-lg text-[#080808] dark:text-[#f8f8f8]">
+              <span
+                className={`text-lg ${
+                  isDark ? "text-[#f8f8f8]" : "text-[#080808]"
+                }`}
+              >
                 {item.icon}
               </span>
               {!collapsed && (
-                <span className="sidebar-label text-base text-[#080808] dark:text-[#f8f8f8]">
+                <span
+                  className={`sidebar-label text-base ${
+                    isDark ? "text-[#f8f8f8]" : "text-[#080808]"
+                  }`}
+                >
                   {item.label}
                 </span>
               )}
@@ -97,19 +111,12 @@ const Sidebar = ({ activeKey, setActiveTab }) => {
       </div>
       <div className="flex flex-col gap-2 px-2 pb-4">
         <button
-          className="flex items-center justify-center md:justify-start gap-2 px-2 py-2 rounded hover:bg-gray-100 dark:hover:bg-[#181818] transition text-[#080808] dark:text-[#f8f8f8]"
-          onClick={() => setTheme((t) => (t === "light" ? "dark" : "light"))}
-          title="Toggle theme"
-        >
-          {theme === "light" ? <FaMoon /> : <FaSun />}
-          {!collapsed && (
-            <span className="sidebar-label text-base">
-              {theme === "light" ? "Dark" : "Light"} Mode
-            </span>
-          )}
-        </button>
-        <button
-          className="flex items-center justify-center md:justify-start gap-2 px-2 py-2 rounded hover:bg-red-50 dark:hover:bg-[#181818] text-red-600 dark:text-red-400 transition"
+          className={`flex items-center justify-center md:justify-start gap-2 px-2 py-2 rounded transition
+            ${
+              isDark
+                ? "hover:bg-[#181818] text-red-400"
+                : "hover:bg-red-50 text-red-600"
+            }`}
           onClick={handleLogout}
           title="Logout"
         >

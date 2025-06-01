@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { ToastContainer } from "react-toastify";
-import Sidebar from "./Sidebar";
+import Sidebar from "../Sidebar";
+import { ThemeToggle } from "../landing/ThemeToggle";
+import { useTheme } from "../../context/ThemeContext"; // Add this import
 
 const DashboardLayout = ({
   user,
@@ -12,8 +14,14 @@ const DashboardLayout = ({
   activeKey,
   setActiveTab,
 }) => {
+  const { isDark } = useTheme(); // Use theme context
+
   return (
-    <div className="min-h-screen flex bg-[#f8f8f8] dark:bg-[#080808]">
+    <div
+      className={`min-h-screen flex ${
+        isDark ? "bg-[#080808]" : "bg-[#f8f8f8]"
+      }`}
+    >
       {/* Sidebar */}
       <Sidebar activeKey={activeKey} setActiveTab={setActiveTab} />
 
@@ -23,24 +31,41 @@ const DashboardLayout = ({
         <motion.header
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="sticky top-0 z-20 bg-white/90 dark:bg-[#101010]/90 backdrop-blur border-b border-gray-200 dark:border-[#222] px-4 md:px-8 py-2"
+          className={`sticky top-0 z-20 backdrop-blur border-b px-4 md:px-8 py-2
+            ${isDark
+              ? "bg-[#101010]/90 border-[#222]"
+              : "bg-white/90 border-gray-200"}
+          `}
         >
           <div className="flex items-center justify-between">
             <div className="min-w-0">
-              <h1 className="text-lg md:text-xl font-semibold text-[#080808] dark:text-[#f8f8f8] truncate">
+              <h1
+                className={`text-lg md:text-xl font-semibold truncate ${
+                  isDark ? "text-[#f8f8f8]" : "text-[#080808]"
+                }`}
+              >
                 {title}
               </h1>
               {subtitle && (
-                <p className="text-[#222] dark:text-[#aaa] text-xs md:text-sm truncate">
+                <p
+                  className={`text-xs md:text-sm truncate ${
+                    isDark ? "text-[#aaa]" : "text-[#222]"
+                  }`}
+                >
                   {subtitle}
                 </p>
               )}
             </div>
+            <ThemeToggle />
           </div>
         </motion.header>
 
         {/* Content Area */}
-        <main className="flex-1 p-4 md:p-8 bg-[#f8f8f8] dark:bg-[#080808] overflow-auto">
+        <main
+          className={`flex-1 p-4 md:p-8 overflow-auto ${
+            isDark ? "bg-[#080808]" : "bg-[#f8f8f8]"
+          }`}
+        >
           <div className="max-w-6xl mx-auto w-full">{children}</div>
         </main>
       </div>
