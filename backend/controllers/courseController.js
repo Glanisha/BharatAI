@@ -301,6 +301,7 @@ const getInstructorCourses = async (req, res) => {
           enrolledStudents: course.enrolledStudents.length,
           isPublished: course.isPublished,
           createdAt: course.createdAt,
+          contentTree: course.contentTree,
         };
 
         // Include course code only for private courses
