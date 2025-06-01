@@ -15,6 +15,8 @@ import {
 } from "react-icons/fa";
 import WikipediaShortsLauncher from "./TikTok";
 import PDFTranslator from "./translatePart/PDFTranslator";
+import { useTheme } from "../context/ThemeContext";
+import { TranslatedText } from "./TranslatedText";
 
 // Maps frontend codes to backend full names
 const BACKEND_LANGUAGE_MAP = {
@@ -53,6 +55,7 @@ const navItems = [
 ];
 
 const StudentDashboard = () => {
+  const { isDark, toggleTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [courses, setCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
@@ -66,21 +69,8 @@ const StudentDashboard = () => {
   const [currentLanguage, setCurrentLanguage] = useState("English");
   const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
   const [collapsed, setCollapsed] = useState(window.innerWidth < 768);
-  const [darkMode, setDarkMode] = useState(
-    localStorage.getItem("darkMode") === "true" || false
-  );
   const [activeTab, setActiveTab] = useState("dashboard");
   const navigate = useNavigate();
-
-  // Apply dark mode class to document element
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    localStorage.setItem("darkMode", darkMode);
-  }, [darkMode]);
 
   useEffect(() => {
     const handleResize = () => setCollapsed(window.innerWidth < 768);
@@ -107,6 +97,7 @@ const StudentDashboard = () => {
     fetchCourses();
     fetchEnrolledCourses();
     fetchPreferredLanguage();
+    // eslint-disable-next-line
   }, [navigate]);
 
   const fetchPreferredLanguage = async () => {
@@ -310,7 +301,7 @@ const StudentDashboard = () => {
         return (
           <div className="p-6">
             <h2 className="text-2xl font-bold mb-6 text-[#080808] dark:text-[#f8f8f8]">
-              My Enrolled Courses
+              <TranslatedText>My Enrolled Courses</TranslatedText>
             </h2>
             {enrolledCourses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -406,24 +397,30 @@ const StudentDashboard = () => {
                 Course Progress
               </h3>
               <div className="space-y-4">
-                {enrolledCourses.map((course) => (
-                  <div key={course._id} className="mb-4">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium text-[#080808] dark:text-[#f8f8f8]">
-                        {course.title}
-                      </span>
-                      <span className="text-sm text-[#080808]/60 dark:text-[#f8f8f8]/60">
-                        {Math.round(course.progress || 0)}%
-                      </span>
+                {enrolledCourses.map((course) => {
+                  // Ensure progress doesn't exceed 100%
+                  const progress = Math.min(course.progress || 0, 100);
+                  const roundedProgress = Math.round(progress);
+
+                  return (
+                    <div key={course._id} className="mb-4">
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium text-[#080808] dark:text-[#f8f8f8]">
+                          {course.title}
+                        </span>
+                        <span className="text-sm text-[#080808]/60 dark:text-[#f8f8f8]/60">
+                          {roundedProgress}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-100 dark:bg-[#222] rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-[#7c3aed] dark:bg-[#a78bfa] h-2 rounded-full"
+                          style={{ width: `${progress}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-100 dark:bg-[#222] rounded-full h-2">
-                      <div
-                        className="bg-[#7c3aed] dark:bg-[#a78bfa] h-2 rounded-full"
-                        style={{ width: `${course.progress || 0}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -436,9 +433,10 @@ const StudentDashboard = () => {
             </h2>
             <div className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-6">
               <p className="text-[#080808] dark:text-[#f8f8f8] mb-4">
-                This feature allows you to translate PDF documents to your preferred language.
+                This feature allows you to translate PDF documents to your
+                preferred language.
               </p>
-             <PDFTranslator/>
+              <PDFTranslator />
             </div>
           </div>
         );
@@ -447,15 +445,21 @@ const StudentDashboard = () => {
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-[#080808] dark:text-[#f8f8f8]">
-                Available Courses
+                <TranslatedText>Available Courses</TranslatedText>
               </h2>
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => setDarkMode(!darkMode)}
+                  onClick={toggleTheme}
                   className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#222] transition"
-                  title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+                  title={
+                    isDark ? "Switch to light mode" : "Switch to dark mode"
+                  }
                 >
-                  {darkMode ? <FaSun className="text-yellow-400" /> : <FaMoon className="text-gray-600" />}
+                  {isDark ? (
+                    <FaSun className="text-yellow-400" />
+                  ) : (
+                    <FaMoon className="text-gray-600" />
+                  )}
                 </button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -555,7 +559,11 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className={`flex h-screen ${darkMode ? 'dark' : ''} bg-white dark:bg-[#101010] overflow-hidden`}>
+    <div
+      className={`flex h-screen ${
+        isDark ? "dark" : ""
+      } bg-white dark:bg-[#101010] overflow-hidden`}
+    >
       {/* Sidebar */}
       <aside
         className={`sticky top-0 flex flex-col justify-between h-screen bg-white dark:bg-[#101010] border-r border-gray-200 dark:border-[#222] transition-all duration-200
@@ -618,7 +626,9 @@ const StudentDashboard = () => {
               <span>🌐</span>
               {!collapsed && (
                 <>
-                  <span className="sidebar-label text-base">{currentLanguage}</span>
+                  <span className="sidebar-label text-base">
+                    {currentLanguage}
+                  </span>
                   <span>▼</span>
                 </>
               )}
@@ -626,7 +636,9 @@ const StudentDashboard = () => {
             {!collapsed && (
               <div className="absolute bottom-full left-0 mb-2 w-full bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-lg shadow-lg z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                 {Object.keys(LANGUAGE_MAPPING)
-                  .filter((name) => BACKEND_LANGUAGE_MAP[LANGUAGE_MAPPING[name]])
+                  .filter(
+                    (name) => BACKEND_LANGUAGE_MAP[LANGUAGE_MAPPING[name]]
+                  )
                   .map((languageName) => (
                     <div
                       key={languageName}
@@ -641,7 +653,8 @@ const StudentDashboard = () => {
                         }
                       }}
                     >
-                      {isUpdatingLanguage && currentLanguage === languageName ? (
+                      {isUpdatingLanguage &&
+                      currentLanguage === languageName ? (
                         <span className="flex items-center">
                           <svg
                             className="animate-spin -ml-1 mr-2 h-3 w-3 text-[#7c3aed] dark:text-[#a78bfa]"
@@ -679,15 +692,15 @@ const StudentDashboard = () => {
             title="Logout"
           >
             <FaSignOutAlt />
-            {!collapsed && <span className="sidebar-label text-base">Logout</span>}
+            {!collapsed && (
+              <span className="sidebar-label text-base">Logout</span>
+            )}
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        {renderContent()}
-      </main>
+      <main className="flex-1 overflow-y-auto">{renderContent()}</main>
 
       {/* Private Course Modal */}
       {showPrivateCourseModal && (
@@ -759,11 +772,11 @@ const StudentDashboard = () => {
         position="top-right"
         autoClose={3000}
         hideProgressBar={false}
-        theme={darkMode ? "dark" : "light"}
+        theme={isDark ? "dark" : "light"}
         toastStyle={{
-          backgroundColor: darkMode ? "#181818" : "#ffffff",
-          color: darkMode ? "#f8f8f8" : "#080808",
-          border: darkMode ? "1px solid #222" : "1px solid #e5e7eb",
+          backgroundColor: isDark ? "#181818" : "#ffffff",
+          color: isDark ? "#f8f8f8" : "#080808",
+          border: isDark ? "1px solid #222" : "1px solid #e5e7eb",
         }}
       />
 
