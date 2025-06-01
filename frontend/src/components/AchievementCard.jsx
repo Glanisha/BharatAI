@@ -1,5 +1,18 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { TranslatedText } from "./TranslatedText";
+
+// Maps frontend codes to backend full names (same as in StudentStats)
+const BACKEND_LANGUAGE_MAP = {
+  en: "English",
+  hi: "Hindi",
+  ta: "Tamil",
+  te: "Telugu",
+  bn: "Bengali",
+  mr: "Marathi",
+  gu: "Gujarati",
+  kn: "Kannada",
+};
 
 const AchievementCard = ({ achievement }) => {
   const { name, description, icon, unlocked, progress, total, category } = achievement;
@@ -17,6 +30,16 @@ const AchievementCard = ({ achievement }) => {
     perfection: "#eab308",  // Yellow
   };
   
+  // Translate category names
+  const translatedCategories = {
+    beginner: <TranslatedText>Beginner</TranslatedText>,
+    streak: <TranslatedText>Streak</TranslatedText>,
+    completion: <TranslatedText>Completion</TranslatedText>,
+    variety: <TranslatedText>Variety</TranslatedText>,
+    time: <TranslatedText>Time</TranslatedText>,
+    perfection: <TranslatedText>Perfection</TranslatedText>,
+  };
+
   const categoryColor = categoryColors[category] || "#A2BFFE";
   
   return (
@@ -41,8 +64,12 @@ const AchievementCard = ({ achievement }) => {
       </div>
       
       <div className="space-y-2 mb-3">
-        <h3 className={`font-bold text-base ${!unlocked && "text-[#f5f5f7]/60"}`}>{name}</h3>
-        <p className="text-xs text-[#f5f5f7]/60">{description}</p>
+        <h3 className={`font-bold text-base ${!unlocked && "text-[#f5f5f7]/60"}`}>
+          <TranslatedText>{name}</TranslatedText>
+        </h3>
+        <p className="text-xs text-[#f5f5f7]/60">
+          <TranslatedText>{description}</TranslatedText>
+        </p>
       </div>
       
       {/* Category badge */}
@@ -57,7 +84,7 @@ const AchievementCard = ({ achievement }) => {
           color: unlocked ? categoryColor : undefined 
         }}
       >
-        {category}
+        {translatedCategories[category] || category}
       </div>
       
       {/* Progress bar */}
@@ -83,7 +110,7 @@ const AchievementCard = ({ achievement }) => {
           ? "bg-[#A2BFFE]/10 text-[#A2BFFE]" 
           : "bg-[#222] text-[#f5f5f7]/40"
       }`}>
-        {unlocked ? "Unlocked" : "Locked"}
+        {unlocked ? <TranslatedText>Unlocked</TranslatedText> : <TranslatedText>Locked</TranslatedText>}
       </div>
     </motion.div>
   );
