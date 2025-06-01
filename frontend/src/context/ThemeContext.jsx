@@ -13,22 +13,11 @@ export const useTheme = () => {
 export const ThemeProvider = ({ children }) => {
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("theme");
-    // Fix: Handle both JSON and plain string values
-    if (saved) {
-      try {
-        // Try parsing as JSON first (for boolean values)
-        return JSON.parse(saved);
-      } catch (error) {
-        // If parsing fails, treat as string
-        return saved === "dark" || saved === "true";
-      }
-    }
-    return true; // Default to dark mode
+    return saved ? saved === "dark" : true; // Default to dark mode
   });
 
   useEffect(() => {
-    // Store as JSON boolean for consistency
-    localStorage.setItem("theme", JSON.stringify(isDark));
+    localStorage.setItem("theme", isDark ? "dark" : "light");
 
     // Apply to both html and body
     if (isDark) {

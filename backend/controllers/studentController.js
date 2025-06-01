@@ -2,7 +2,7 @@ const Progress = require('../models/Progress');
 const Course = require('../models/Course');
 const User = require('../models/User');
 const { checkAchievements } = require('./achievementController');
-const UserAchievement = require('../models/UserAchievement');
+const UserAchievement = require('../models/userAchievement');
 
 const getStudentStats = async (req, res) => {
   try {
