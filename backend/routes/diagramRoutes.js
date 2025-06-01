@@ -4,23 +4,24 @@ const { generateMermaidDiagram } = require("../services/geminiService");
 
 const router = express.Router();
 
-// Simple Mermaid syntax validator
+// Improved Mermaid syntax validator
 const validateMermaidSyntax = (code) => {
   // Check for line breaks (essential for Mermaid)
-  if (!code.includes('\n')) {
-    throw new Error('Missing line breaks');
+  if (!code.includes("\n")) {
+    throw new Error("Missing line breaks");
   }
-  
+
   // Must have at least 2 lines
-  if (code.split('\n').length < 2) {
-    throw new Error('Insufficient line breaks');
+  if (code.split("\n").length < 2) {
+    throw new Error("Insufficient line breaks");
   }
-  
-  // Must start with flowchart
-  if (!code.trim().startsWith('flowchart')) {
-    throw new Error('Must start with flowchart');
+
+  // Must start with flowchart or graph
+  const trimmed = code.trim();
+  if (!/^flowchart|^graph/.test(trimmed)) {
+    throw new Error("Must start with flowchart or graph");
   }
-  
+
   return true;
 };
 
@@ -43,11 +44,12 @@ router.post("/generate-mermaid", authMiddleware, async (req, res) => {
       validateMermaidSyntax(mermaidCode);
     } catch (validationError) {
       console.warn("Generated code failed validation, using fallback");
-      // Simple fallback
-      const safeName = description.replace(/[^a-zA-Z0-9\s]/g, "").substring(0, 15) || 'Task';
+      // Simple fallback (no indentation, always newline after TD)
+      const safeName =
+        description.replace(/[^a-zA-Z0-9\s]/g, "").substring(0, 15) || "Task";
       const fallbackCode = `flowchart TD
-    A[Start] --> B[${safeName}]
-    B --> C[End]`;
+A[Start] --> B[${safeName}]
+B --> C[End]`;
 
       return res.json({
         success: true,
@@ -61,12 +63,12 @@ router.post("/generate-mermaid", authMiddleware, async (req, res) => {
     });
   } catch (error) {
     console.error("Diagram generation error:", error);
-    
-    // Emergency fallback
+
+    // Emergency fallback (no indentation)
     const fallbackCode = `flowchart TD
-    A[Start] --> B[Process]
-    B --> C[End]`;
-    
+A[Start] --> B[Process]
+B --> C[End]`;
+
     res.json({
       success: true,
       mermaid: fallbackCode,

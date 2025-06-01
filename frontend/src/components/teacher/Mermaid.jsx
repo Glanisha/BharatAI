@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import mermaid from "mermaid";
 import { FaMagic, FaEdit } from "react-icons/fa";
 import { AnimatePresence, motion } from "framer-motion";
+import { FaCopy } from "react-icons/fa";
 
 const Mermaid = ({ code, onChange }) => {
   const [desc, setDesc] = useState("");
   const [showEditor, setShowEditor] = useState(false);
   const [error, setError] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [diagramHtml, setDiagramHtml] = useState("");
 
   useEffect(() => {
     mermaid.initialize({
@@ -17,6 +19,56 @@ const Mermaid = ({ code, onChange }) => {
       fontFamily: "monospace",
     });
   }, []);
+
+  useEffect(() => {
+    if (!code || code.trim().length === 0) {
+      setDiagramHtml(
+        '<div class="text-gray-500 text-center p-4">No diagram code provided</div>'
+      );
+      setError("");
+      return;
+    }
+    let cancelled = false;
+    async function renderMermaid() {
+      try {
+        let cleanedCode = code
+          .replace(/[^\x20-\x7E\n\r\t]/g, "")
+          .replace(/\s+/g, " ")
+          .replace(/\n\s*\n/g, "\n")
+          .trim();
+
+        // Ensure newline after diagram type (graph/flowchart) and direction (TD/LR/RL/BT)
+        cleanedCode = cleanedCode.replace(
+          /^(flowchart|graph)\s+([A-Za-z]+)\s*/i,
+          (match, p1, p2) => `${p1} ${p2}\n`
+        );
+
+        const diagramId = `mermaid-${Date.now()}-${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
+
+        // Async render
+        await mermaid.parse(cleanedCode);
+        const { svg } = await mermaid.render(diagramId, cleanedCode);
+
+        if (!cancelled) {
+          setDiagramHtml(svg);
+          setError("");
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setDiagramHtml(
+            '<div class="text-red-500 text-center p-4">Error: Invalid diagram syntax. Please try regenerating or edit manually.</div>'
+          );
+          setError("Invalid mermaid syntax. Please check your diagram code.");
+        }
+      }
+    }
+    renderMermaid();
+    return () => {
+      cancelled = true;
+    };
+  }, [code]);
 
   // Render mermaid diagram
   const renderDiagram = (code) => {
@@ -66,7 +118,9 @@ const Mermaid = ({ code, onChange }) => {
 
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_NODE_BASE_API_URL}/api/diagram/generate-mermaid`,
+        `${
+          import.meta.env.VITE_NODE_BASE_API_URL
+        }/api/diagram/generate-mermaid`,
         {
           method: "POST",
           headers: {
@@ -108,29 +162,29 @@ const Mermaid = ({ code, onChange }) => {
 
   return (
     <motion.div
-      className="w-full max-w-2xl mx-auto bg-white dark:bg-[#101010] rounded-lg shadow p-4 mt-4"
+      className="w-full max-w-2xl mx-auto bg-white dark:bg-neutral-900 rounded-xl shadow p-6 mt-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-4">
         <motion.button
           type="button"
           whileTap={{ scale: 0.95 }}
           whileHover={{ scale: 1.05 }}
           onClick={() => setShowEditor((v) => !v)}
           title="Edit Mermaid Code"
-          className="flex items-center gap-1 px-2 py-1 rounded bg-[#f8f8f8] dark:bg-[#181818] hover:bg-gray-100 dark:hover:bg-[#222] text-sm transition"
+          className="flex items-center gap-1 px-3 py-1 rounded bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-sm transition"
         >
-          <FaEdit /> {showEditor ? "Hide" : "Edit"}
+          <FaEdit /> {showEditor ? "Hide Editor" : "Edit Code"}
         </motion.button>
         <input
           type="text"
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-          placeholder="Describe diagram (e.g. flowchart of login process)"
-          className="flex-1 px-2 py-1 rounded border border-gray-200 dark:border-[#222] bg-white dark:bg-[#101010] text-[#080808] dark:text-[#f8f8f8] text-sm"
+          placeholder="Describe diagram (e.g. flowchart of making tea)"
+          className="flex-1 px-3 py-1 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 text-sm"
           disabled={generating}
         />
         <motion.button
@@ -140,7 +194,7 @@ const Mermaid = ({ code, onChange }) => {
           onClick={handleGenerate}
           disabled={generating || !desc.trim()}
           title="Generate from Description"
-          className="flex items-center gap-1 px-2 py-1 rounded bg-[#f8f8f8] dark:bg-[#181818] hover:bg-gray-100 dark:hover:bg-[#222] text-sm transition disabled:opacity-50"
+          className="flex items-center gap-1 px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm transition disabled:opacity-50"
         >
           <FaMagic className={generating ? "animate-spin" : ""} />
           {generating ? "Generating..." : "Generate"}
@@ -155,7 +209,7 @@ const Mermaid = ({ code, onChange }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="w-full px-2 py-1 rounded border border-gray-200 dark:border-[#222] bg-white dark:bg-[#101010] text-[#080808] dark:text-[#f8f8f8] text-sm mb-2 font-mono"
+            className="w-full px-3 py-2 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 text-sm mb-2 font-mono"
             value={code}
             onChange={(e) => onChange(e.target.value)}
             rows={8}
@@ -164,7 +218,22 @@ const Mermaid = ({ code, onChange }) => {
         )}
       </AnimatePresence>
 
-      <div className="mt-2">
+      <div className="flex items-center justify-between mt-2 mb-1">
+        <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+          Preview
+        </span>
+        <button
+          className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-100"
+          onClick={() => {
+            navigator.clipboard.writeText(code);
+          }}
+          title="Copy Mermaid code"
+        >
+          <FaCopy /> Copy Code
+        </button>
+      </div>
+
+      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded mb-2 overflow-auto border border-neutral-100 dark:border-neutral-700">
         <AnimatePresence>
           {code && (
             <motion.div
@@ -173,8 +242,7 @@ const Mermaid = ({ code, onChange }) => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.25 }}
-              dangerouslySetInnerHTML={renderDiagram(code)}
-              className="bg-[#f8f8f8] dark:bg-[#181818] p-3 rounded overflow-auto"
+              dangerouslySetInnerHTML={{ __html: diagramHtml }}
             />
           )}
         </AnimatePresence>

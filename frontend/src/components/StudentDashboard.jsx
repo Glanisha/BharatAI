@@ -3,9 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useTheme } from "../context/ThemeContext";
-import { ThemeToggle } from "../components/landing/ThemeToggle";
+import {
+  FaBars,
+  FaBook,
+  FaChartBar,
+  FaSignOutAlt,
+  FaHome,
+  FaMoon,
+  FaSun,
+  FaLanguage,
+} from "react-icons/fa";
 import WikipediaShortsLauncher from "./TikTok";
+import PDFTranslator from "./translatePart/PDFTranslator";
 
 // Maps frontend codes to backend full names
 const BACKEND_LANGUAGE_MAP = {
@@ -24,7 +33,7 @@ const FRONTEND_LANGUAGE_MAP = Object.fromEntries(
   Object.entries(BACKEND_LANGUAGE_MAP).map(([code, name]) => [name, code])
 );
 
-// Your existing display mapping (name -> code)
+// Display mapping (name -> code)
 const LANGUAGE_MAPPING = {
   English: "en",
   Hindi: "hi",
@@ -35,6 +44,13 @@ const LANGUAGE_MAPPING = {
   Gujarati: "gu",
   Kannada: "kn",
 };
+
+const navItems = [
+  { key: "dashboard", label: "Dashboard", icon: <FaHome /> },
+  { key: "courses", label: "My Courses", icon: <FaBook /> },
+  { key: "stats", label: "Stats", icon: <FaChartBar /> },
+  { key: "translator", label: "Translator", icon: <FaLanguage /> },
+];
 
 const StudentDashboard = () => {
   const [user, setUser] = useState(null);
@@ -49,8 +65,28 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState("English");
   const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
+  const [collapsed, setCollapsed] = useState(window.innerWidth < 768);
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem("darkMode") === "true" || false
+  );
+  const [activeTab, setActiveTab] = useState("dashboard");
   const navigate = useNavigate();
-  const { isDark } = useTheme();
+
+  // Apply dark mode class to document element
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem("darkMode", darkMode);
+  }, [darkMode]);
+
+  useEffect(() => {
+    const handleResize = () => setCollapsed(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -255,54 +291,340 @@ const StudentDashboard = () => {
 
   if (!user) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#030303]" : "bg-[#f8f8f8]"}`}>
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#101010]">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className={`flex items-center space-x-2 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}
+          className="flex items-center space-x-2 text-[#080808] dark:text-[#f8f8f8]"
         >
-          <div className={`animate-spin h-6 w-6 border-2 ${isDark ? "border-[#222052]" : "border-[#f8f8f8]"} border-t-transparent rounded-full`}></div>
+          <div className="animate-spin h-6 w-6 border-2 border-[#080808] dark:border-[#f8f8f8] border-t-transparent rounded-full"></div>
           <span>Loading...</span>
         </motion.div>
       </div>
     );
   }
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className={`min-h-screen ${isDark ? "bg-[#030303]" : "bg-[#f8f8f8]"}`}
-    >
-      {/* Navigation */}
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className={`${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border-b shadow-lg`}
-      >
-        <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
-          <motion.h1
-            whileHover={{ scale: 1.02 }}
-            className={`text-2xl font-bold ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}
-          >
-            EduPlatform - Student
-          </motion.h1>
-          <div className="flex items-center space-x-4">
-            <motion.span className={`${isDark ? "text-[#f8f8f8]" : "text-[#080808]"} hidden sm:block`}>
-              Welcome, {user.name}!
-            </motion.span>
+  const renderContent = () => {
+    switch (activeTab) {
+      case "courses":
+        return (
+          <div className="p-6">
+            <h2 className="text-2xl font-bold mb-6 text-[#080808] dark:text-[#f8f8f8]">
+              My Enrolled Courses
+            </h2>
+            {enrolledCourses.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {enrolledCourses.map((course, index) => (
+                  <motion.div
+                    key={course._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-6 cursor-pointer"
+                    onClick={() => navigate(`/course/${course._id}`)}
+                  >
+                    <div className="text-3xl mb-4">{course.emoji || "📖"}</div>
+                    <h4 className="text-xl font-semibold mb-2 text-[#080808] dark:text-[#f8f8f8]">
+                      {course.title}
+                    </h4>
+                    <p className="text-[#080808]/70 dark:text-[#f8f8f8]/70 mb-4 line-clamp-2">
+                      {course.description}
+                    </p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-[#080808]/60 dark:text-[#f8f8f8]/60">
+                        Progress: {Math.round(course.progress || 0)}%
+                      </span>
+                      <span className="text-sm text-[#080808]/60 dark:text-[#f8f8f8]/60">
+                        {course.language}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-100 dark:bg-[#222] rounded-full h-2 mt-3">
+                      <div
+                        className="bg-[#7c3aed] dark:bg-[#a78bfa] h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${course.progress || 0}%` }}
+                      ></div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl">
+                <div className="text-6xl mb-4">📚</div>
+                <h4 className="text-xl font-semibold mb-2 text-[#080808] dark:text-[#f8f8f8]">
+                  No courses yet
+                </h4>
+                <p className="text-[#080808]/70 dark:text-[#f8f8f8]/70">
+                  Start learning by enrolling in a course!
+                </p>
+              </div>
+            )}
+          </div>
+        );
+      case "stats":
+        return (
+          <div className="p-6">
+            <h2 className="text-2xl font-bold mb-6 text-[#080808] dark:text-[#f8f8f8]">
+              Statistics
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-6">
+                <h3 className="text-lg font-medium text-[#080808] dark:text-[#f8f8f8] mb-2">
+                  Total Courses
+                </h3>
+                <p className="text-3xl font-bold text-[#7c3aed] dark:text-[#a78bfa]">
+                  {enrolledCourses.length}
+                </p>
+              </div>
+              <div className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-6">
+                <h3 className="text-lg font-medium text-[#080808] dark:text-[#f8f8f8] mb-2">
+                  Average Progress
+                </h3>
+                <p className="text-3xl font-bold text-[#7c3aed] dark:text-[#a78bfa]">
+                  {enrolledCourses.length > 0
+                    ? Math.round(
+                        enrolledCourses.reduce(
+                          (acc, course) => acc + (course.progress || 0),
+                          0
+                        ) / enrolledCourses.length
+                      )
+                    : 0}
+                  %
+                </p>
+              </div>
+              <div className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-6">
+                <h3 className="text-lg font-medium text-[#080808] dark:text-[#f8f8f8] mb-2">
+                  Languages
+                </h3>
+                <p className="text-3xl font-bold text-[#7c3aed] dark:text-[#a78bfa]">
+                  {[...new Set(enrolledCourses.map((c) => c.language))].length}
+                </p>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-6">
+              <h3 className="text-lg font-medium text-[#080808] dark:text-[#f8f8f8] mb-4">
+                Course Progress
+              </h3>
+              <div className="space-y-4">
+                {enrolledCourses.map((course) => (
+                  <div key={course._id} className="mb-4">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium text-[#080808] dark:text-[#f8f8f8]">
+                        {course.title}
+                      </span>
+                      <span className="text-sm text-[#080808]/60 dark:text-[#f8f8f8]/60">
+                        {Math.round(course.progress || 0)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-100 dark:bg-[#222] rounded-full h-2">
+                      <div
+                        className="bg-[#7c3aed] dark:bg-[#a78bfa] h-2 rounded-full"
+                        style={{ width: `${course.progress || 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      case "translator":
+        return (
+          <div className="p-6">
+            <h2 className="text-2xl font-bold mb-6 text-[#080808] dark:text-[#f8f8f8]">
+              PDF Translator
+            </h2>
+            <div className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-6">
+              <p className="text-[#080808] dark:text-[#f8f8f8] mb-4">
+                This feature allows you to translate PDF documents to your preferred language.
+              </p>
+             <PDFTranslator/>
+            </div>
+          </div>
+        );
+      default:
+        return (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-[#080808] dark:text-[#f8f8f8]">
+                Available Courses
+              </h2>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#222] transition"
+                  title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+                >
+                  {darkMode ? <FaSun className="text-yellow-400" /> : <FaMoon className="text-gray-600" />}
+                </button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowPrivateCourseModal(true)}
+                  className="px-4 py-2 bg-[#7c3aed] dark:bg-[#a78bfa] text-white rounded-lg font-medium"
+                >
+                  Join Private Course
+                </motion.button>
+              </div>
+            </div>
 
-            {/* Language Dropdown */}
-            <div className="relative group">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className={`px-3 py-1 ${isDark ? "bg-[#f8f8f8]/10 text-[#f8f8f8]" : "bg-[#080808]/10 text-[#080808]"} rounded-lg text-sm flex items-center space-x-1 cursor-pointer`}
+            <div className="mb-6">
+              <input
+                type="text"
+                placeholder="Search courses..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] text-[#080808] dark:text-[#f8f8f8] focus:ring-2 focus:ring-[#7c3aed] dark:focus:ring-[#a78bfa] focus:outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCourses.map((course, index) => {
+                const isEnrolled = enrolledCourses.some(
+                  (enrolled) => enrolled._id === course._id
+                );
+
+                return (
+                  <motion.div
+                    key={course._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-6"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="text-3xl">{course.emoji || "📖"}</div>
+                      <span className="px-2 py-1 bg-[#7c3aed]/10 dark:bg-[#a78bfa]/10 text-[#7c3aed] dark:text-[#a78bfa] rounded text-xs">
+                        {course.category}
+                      </span>
+                    </div>
+
+                    <h4 className="text-xl font-semibold mb-2 line-clamp-1 text-[#080808] dark:text-[#f8f8f8]">
+                      {course.title}
+                    </h4>
+
+                    <p className="text-[#080808]/70 dark:text-[#f8f8f8]/70 mb-4 line-clamp-2">
+                      {course.description}
+                    </p>
+
+                    <div className="flex justify-between items-center mb-4 text-sm text-[#080808]/60 dark:text-[#f8f8f8]/60">
+                      <span>By: {course.teacher}</span>
+                      <span>{course.language}</span>
+                    </div>
+
+                    {isEnrolled ? (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigate(`/course/${course._id}`)}
+                        className="w-full py-2 bg-[#7c3aed]/10 dark:bg-[#a78bfa]/10 text-[#7c3aed] dark:text-[#a78bfa] rounded-lg font-medium"
+                      >
+                        Continue Learning →
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleEnrollCourse(course._id)}
+                        disabled={loading}
+                        className="w-full py-2 bg-[#7c3aed] dark:bg-[#a78bfa] text-white rounded-lg font-medium disabled:opacity-50"
+                      >
+                        {loading ? "Enrolling..." : "Enroll Now"}
+                      </motion.button>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {filteredCourses.length === 0 && searchTerm && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🔍</div>
+                <h4 className="text-xl font-semibold mb-2 text-[#080808] dark:text-[#f8f8f8]">
+                  No courses found
+                </h4>
+                <p className="text-[#080808]/70 dark:text-[#f8f8f8]/70">
+                  Try adjusting your search terms
+                </p>
+              </div>
+            )}
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className={`flex h-screen ${darkMode ? 'dark' : ''} bg-white dark:bg-[#101010] overflow-hidden`}>
+      {/* Sidebar */}
+      <aside
+        className={`sticky top-0 flex flex-col justify-between h-screen bg-white dark:bg-[#101010] border-r border-gray-200 dark:border-[#222] transition-all duration-200
+        ${collapsed ? "w-16" : "w-56"} z-30`}
+      >
+        <div>
+          <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-[#222]">
+            {!collapsed && (
+              <h1 className="font-bold text-[#080808] dark:text-[#f8f8f8]">
+                EduPlatform
+              </h1>
+            )}
+            <button
+              className="p-2 rounded hover:bg-gray-100 dark:hover:bg-[#181818] transition text-[#080808] dark:text-[#f8f8f8]"
+              onClick={() => setCollapsed((c) => !c)}
+            >
+              <FaBars />
+            </button>
+          </div>
+          <nav className="mt-4 flex flex-col gap-1">
+            {navItems.map((item) => (
+              <button
+                key={item.key}
+                className={`
+                  group flex items-center gap-4 px-3 py-2 text-left rounded-lg transition
+                  relative
+                  ${
+                    activeTab === item.key
+                      ? "mx-2 my-1 bg-[#ece9ff] dark:bg-[#18182b] font-semibold border-l-4 border-[#7c3aed] dark:border-[#a78bfa] shadow-sm"
+                      : "hover:bg-gray-100 dark:hover:bg-[#181818]"
+                  }
+                  ${collapsed ? "justify-center px-0" : ""}
+                  text-[#080808] dark:text-[#f8f8f8]
+                `}
+                onClick={() => setActiveTab(item.key)}
+                title={item.label}
+                style={{
+                  marginLeft: activeTab === item.key && !collapsed ? "2px" : 0,
+                  marginRight: activeTab === item.key && !collapsed ? "2px" : 0,
+                }}
               >
-                <span>🌐</span>
-                <span>{currentLanguage}</span>
-                <span>▼</span>
-              </motion.div>
-              <div className={`absolute right-0 mt-1 w-40 ${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border rounded-lg shadow-lg z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200`}>
+                <span className="text-lg text-[#080808] dark:text-[#f8f8f8]">
+                  {item.icon}
+                </span>
+                {!collapsed && (
+                  <span className="sidebar-label text-base text-[#080808] dark:text-[#f8f8f8]">
+                    {item.label}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
+        </div>
+        <div className="flex flex-col gap-2 px-2 pb-4">
+          <div className="relative group">
+            <button
+              className="flex items-center justify-center md:justify-start gap-2 px-2 py-2 rounded hover:bg-gray-100 dark:hover:bg-[#181818] transition text-[#080808] dark:text-[#f8f8f8] w-full"
+              title="Language"
+            >
+              <span>🌐</span>
+              {!collapsed && (
+                <>
+                  <span className="sidebar-label text-base">{currentLanguage}</span>
+                  <span>▼</span>
+                </>
+              )}
+            </button>
+            {!collapsed && (
+              <div className="absolute bottom-full left-0 mb-2 w-full bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-lg shadow-lg z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                 {Object.keys(LANGUAGE_MAPPING)
                   .filter((name) => BACKEND_LANGUAGE_MAP[LANGUAGE_MAPPING[name]])
                   .map((languageName) => (
@@ -310,12 +632,8 @@ const StudentDashboard = () => {
                       key={languageName}
                       className={`px-4 py-2 text-sm cursor-pointer ${
                         currentLanguage === languageName
-                          ? isDark 
-                            ? "bg-[#f8f8f8]/20 text-[#f8f8f8]"
-                            : "bg-[#080808]/20 text-[#080808]"
-                          : isDark
-                            ? "text-[#f8f8f8]/70 hover:bg-[#f8f8f8]/10"
-                            : "text-[#080808]/70 hover:bg-[#080808]/10"
+                          ? "bg-[#ece9ff] dark:bg-[#18182b] text-[#7c3aed] dark:text-[#a78bfa]"
+                          : "text-[#080808] dark:text-[#f8f8f8] hover:bg-gray-100 dark:hover:bg-[#222]"
                       }`}
                       onClick={() => {
                         if (currentLanguage !== languageName) {
@@ -326,7 +644,7 @@ const StudentDashboard = () => {
                       {isUpdatingLanguage && currentLanguage === languageName ? (
                         <span className="flex items-center">
                           <svg
-                            className="animate-spin -ml-1 mr-2 h-3 w-3 text-white"
+                            className="animate-spin -ml-1 mr-2 h-3 w-3 text-[#7c3aed] dark:text-[#a78bfa]"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -353,271 +671,22 @@ const StudentDashboard = () => {
                     </div>
                   ))}
               </div>
-            </div>
-
-            <ThemeToggle />
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              onClick={() => navigate("/student-stats")}
-              className={`px-3 py-1 ${isDark ? "bg-[#f8f8f8]/10 text-[#f8f8f8]" : "bg-[#080808]/10 text-[#080808]"} rounded-lg text-sm`}
-            >
-              📊 Stats
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              onClick={() => navigate("/pdf-translator")}
-              className={`px-3 py-1 ${isDark ? "bg-[#f8f8f8]/10 text-[#f8f8f8]" : "bg-[#080808]/10 text-[#080808]"} rounded-lg text-sm`}
-            >
-              📄🌐 Translate
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleLogout}
-              className={`px-4 py-2 rounded-lg ${isDark ? "bg-[#f8f8f8] text-[#030303]" : "bg-[#080808] text-[#f8f8f8]"} font-medium transition-all duration-200`}
-            >
-              Logout
-            </motion.button>
+            )}
           </div>
-        </div>
-      </motion.nav>
-
-      <main className="max-w-7xl mx-auto py-8 px-4">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <h2 className={`text-4xl font-bold mb-4 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
-            🎓 Student Dashboard
-          </h2>
-          <p className={`text-xl ${isDark ? "text-[#f8f8f8]/70" : "text-[#080808]/70"}`}>
-            Discover and learn from amazing courses!
-          </p>
-        </motion.div>
-
-        {/* My Enrolled Courses */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-12"
-        >
-          <h3 className={`text-2xl font-bold mb-6 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
-            📚 My Courses
-          </h3>
-          {enrolledCourses.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {enrolledCourses.map((course, index) => (
-                <motion.div
-                  key={course._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  className={`${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border rounded-2xl p-6 cursor-pointer`}
-                  onClick={() => navigate(`/course/${course._id}`)}
-                >
-                  <div className="text-3xl mb-4">{course.emoji || "📖"}</div>
-                  <h4 className={`text-xl font-semibold mb-2 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
-                    {course.title}
-                  </h4>
-                  <p className={`${isDark ? "text-[#f8f8f8]/70" : "text-[#080808]/70"} mb-4 line-clamp-2`}>
-                    {course.description}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span className={`text-sm ${isDark ? "text-[#f8f8f8]/60" : "text-[#080808]/60"}`}>
-                      Progress: {Math.round(course.progress || 0)}%
-                    </span>
-                    <span className={`text-sm ${isDark ? "text-[#f8f8f8]/60" : "text-[#080808]/60"}`}>
-                      {course.language}
-                    </span>
-                  </div>
-                  <div className={`flex items-center gap-2 text-sm ${isDark ? "text-[#f8f8f8]/60" : "text-[#080808]/60"}`}>
-                    <span>⏱️ {course.estimatedTime || 60} min</span>
-                    <span>•</span>
-                    <span>{course.category}</span>
-                  </div>
-                  <div className={`w-full ${isDark ? "bg-[#030303]" : "bg-[#f8f8f8]"} rounded-full h-2 mt-3`}>
-                    <div
-                      className={`${isDark ? "bg-[#f8f8f8]" : "bg-[#080808]"} h-2 rounded-full transition-all duration-300`}
-                      style={{ width: `${course.progress || 0}%` }}
-                    ></div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className={`text-center py-12 ${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border rounded-2xl`}
-            >
-              <div className="text-6xl mb-4">📚</div>
-              <h4 className={`text-xl font-semibold mb-2 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
-                No courses yet
-              </h4>
-              <p className={`${isDark ? "text-[#f8f8f8]/70" : "text-[#080808]/70"}`}>
-                Start learning by enrolling in a course below!
-              </p>
-            </motion.div>
-          )}
-        </motion.section>
-
-        {/* Course Discovery */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <h3 className={`text-2xl font-bold ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
-              🌟 Discover Courses
-            </h3>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowPrivateCourseModal(true)}
-              className={`px-4 py-2 ${isDark ? "bg-[#222052] text-[#f8f8f8] border-[#f8f8f8]/20" : "bg-[#f8f8f8] text-[#080808] border-[#080808]/20"} border rounded-lg font-medium`}
-            >
-              🔐 Join Private Course
-            </motion.button>
-          </div>
-
-          {/* Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mb-6"
+          <button
+            className="flex items-center justify-center md:justify-start gap-2 px-2 py-2 rounded hover:bg-red-50 dark:hover:bg-[#181818] text-red-600 dark:text-red-400 transition"
+            onClick={handleLogout}
+            title="Logout"
           >
-            <input
-              type="text"
-              placeholder="Search courses by title, description, or category..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full px-4 py-3 rounded-xl ${isDark ? "bg-[#222052] text-[#f8f8f8] border-[#f8f8f8]/30 placeholder-[#f8f8f8]/50" : "bg-[#f8f8f8] text-[#080808] border-[#080808]/30 placeholder-[#080808]/50"} border focus:ring-2 ${isDark ? "focus:ring-[#f8f8f8]/50" : "focus:ring-[#080808]/50"} focus:outline-none`}
-            />
-          </motion.div>
+            <FaSignOutAlt />
+            {!collapsed && <span className="sidebar-label text-base">Logout</span>}
+          </button>
+        </div>
+      </aside>
 
-          {/* Course Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            {[filteredCourses.length, enrolledCourses.length, 
-              [...new Set(filteredCourses.map((c) => c.category))].length, 
-              [...new Set(filteredCourses.map((c) => c.language))].length].map((count, index) => (
-              <div 
-                key={index}
-                className={`${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border rounded-lg p-4 text-center`}
-              >
-                <div className={`text-2xl font-bold ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
-                  {count}
-                </div>
-                <div className={`text-sm ${isDark ? "text-[#f8f8f8]/70" : "text-[#080808]/70"}`}>
-                  {["Available Courses", "Enrolled", "Categories", "Languages"][index]}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Public Courses */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCourses.map((course, index) => {
-              const isEnrolled = enrolledCourses.some(
-                (enrolled) => enrolled._id === course._id
-              );
-
-              return (
-                <motion.div
-                  key={course._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  className={`${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border rounded-2xl p-6`}
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="text-3xl">{course.emoji || "📖"}</div>
-                    <span className={`px-2 py-1 ${isDark ? "bg-[#f8f8f8]/10 text-[#f8f8f8]/70" : "bg-[#080808]/10 text-[#080808]/70"} rounded text-xs`}>
-                      {course.category}
-                    </span>
-                  </div>
-
-                  <h4 className={`text-xl font-semibold mb-2 line-clamp-1 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
-                    {course.title}
-                  </h4>
-
-                  <p className={`${isDark ? "text-[#f8f8f8]/70" : "text-[#080808]/70"} mb-4 line-clamp-2`}>
-                    {course.description}
-                  </p>
-
-                  <div className={`flex justify-between items-center mb-4 text-sm ${isDark ? "text-[#f8f8f8]/60" : "text-[#080808]/60"}`}>
-                    <span>By: {course.teacher}</span>
-                    <span>{course.language}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center mb-4">
-                    <span className={`text-sm ${isDark ? "text-[#f8f8f8]/60" : "text-[#080808]/60"}`}>
-                      👥 {course.studentCount} students
-                    </span>
-                    {course.tags && course.tags.length > 0 && (
-                      <div className="flex gap-1">
-                        {course.tags.slice(0, 2).map((tag, i) => (
-                          <span
-                            key={i}
-                            className={`px-2 py-1 ${isDark ? "bg-[#f8f8f8]/5 text-[#f8f8f8]/50" : "bg-[#080808]/5 text-[#080808]/50"} rounded text-xs`}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {isEnrolled ? (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate(`/course/${course._id}`)}
-                      className={`w-full py-2 ${isDark ? "bg-[#f8f8f8]/20 text-[#f8f8f8] border-[#f8f8f8]/30" : "bg-[#080808]/20 text-[#080808] border-[#080808]/30"} border rounded-lg font-medium`}
-                    >
-                      Continue Learning →
-                    </motion.button>
-                  ) : (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleEnrollCourse(course._id)}
-                      disabled={loading}
-                      className={`w-full py-2 ${isDark ? "bg-[#f8f8f8] text-[#030303]" : "bg-[#080808] text-[#f8f8f8]"} rounded-lg font-medium disabled:opacity-50`}
-                    >
-                      {loading ? "Enrolling..." : "Enroll Now"}
-                    </motion.button>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
-
-          {filteredCourses.length === 0 && searchTerm && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12"
-            >
-              <div className="text-6xl mb-4">🔍</div>
-              <h4 className={`text-xl font-semibold mb-2 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
-                No courses found
-              </h4>
-              <p className={`${isDark ? "text-[#f8f8f8]/70" : "text-[#080808]/70"}`}>
-                Try adjusting your search terms
-              </p>
-            </motion.div>
-          )}
-        </motion.section>
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto">
+        {renderContent()}
       </main>
 
       {/* Private Course Modal */}
@@ -631,11 +700,11 @@ const StudentDashboard = () => {
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className={`${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border rounded-2xl p-8 w-full max-w-md`}
+            className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-8 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className={`text-2xl font-bold mb-6 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
-              🔐 Join Private Course
+            <h3 className="text-2xl font-bold mb-6 text-[#080808] dark:text-[#f8f8f8]">
+              Join Private Course
             </h3>
             <div className="space-y-4">
               <input
@@ -648,7 +717,7 @@ const StudentDashboard = () => {
                     code: e.target.value,
                   })
                 }
-                className={`w-full px-4 py-3 rounded-xl ${isDark ? "bg-[#030303] text-[#f8f8f8] border-[#f8f8f8]/30 placeholder-[#f8f8f8]/50" : "bg-[#f8f8f8] text-[#080808] border-[#080808]/30 placeholder-[#080808]/50"} border focus:ring-2 ${isDark ? "focus:ring-[#f8f8f8]/50" : "focus:ring-[#080808]/50"} focus:outline-none`}
+                className="w-full px-4 py-3 rounded-xl bg-white dark:bg-[#222] border border-gray-200 dark:border-[#333] text-[#080808] dark:text-[#f8f8f8] focus:ring-2 focus:ring-[#7c3aed] dark:focus:ring-[#a78bfa] focus:outline-none"
               />
               <input
                 type="password"
@@ -660,7 +729,7 @@ const StudentDashboard = () => {
                     password: e.target.value,
                   })
                 }
-                className={`w-full px-4 py-3 rounded-xl ${isDark ? "bg-[#030303] text-[#f8f8f8] border-[#f8f8f8]/30 placeholder-[#f8f8f8]/50" : "bg-[#f8f8f8] text-[#080808] border-[#080808]/30 placeholder-[#080808]/50"} border focus:ring-2 ${isDark ? "focus:ring-[#f8f8f8]/50" : "focus:ring-[#080808]/50"} focus:outline-none`}
+                className="w-full px-4 py-3 rounded-xl bg-white dark:bg-[#222] border border-gray-200 dark:border-[#333] text-[#080808] dark:text-[#f8f8f8] focus:ring-2 focus:ring-[#7c3aed] dark:focus:ring-[#a78bfa] focus:outline-none"
               />
             </div>
             <div className="flex space-x-4 mt-6">
@@ -668,7 +737,7 @@ const StudentDashboard = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowPrivateCourseModal(false)}
-                className={`flex-1 py-2 ${isDark ? "border-[#f8f8f8]/30 text-[#f8f8f8]" : "border-[#080808]/30 text-[#080808]"} border rounded-lg`}
+                className="flex-1 py-2 border border-gray-200 dark:border-[#222] text-[#080808] dark:text-[#f8f8f8] rounded-lg"
               >
                 Cancel
               </motion.button>
@@ -677,7 +746,7 @@ const StudentDashboard = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={handlePrivateCourseJoin}
                 disabled={loading}
-                className={`flex-1 py-2 ${isDark ? "bg-[#f8f8f8] text-[#030303]" : "bg-[#080808] text-[#f8f8f8]"} rounded-lg font-medium disabled:opacity-50`}
+                className="flex-1 py-2 bg-[#7c3aed] dark:bg-[#a78bfa] text-white rounded-lg font-medium disabled:opacity-50"
               >
                 {loading ? "Joining..." : "Join Course"}
               </motion.button>
@@ -690,16 +759,16 @@ const StudentDashboard = () => {
         position="top-right"
         autoClose={3000}
         hideProgressBar={false}
-        theme={isDark ? "dark" : "light"}
+        theme={darkMode ? "dark" : "light"}
         toastStyle={{
-          backgroundColor: isDark ? "#222052" : "#f8f8f8",
-          color: isDark ? "#f8f8f8" : "#080808",
-          border: isDark ? "1px solid rgba(248, 248, 248, 0.2)" : "1px solid rgba(8, 8, 8, 0.2)",
+          backgroundColor: darkMode ? "#181818" : "#ffffff",
+          color: darkMode ? "#f8f8f8" : "#080808",
+          border: darkMode ? "1px solid #222" : "1px solid #e5e7eb",
         }}
       />
 
-      <WikipediaShortsLauncher/>
-    </motion.div>
+      <WikipediaShortsLauncher />
+    </div>
   );
 };
 
