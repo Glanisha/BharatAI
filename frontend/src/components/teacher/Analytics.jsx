@@ -205,7 +205,7 @@ const Analytics = () => {
   }
 
   return (
-    <div className={`p-3 sm:p-6 min-h-screen ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+    <div className={`p-3 sm:p-6 min-h-screen ${isDark ? "#030303" : "bg-gray-50"}`}>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
