@@ -15,7 +15,7 @@ const HeroSection = () => {
     {
       id: "multi-lingual",
       label: "Multilingual",
-      image: "../../../public/multiLingual.png",
+      image: "/multiLingual.png",
     },
   ];
 
@@ -121,6 +121,7 @@ const HeroSection = () => {
               className={`
                 flex space-x-1 p-2 border-b
                 ${isDark ? "border-[#f8f8f8]/20" : "border-[#080808]/20"}
+                relative
               `}
             >
               {tabs.map((tab) => (
@@ -128,40 +129,59 @@ const HeroSection = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`
-                      px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                      ${
-                        activeTab === tab.id
-                          ? isDark
-                            ? "bg-[#4a4494] text-[#f8f8f8]"
-                            : "bg-[#222052] text-[#f8f8f8]"
-                          : isDark
-                          ? "text-[#f8f8f8]/70 hover:text-[#f8f8f8] hover:bg-[#f8f8f8]/10"
-                          : "text-[#080808]/70 hover:text-[#080808] hover:bg-[#080808]/10"
-                      }
-                    `}
+        relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+        ${
+          activeTab === tab.id
+            ? isDark
+              ? "text-[#f8f8f8]"
+              : "text-[#f8f8f8]"
+            : isDark
+            ? "text-[#f8f8f8]/70 hover:text-[#f8f8f8] hover:bg-[#f8f8f8]/10"
+            : "text-[#080808]/70 hover:text-[#080808] hover:bg-[#080808]/10"
+        }
+      `}
+                  style={{ zIndex: 1 }}
                 >
+                  {activeTab === tab.id && (
+                    <motion.div
+                      layoutId="tab-highlight"
+                      className={`absolute inset-0 rounded-lg ${
+                        isDark ? "bg-[#4a4494]" : "bg-[#222052]"
+                      }`}
+                      style={{ zIndex: -1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                      }}
+                    />
+                  )}
                   {tab.label}
                 </button>
               ))}
             </div>
 
             {/* Tab Content */}
-            <div className="p-8">
+            <div className="p-2">
               <motion.div
                 key={activeTab}
+                layoutId="demo-tab-image"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.35, ease: "easeInOut" }}
                 className={`aspect-video rounded-lg overflow-hidden ${
                   isDark
                     ? "bg-gradient-to-br from-[#4a4494]/20 to-[#4a4494]/10"
                     : "bg-gradient-to-br from-[#222052]/20 to-[#222052]/10"
                 }`}
+                style={{ padding: 0 }}
               >
                 <img
                   src={tabs.find((tab) => tab.id === activeTab)?.image}
                   alt={`${activeTab} preview`}
                   className="w-full h-full object-cover"
+                  style={{ padding: 0 }}
                 />
               </motion.div>
             </div>
