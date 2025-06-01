@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { TranslatedText } from "./TranslatedText";
+import { useTheme } from "../context/ThemeContext";
+import { ThemeToggle } from "../components/landing/ThemeToggle";
 
 // Maps frontend codes to backend full names
 const BACKEND_LANGUAGE_MAP = {
@@ -14,7 +15,7 @@ const BACKEND_LANGUAGE_MAP = {
   bn: "Bengali",
   mr: "Marathi",
   gu: "Gujarati",
-  kn: "Kannada", // Added Kannada which exists in your backend enum
+  kn: "Kannada",
 };
 
 // Maps backend names to frontend codes
@@ -45,9 +46,10 @@ const StudentDashboard = () => {
     password: "",
   });
   const [loading, setLoading] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState("English"); // Default language
+  const [currentLanguage, setCurrentLanguage] = useState("English");
   const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
   const navigate = useNavigate();
+  const { isDark } = useTheme();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -83,9 +85,7 @@ const StudentDashboard = () => {
       const data = await response.json();
 
       if (data.success && data.preferredLanguage) {
-        // Convert backend name (e.g. "Hindi") to frontend code ("hi")
         const frontendCode = FRONTEND_LANGUAGE_MAP[data.preferredLanguage];
-        // Then convert to display name ("Hindi")
         setCurrentLanguage(
           Object.keys(LANGUAGE_MAPPING).find(
             (name) => LANGUAGE_MAPPING[name] === frontendCode
@@ -101,17 +101,13 @@ const StudentDashboard = () => {
     setIsUpdatingLanguage(true);
 
     try {
-      // Get frontend code (e.g. "hi")
       const frontendCode = LANGUAGE_MAPPING[selectedLanguageName];
-
       if (!frontendCode) {
         toast.error("Invalid language selection");
         return;
       }
 
-      // Convert to backend name (e.g. "Hindi")
       const backendName = BACKEND_LANGUAGE_MAP[frontendCode];
-
       const response = await fetch(
         `${import.meta.env.VITE_NODE_BASE_API_URL}/api/student/language`,
         {
@@ -120,12 +116,11 @@ const StudentDashboard = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          body: JSON.stringify({ preferredLanguage: backendName }), // Send backend name
+          body: JSON.stringify({ preferredLanguage: backendName }),
         }
       );
 
       const data = await response.json();
-
       if (data.success) {
         setCurrentLanguage(selectedLanguageName);
         toast.success("Language preference updated successfully!");
@@ -138,6 +133,7 @@ const StudentDashboard = () => {
       setIsUpdatingLanguage(false);
     }
   };
+
   const fetchCourses = async () => {
     try {
       const response = await fetch(
@@ -157,23 +153,24 @@ const StudentDashboard = () => {
     }
   };
 
-    const fetchEnrolledCourses = async () => {
-        try {
-            const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/enrolled`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            const data = await response.json();
-            if (data.success) {
-                console.log('Enrolled courses:', data.courses);
-                setEnrolledCourses(data.courses);
-            }
-        } catch (error) {
-            console.error('Error fetching enrolled courses:', error);
+  const fetchEnrolledCourses = async () => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/enrolled`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
-    };
- 
+      );
+      const data = await response.json();
+      if (data.success) {
+        setEnrolledCourses(data.courses);
+      }
+    } catch (error) {
+      console.error("Error fetching enrolled courses:", error);
+    }
+  };
 
   const handleEnrollCourse = async (courseId) => {
     setLoading(true);
@@ -194,7 +191,7 @@ const StudentDashboard = () => {
       if (data.success) {
         toast.success("Successfully enrolled in course!");
         fetchEnrolledCourses();
-        fetchCourses(); // Refresh to update enrollment status
+        fetchCourses();
       } else {
         toast.error(data.message || "Failed to enroll");
       }
@@ -257,13 +254,13 @@ const StudentDashboard = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#030303]">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#030303]" : "bg-[#f8f8f8]"}`}>
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex items-center space-x-2 text-[#f8f8f8]"
+          className={`flex items-center space-x-2 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}
         >
-          <div className="animate-spin h-6 w-6 border-2 border-[#222052] border-t-transparent rounded-full"></div>
+          <div className={`animate-spin h-6 w-6 border-2 ${isDark ? "border-[#222052]" : "border-[#f8f8f8]"} border-t-transparent rounded-full`}></div>
           <span>Loading...</span>
         </motion.div>
       </div>
@@ -274,49 +271,50 @@ const StudentDashboard = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-[#030303]"
+      className={`min-h-screen ${isDark ? "bg-[#030303]" : "bg-[#f8f8f8]"}`}
     >
       {/* Navigation */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="bg-[#222052] border-b border-[#f8f8f8]/20 shadow-lg"
+        className={`${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border-b shadow-lg`}
       >
         <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
           <motion.h1
             whileHover={{ scale: 1.02 }}
-            className="text-2xl font-bold text-[#f8f8f8]"
+            className={`text-2xl font-bold ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}
           >
             EduPlatform - Student
           </motion.h1>
           <div className="flex items-center space-x-4">
-            <motion.span className="text-[#f8f8f8] hidden sm:block">
+            <motion.span className={`${isDark ? "text-[#f8f8f8]" : "text-[#080808]"} hidden sm:block`}>
               Welcome, {user.name}!
             </motion.span>
 
             {/* Language Dropdown */}
-            {/* Language Dropdown */}
             <div className="relative group">
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="px-3 py-1 bg-[#f8f8f8]/10 text-[#f8f8f8] rounded-lg text-sm flex items-center space-x-1 cursor-pointer"
+                className={`px-3 py-1 ${isDark ? "bg-[#f8f8f8]/10 text-[#f8f8f8]" : "bg-[#080808]/10 text-[#080808]"} rounded-lg text-sm flex items-center space-x-1 cursor-pointer`}
               >
                 <span>🌐</span>
                 <span>{currentLanguage}</span>
                 <span>▼</span>
               </motion.div>
-              <div className="absolute right-0 mt-1 w-40 bg-[#222052] border border-[#f8f8f8]/20 rounded-lg shadow-lg z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <div className={`absolute right-0 mt-1 w-40 ${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border rounded-lg shadow-lg z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200`}>
                 {Object.keys(LANGUAGE_MAPPING)
-                  .filter(
-                    (name) => BACKEND_LANGUAGE_MAP[LANGUAGE_MAPPING[name]]
-                  )
+                  .filter((name) => BACKEND_LANGUAGE_MAP[LANGUAGE_MAPPING[name]])
                   .map((languageName) => (
                     <div
                       key={languageName}
                       className={`px-4 py-2 text-sm cursor-pointer ${
                         currentLanguage === languageName
-                          ? "bg-[#f8f8f8]/20 text-[#f8f8f8]"
-                          : "text-[#f8f8f8]/70 hover:bg-[#f8f8f8]/10"
+                          ? isDark 
+                            ? "bg-[#f8f8f8]/20 text-[#f8f8f8]"
+                            : "bg-[#080808]/20 text-[#080808]"
+                          : isDark
+                            ? "text-[#f8f8f8]/70 hover:bg-[#f8f8f8]/10"
+                            : "text-[#080808]/70 hover:bg-[#080808]/10"
                       }`}
                       onClick={() => {
                         if (currentLanguage !== languageName) {
@@ -324,8 +322,7 @@ const StudentDashboard = () => {
                         }
                       }}
                     >
-                      {isUpdatingLanguage &&
-                      currentLanguage === languageName ? (
+                      {isUpdatingLanguage && currentLanguage === languageName ? (
                         <span className="flex items-center">
                           <svg
                             className="animate-spin -ml-1 mr-2 h-3 w-3 text-white"
@@ -357,26 +354,29 @@ const StudentDashboard = () => {
               </div>
             </div>
 
+            <ThemeToggle />
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               onClick={() => navigate("/student-stats")}
-              className="px-3 py-1 bg-[#f8f8f8]/10 text-[#f8f8f8] rounded-lg text-sm"
+              className={`px-3 py-1 ${isDark ? "bg-[#f8f8f8]/10 text-[#f8f8f8]" : "bg-[#080808]/10 text-[#080808]"} rounded-lg text-sm`}
             >
               📊 Stats
             </motion.button>
-<motion.button
-  whileHover={{ scale: 1.05 }}
-  onClick={() => navigate("/pdf-translator")}
-  className="px-3 py-1 bg-[#f8f8f8]/10 text-[#f8f8f8] rounded-lg text-sm"
->
-  📄🌐 Translate
-</motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              onClick={() => navigate("/pdf-translator")}
+              className={`px-3 py-1 ${isDark ? "bg-[#f8f8f8]/10 text-[#f8f8f8]" : "bg-[#080808]/10 text-[#080808]"} rounded-lg text-sm`}
+            >
+              📄🌐 Translate
+            </motion.button>
 
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleLogout}
-              className="px-4 py-2 rounded-lg bg-[#f8f8f8] text-[#030303] font-medium transition-all duration-200"
+              className={`px-4 py-2 rounded-lg ${isDark ? "bg-[#f8f8f8] text-[#030303]" : "bg-[#080808] text-[#f8f8f8]"} font-medium transition-all duration-200`}
             >
               Logout
             </motion.button>
@@ -391,13 +391,11 @@ const StudentDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h2 className="text-4xl font-bold mb-4 text-[#f8f8f8]">
+          <h2 className={`text-4xl font-bold mb-4 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
             🎓 Student Dashboard
           </h2>
-          <p className="text-xl text-[#f8f8f8]/70">
-  
-              Discover and learn from amazing courses!
-       
+          <p className={`text-xl ${isDark ? "text-[#f8f8f8]/70" : "text-[#080808]/70"}`}>
+            Discover and learn from amazing courses!
           </p>
         </motion.div>
 
@@ -408,7 +406,7 @@ const StudentDashboard = () => {
           transition={{ delay: 0.2 }}
           className="mb-12"
         >
-          <h3 className="text-2xl font-bold text-[#f8f8f8] mb-6">
+          <h3 className={`text-2xl font-bold mb-6 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
             📚 My Courses
           </h3>
           {enrolledCourses.length > 0 ? (
@@ -420,32 +418,32 @@ const StudentDashboard = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 * index }}
                   whileHover={{ y: -5, scale: 1.02 }}
-                  className="bg-[#222052] border border-[#f8f8f8]/20 rounded-2xl p-6 cursor-pointer"
+                  className={`${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border rounded-2xl p-6 cursor-pointer`}
                   onClick={() => navigate(`/course/${course._id}`)}
                 >
                   <div className="text-3xl mb-4">{course.emoji || "📖"}</div>
-                  <h4 className="text-xl font-semibold text-[#f8f8f8] mb-2">
+                  <h4 className={`text-xl font-semibold mb-2 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
                     {course.title}
                   </h4>
-                  <p className="text-[#f8f8f8]/70 mb-4 line-clamp-2">
+                  <p className={`${isDark ? "text-[#f8f8f8]/70" : "text-[#080808]/70"} mb-4 line-clamp-2`}>
                     {course.description}
                   </p>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-[#f8f8f8]/60">
+                    <span className={`text-sm ${isDark ? "text-[#f8f8f8]/60" : "text-[#080808]/60"}`}>
                       Progress: {Math.round(course.progress || 0)}%
                     </span>
-                    <span className="text-sm text-[#f8f8f8]/60">
+                    <span className={`text-sm ${isDark ? "text-[#f8f8f8]/60" : "text-[#080808]/60"}`}>
                       {course.language}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-[#f8f8f8]/60 text-sm">
+                  <div className={`flex items-center gap-2 text-sm ${isDark ? "text-[#f8f8f8]/60" : "text-[#080808]/60"}`}>
                     <span>⏱️ {course.estimatedTime || 60} min</span>
                     <span>•</span>
                     <span>{course.category}</span>
                   </div>
-                  <div className="w-full bg-[#030303] rounded-full h-2 mt-3">
+                  <div className={`w-full ${isDark ? "bg-[#030303]" : "bg-[#f8f8f8]"} rounded-full h-2 mt-3`}>
                     <div
-                      className="bg-[#f8f8f8] h-2 rounded-full transition-all duration-300"
+                      className={`${isDark ? "bg-[#f8f8f8]" : "bg-[#080808]"} h-2 rounded-full transition-all duration-300`}
                       style={{ width: `${course.progress || 0}%` }}
                     ></div>
                   </div>
@@ -456,13 +454,13 @@ const StudentDashboard = () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-12 bg-[#222052] rounded-2xl border border-[#f8f8f8]/20"
+              className={`text-center py-12 ${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border rounded-2xl`}
             >
               <div className="text-6xl mb-4">📚</div>
-              <h4 className="text-xl font-semibold text-[#f8f8f8] mb-2">
+              <h4 className={`text-xl font-semibold mb-2 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
                 No courses yet
               </h4>
-              <p className="text-[#f8f8f8]/70">
+              <p className={`${isDark ? "text-[#f8f8f8]/70" : "text-[#080808]/70"}`}>
                 Start learning by enrolling in a course below!
               </p>
             </motion.div>
@@ -476,14 +474,14 @@ const StudentDashboard = () => {
           transition={{ delay: 0.4 }}
         >
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <h3 className="text-2xl font-bold text-[#f8f8f8]">
+            <h3 className={`text-2xl font-bold ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
               🌟 Discover Courses
             </h3>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowPrivateCourseModal(true)}
-              className="px-4 py-2 bg-[#222052] text-[#f8f8f8] rounded-lg border border-[#f8f8f8]/20 font-medium"
+              className={`px-4 py-2 ${isDark ? "bg-[#222052] text-[#f8f8f8] border-[#f8f8f8]/20" : "bg-[#f8f8f8] text-[#080808] border-[#080808]/20"} border rounded-lg font-medium`}
             >
               🔐 Join Private Course
             </motion.button>
@@ -501,36 +499,27 @@ const StudentDashboard = () => {
               placeholder="Search courses by title, description, or category..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[#222052] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none placeholder-[#f8f8f8]/50"
+              className={`w-full px-4 py-3 rounded-xl ${isDark ? "bg-[#222052] text-[#f8f8f8] border-[#f8f8f8]/30 placeholder-[#f8f8f8]/50" : "bg-[#f8f8f8] text-[#080808] border-[#080808]/30 placeholder-[#080808]/50"} border focus:ring-2 ${isDark ? "focus:ring-[#f8f8f8]/50" : "focus:ring-[#080808]/50"} focus:outline-none`}
             />
           </motion.div>
 
           {/* Course Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-[#222052] border border-[#f8f8f8]/20 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-[#f8f8f8]">
-                {filteredCourses.length}
+            {[filteredCourses.length, enrolledCourses.length, 
+              [...new Set(filteredCourses.map((c) => c.category))].length, 
+              [...new Set(filteredCourses.map((c) => c.language))].length].map((count, index) => (
+              <div 
+                key={index}
+                className={`${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border rounded-lg p-4 text-center`}
+              >
+                <div className={`text-2xl font-bold ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
+                  {count}
+                </div>
+                <div className={`text-sm ${isDark ? "text-[#f8f8f8]/70" : "text-[#080808]/70"}`}>
+                  {["Available Courses", "Enrolled", "Categories", "Languages"][index]}
+                </div>
               </div>
-              <div className="text-sm text-[#f8f8f8]/70">Available Courses</div>
-            </div>
-            <div className="bg-[#222052] border border-[#f8f8f8]/20 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-[#f8f8f8]">
-                {enrolledCourses.length}
-              </div>
-              <div className="text-sm text-[#f8f8f8]/70">Enrolled</div>
-            </div>
-            <div className="bg-[#222052] border border-[#f8f8f8]/20 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-[#f8f8f8]">
-                {[...new Set(filteredCourses.map((c) => c.category))].length}
-              </div>
-              <div className="text-sm text-[#f8f8f8]/70">Categories</div>
-            </div>
-            <div className="bg-[#222052] border border-[#f8f8f8]/20 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-[#f8f8f8]">
-                {[...new Set(filteredCourses.map((c) => c.language))].length}
-              </div>
-              <div className="text-sm text-[#f8f8f8]/70">Languages</div>
-            </div>
+            ))}
           </div>
 
           {/* Public Courses */}
@@ -547,32 +536,30 @@ const StudentDashboard = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 * index }}
                   whileHover={{ y: -5, scale: 1.02 }}
-                  className="bg-[#222052] border border-[#f8f8f8]/20 rounded-2xl p-6"
+                  className={`${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border rounded-2xl p-6`}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="text-3xl">{course.emoji || "📖"}</div>
-                    <span className="px-2 py-1 bg-[#f8f8f8]/10 text-[#f8f8f8]/70 rounded text-xs">
+                    <span className={`px-2 py-1 ${isDark ? "bg-[#f8f8f8]/10 text-[#f8f8f8]/70" : "bg-[#080808]/10 text-[#080808]/70"} rounded text-xs`}>
                       {course.category}
                     </span>
                   </div>
 
-                  <h4 className="text-xl font-semibold text-[#f8f8f8] mb-2 line-clamp-1">
+                  <h4 className={`text-xl font-semibold mb-2 line-clamp-1 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
                     {course.title}
                   </h4>
 
-                  <p className="text-[#f8f8f8]/70 mb-4 line-clamp-2">
+                  <p className={`${isDark ? "text-[#f8f8f8]/70" : "text-[#080808]/70"} mb-4 line-clamp-2`}>
                     {course.description}
                   </p>
 
-                  <div className="flex justify-between items-center mb-4 text-sm">
-                    <span className="text-[#f8f8f8]/60">
-                      By: {course.teacher}
-                    </span>
-                    <span className="text-[#f8f8f8]/60">{course.language}</span>
+                  <div className={`flex justify-between items-center mb-4 text-sm ${isDark ? "text-[#f8f8f8]/60" : "text-[#080808]/60"}`}>
+                    <span>By: {course.teacher}</span>
+                    <span>{course.language}</span>
                   </div>
 
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-sm text-[#f8f8f8]/60">
+                    <span className={`text-sm ${isDark ? "text-[#f8f8f8]/60" : "text-[#080808]/60"}`}>
                       👥 {course.studentCount} students
                     </span>
                     {course.tags && course.tags.length > 0 && (
@@ -580,7 +567,7 @@ const StudentDashboard = () => {
                         {course.tags.slice(0, 2).map((tag, i) => (
                           <span
                             key={i}
-                            className="px-2 py-1 bg-[#f8f8f8]/5 text-[#f8f8f8]/50 rounded text-xs"
+                            className={`px-2 py-1 ${isDark ? "bg-[#f8f8f8]/5 text-[#f8f8f8]/50" : "bg-[#080808]/5 text-[#080808]/50"} rounded text-xs`}
                           >
                             {tag}
                           </span>
@@ -594,7 +581,7 @@ const StudentDashboard = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => navigate(`/course/${course._id}`)}
-                      className="w-full py-2 bg-[#f8f8f8]/20 text-[#f8f8f8] rounded-lg font-medium border border-[#f8f8f8]/30"
+                      className={`w-full py-2 ${isDark ? "bg-[#f8f8f8]/20 text-[#f8f8f8] border-[#f8f8f8]/30" : "bg-[#080808]/20 text-[#080808] border-[#080808]/30"} border rounded-lg font-medium`}
                     >
                       Continue Learning →
                     </motion.button>
@@ -604,7 +591,7 @@ const StudentDashboard = () => {
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleEnrollCourse(course._id)}
                       disabled={loading}
-                      className="w-full py-2 bg-[#f8f8f8] text-[#030303] rounded-lg font-medium disabled:opacity-50"
+                      className={`w-full py-2 ${isDark ? "bg-[#f8f8f8] text-[#030303]" : "bg-[#080808] text-[#f8f8f8]"} rounded-lg font-medium disabled:opacity-50`}
                     >
                       {loading ? "Enrolling..." : "Enroll Now"}
                     </motion.button>
@@ -621,10 +608,10 @@ const StudentDashboard = () => {
               className="text-center py-12"
             >
               <div className="text-6xl mb-4">🔍</div>
-              <h4 className="text-xl font-semibold text-[#f8f8f8] mb-2">
+              <h4 className={`text-xl font-semibold mb-2 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
                 No courses found
               </h4>
-              <p className="text-[#f8f8f8]/70">
+              <p className={`${isDark ? "text-[#f8f8f8]/70" : "text-[#080808]/70"}`}>
                 Try adjusting your search terms
               </p>
             </motion.div>
@@ -643,10 +630,10 @@ const StudentDashboard = () => {
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#222052] border border-[#f8f8f8]/20 rounded-2xl p-8 w-full max-w-md"
+            className={`${isDark ? "bg-[#222052] border-[#f8f8f8]/20" : "bg-[#f8f8f8] border-[#080808]/20"} border rounded-2xl p-8 w-full max-w-md`}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-2xl font-bold text-[#f8f8f8] mb-6">
+            <h3 className={`text-2xl font-bold mb-6 ${isDark ? "text-[#f8f8f8]" : "text-[#080808]"}`}>
               🔐 Join Private Course
             </h3>
             <div className="space-y-4">
@@ -660,7 +647,7 @@ const StudentDashboard = () => {
                     code: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none placeholder-[#f8f8f8]/50"
+                className={`w-full px-4 py-3 rounded-xl ${isDark ? "bg-[#030303] text-[#f8f8f8] border-[#f8f8f8]/30 placeholder-[#f8f8f8]/50" : "bg-[#f8f8f8] text-[#080808] border-[#080808]/30 placeholder-[#080808]/50"} border focus:ring-2 ${isDark ? "focus:ring-[#f8f8f8]/50" : "focus:ring-[#080808]/50"} focus:outline-none`}
               />
               <input
                 type="password"
@@ -672,7 +659,7 @@ const StudentDashboard = () => {
                     password: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 rounded-xl bg-[#030303] text-[#f8f8f8] border border-[#f8f8f8]/30 focus:ring-2 focus:ring-[#f8f8f8]/50 focus:outline-none placeholder-[#f8f8f8]/50"
+                className={`w-full px-4 py-3 rounded-xl ${isDark ? "bg-[#030303] text-[#f8f8f8] border-[#f8f8f8]/30 placeholder-[#f8f8f8]/50" : "bg-[#f8f8f8] text-[#080808] border-[#080808]/30 placeholder-[#080808]/50"} border focus:ring-2 ${isDark ? "focus:ring-[#f8f8f8]/50" : "focus:ring-[#080808]/50"} focus:outline-none`}
               />
             </div>
             <div className="flex space-x-4 mt-6">
@@ -680,7 +667,7 @@ const StudentDashboard = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowPrivateCourseModal(false)}
-                className="flex-1 py-2 border border-[#f8f8f8]/30 text-[#f8f8f8] rounded-lg"
+                className={`flex-1 py-2 ${isDark ? "border-[#f8f8f8]/30 text-[#f8f8f8]" : "border-[#080808]/30 text-[#080808]"} border rounded-lg`}
               >
                 Cancel
               </motion.button>
@@ -689,7 +676,7 @@ const StudentDashboard = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={handlePrivateCourseJoin}
                 disabled={loading}
-                className="flex-1 py-2 bg-[#f8f8f8] text-[#030303] rounded-lg font-medium disabled:opacity-50"
+                className={`flex-1 py-2 ${isDark ? "bg-[#f8f8f8] text-[#030303]" : "bg-[#080808] text-[#f8f8f8]"} rounded-lg font-medium disabled:opacity-50`}
               >
                 {loading ? "Joining..." : "Join Course"}
               </motion.button>
@@ -702,11 +689,11 @@ const StudentDashboard = () => {
         position="top-right"
         autoClose={3000}
         hideProgressBar={false}
-        theme="dark"
+        theme={isDark ? "dark" : "light"}
         toastStyle={{
-          backgroundColor: "#222052",
-          color: "#f8f8f8",
-          border: "1px solid rgba(248, 248, 248, 0.2)",
+          backgroundColor: isDark ? "#222052" : "#f8f8f8",
+          color: isDark ? "#f8f8f8" : "#080808",
+          border: isDark ? "1px solid rgba(248, 248, 248, 0.2)" : "1px solid rgba(8, 8, 8, 0.2)",
         }}
       />
     </motion.div>

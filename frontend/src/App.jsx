@@ -18,10 +18,12 @@ import MyAchievements from "./components/MyAchievements";
 import PDFTranslator from "./components/translatePart/PDFTranslator";
 import TeacherCourseViewer from './components/teacher/TeacherCourseViewer';
 import CourseEditor from './components/teacher/CourseEditor';
+import { ThemeProvider } from "./context/ThemeContext";
 
 function App() {
   return (
      <LanguageProvider>
+      <ThemeProvider>
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -39,6 +41,7 @@ function App() {
         <Route path="/teacher/courses/:courseId/view" element={<TeacherCourseViewer />} />
       </Routes>
     </Router>
+    </ThemeProvider>
     </LanguageProvider>
   );
 }
