@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { ToastContainer } from "react-toastify";
-import Sidebar from "./Sidebar";
-import { ThemeToggle } from "../components/landing/ThemeToggle";
-import { useTheme } from "../context/ThemeContext"; // Add this import
+import Sidebar from "../Sidebar";
+import { ThemeToggle } from "../landing/ThemeToggle";
+import { useTheme } from "../../context/ThemeContext"; // Add this import
 
 const DashboardLayout = ({
   user,

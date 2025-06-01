@@ -27,9 +27,12 @@ const Overview = () => {
           setCourses(data.courses);
           let total = 0;
           for (const course of data.courses) {
-            total += Array.isArray(course.enrolledStudents)
-              ? course.enrolledStudents.length
-              : 0;
+            total +=
+              typeof course.enrolledStudents === "number"
+                ? course.enrolledStudents
+                : Array.isArray(course.enrolledStudents)
+                ? course.enrolledStudents.length
+                : 0;
           }
           setTotalStudents(total);
         }
@@ -147,9 +150,12 @@ const Overview = () => {
                 </div>
               )}
               {courses.map((course, i) => {
-                const count = Array.isArray(course.enrolledStudents)
-                  ? course.enrolledStudents.length
-                  : 0;
+                const count =
+                  typeof course.enrolledStudents === "number"
+                    ? course.enrolledStudents
+                    : Array.isArray(course.enrolledStudents)
+                    ? course.enrolledStudents.length
+                    : 0;
                 const max = Math.max(
                   ...courses.map((c) =>
                     Array.isArray(c.enrolledStudents)

@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import { SidebarProvider } from "../../context/SidebarContext";
-import DashboardLayout from "../DashboardLayout";
+import DashboardLayout from "./DashboardLayout";
 import Overview from "./Overview";
 import Courses from "./Courses"; // Make sure the import path is correct
 import CreateCourse from "./CreateCourse"; // import at the top
+import Analytics from "./Analytics"; // <-- Add this import
 import { useTheme } from "../../context/ThemeContext"; // Add this import
 import "react-toastify/dist/ReactToastify.css";
 
@@ -107,12 +108,7 @@ const TeacherDashboard = () => {
       case "create-course":
         return <CreateCourse setActiveTab={setActiveTab} />;
       case "analytics":
-        // Replace with your Analytics component
-        return (
-          <div className={isDark ? "text-neutral-50" : "text-neutral-900"}>
-            Analytics coming soon...
-          </div>
-        );
+        return <Analytics />; // <-- Use your Analytics component here
       default:
         return <Overview />;
     }
