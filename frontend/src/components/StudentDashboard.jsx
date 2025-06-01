@@ -20,6 +20,7 @@ import { useTheme } from "../context/ThemeContext";
 import { TranslatedText } from "./TranslatedText";
 import AchievementCard from "./AchievementCard";
 import AllAchievements from "./AllAchievements";
+import StudentStats from "./StudentStats";
 
 // Maps frontend codes to backend full names
 const BACKEND_LANGUAGE_MAP = {
@@ -358,75 +359,7 @@ const StudentDashboard = () => {
         );
       case "stats":
         return (
-          <div className="p-6">
-            <h2 className="text-2xl font-bold mb-6 text-[#080808] dark:text-[#f8f8f8]">
-              <TranslatedText>Statistics</TranslatedText>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-6">
-                <h3 className="text-lg font-medium text-[#080808] dark:text-[#f8f8f8] mb-2">
-                  <TranslatedText>Total Courses</TranslatedText>
-                </h3>
-                <p className="text-3xl font-bold text-[#7c3aed] dark:text-[#a78bfa]">
-                  {enrolledCourses.length}
-                </p>
-              </div>
-              <div className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-6">
-                <h3 className="text-lg font-medium text-[#080808] dark:text-[#f8f8f8] mb-2">
-                  <TranslatedText>Average Progress</TranslatedText>
-                </h3>
-                <p className="text-3xl font-bold text-[#7c3aed] dark:text-[#a78bfa]">
-                  {enrolledCourses.length > 0
-                    ? Math.round(
-                        enrolledCourses.reduce(
-                          (acc, course) => acc + (course.progress || 0),
-                          0
-                        ) / enrolledCourses.length
-                      )
-                    : 0}
-                  %
-                </p>
-              </div>
-              <div className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-6">
-                <h3 className="text-lg font-medium text-[#080808] dark:text-[#f8f8f8] mb-2">
-                  <TranslatedText>Languages</TranslatedText>
-                </h3>
-                <p className="text-3xl font-bold text-[#7c3aed] dark:text-[#a78bfa]">
-                  {[...new Set(enrolledCourses.map((c) => c.language))].length}
-                </p>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-[#181818] border border-gray-200 dark:border-[#222] rounded-xl p-6">
-              <h3 className="text-lg font-medium text-[#080808] dark:text-[#f8f8f8] mb-4">
-                <TranslatedText>Course Progress</TranslatedText>
-              </h3>
-              <div className="space-y-4">
-                {enrolledCourses.map((course) => {
-                  const progress = Math.min(course.progress || 0, 100);
-                  const roundedProgress = Math.round(progress);
-
-                  return (
-                    <div key={course._id} className="mb-4">
-                      <div className="flex justify-between mb-1">
-                        <span className="text-sm font-medium text-[#080808] dark:text-[#f8f8f8]">
-                          {course.title}
-                        </span>
-                        <span className="text-sm text-[#080808]/60 dark:text-[#f8f8f8]/60">
-                          {roundedProgress}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-100 dark:bg-[#222] rounded-full h-2 overflow-hidden">
-                        <div
-                          className="bg-[#7c3aed] dark:bg-[#a78bfa] h-2 rounded-full"
-                          style={{ width: `${progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          <StudentStats/>
         );
       case "translator":
         return (
