@@ -19,6 +19,7 @@ import PDFTranslator from "./components/translatePart/PDFTranslator";
 import TeacherCourseViewer from './components/teacher/TeacherCourseViewer';
 import CourseEditor from './components/teacher/CourseEditor';
 import { ThemeProvider } from "./context/ThemeContext";
+import WikipediaShorts, { WikipediaShortsLauncher } from "./components/TikTok";
 
 function App() {
   return (

@@ -5,6 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeToggle } from "../components/landing/ThemeToggle";
+import WikipediaShortsLauncher from "./TikTok";
 
 // Maps frontend codes to backend full names
 const BACKEND_LANGUAGE_MAP = {
@@ -696,6 +697,8 @@ const StudentDashboard = () => {
           border: isDark ? "1px solid rgba(248, 248, 248, 0.2)" : "1px solid rgba(8, 8, 8, 0.2)",
         }}
       />
+
+      <WikipediaShortsLauncher/>
     </motion.div>
   );
 };
