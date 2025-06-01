@@ -96,4 +96,5 @@ router.get('/history/:courseId', authMiddleware, async (req, res) => {
   }
 });
 
+
 module.exports = router;
