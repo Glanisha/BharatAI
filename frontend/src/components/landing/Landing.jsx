@@ -11,6 +11,7 @@ import Footer from "./Footer";
 const Landing = () => {
   const ctaRef = useRef(null);
 
+  
   return (
     <ThemeProvider>
       <div className="min-h-screen transition-colors duration-300">
