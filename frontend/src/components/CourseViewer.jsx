@@ -526,9 +526,9 @@ const CourseViewer = () => {
 
     if (loading) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#030303]' : 'bg-[#f8f8f8]'}`}>
+            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#111]' : 'bg-gray-50'}`}>
                 <motion.div className={`flex items-center space-x-2 ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}`}>
-                    <div className={`animate-spin h-6 w-6 border-2 ${isDark ? 'border-[#222052]' : 'border-[#080808]'} border-t-transparent rounded-full`}></div>
+                    <div className={`animate-spin h-6 w-6 border-2 ${isDark ? 'border-[#7c3aed]' : 'border-[#a78bfa]'} border-t-transparent rounded-full`}></div>
                     <span><TranslatedText>Loading course...</TranslatedText></span>
                 </motion.div>
             </div>
@@ -537,15 +537,17 @@ const CourseViewer = () => {
 
     if (!course) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#030303]' : 'bg-[#f8f8f8]'}`}>
+            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#111]' : 'bg-gray-50'}`}>
                 <div className={`text-center ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}`}>
                     <h2 className="text-2xl font-bold mb-4"><TranslatedText>Course not found</TranslatedText></h2>
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => navigate('/student-dashboard')}
-                        className={`px-4 py-2 ${isDark ? 'bg-[#f8f8f8] text-[#030303]' : 'bg-[#080808] text-[#f8f8f8]'} rounded-lg`}
+                        className={`px-6 py-3 ${isDark ? 'bg-[#7c3aed] hover:bg-[#6d28d9]' : 'bg-[#a78bfa] hover:bg-[#8b5cf6]'} text-white rounded-lg font-medium`}
                     >
                         <TranslatedText>Back to Dashboard</TranslatedText>
-                    </button>
+                    </motion.button>
                 </div>
             </div>
         );
@@ -556,15 +558,17 @@ const CourseViewer = () => {
 
     if (!currentContent) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#030303]' : 'bg-[#f8f8f8]'}`}>
+            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#111]' : 'bg-gray-50'}`}>
                 <div className={`text-center ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}`}>
                     <h2 className="text-2xl font-bold mb-4"><TranslatedText>Content not found</TranslatedText></h2>
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => navigate('/student-dashboard')}
-                        className={`px-4 py-2 ${isDark ? 'bg-[#f8f8f8] text-[#030303]' : 'bg-[#080808] text-[#f8f8f8]'} rounded-lg`}
+                        className={`px-6 py-3 ${isDark ? 'bg-[#7c3aed] hover:bg-[#6d28d9]' : 'bg-[#a78bfa] hover:bg-[#8b5cf6]'} text-white rounded-lg font-medium`}
                     >
                         <TranslatedText>Back to Dashboard</TranslatedText>
-                    </button>
+                    </motion.button>
                 </div>
             </div>
         );
@@ -574,38 +578,39 @@ const CourseViewer = () => {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className={`min-h-screen ${isDark ? 'bg-[#030303]' : 'bg-[#f8f8f8]'}`}
+            className={`min-h-screen ${isDark ? 'bg-[#111]' : 'bg-gray-50'}`}
         >
             {/* Header */}
             <motion.nav
                 initial={{ y: -100 }}
                 animate={{ y: 0 }}
-                className={`${isDark ? 'bg-[#222052] border-[#f8f8f8]/20' : 'bg-[#f8f8f8] border-[#080808]/20'} border-b`}
+                className={`${isDark ? 'bg-[#222052]' : 'bg-[#7c3aed]'} shadow-md`}
             >
                 <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
                     <div className="flex items-center gap-4">
                         <motion.button
                             whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => navigate('/student-dashboard')}
-                            className={`${isDark ? 'text-[#f8f8f8] hover:text-[#f8f8f8]/80' : 'text-[#080808] hover:text-[#080808]/80'}`}
+                            className={`flex items-center gap-2 px-4 py-2 ${isDark ? 'bg-[#222052] hover:bg-[#2d2a6e] text-[#f8f8f8]' : 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white'} rounded-lg`}
                         >
                             ← <TranslatedText>Back to Dashboard</TranslatedText>
                         </motion.button>
                     </div>
                     
-                    <h1 className={`text-xl font-bold ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}`}>{course.title}</h1>
+                    <h1 className={`text-xl font-bold ${isDark ? 'text-[#f8f8f8]' : 'text-white'}`}>{course.title}</h1>
                     
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4">
                         <div className="relative group">
                             <button
-                                className={`flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#222] transition ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}`}
+                                className={`flex items-center gap-2 px-4 py-2 ${isDark ? 'bg-[#222052] hover:bg-[#2d2a6e] text-[#f8f8f8]' : 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white'} rounded-lg`}
                                 title={<TranslatedText>Language</TranslatedText>}
                             >
                                 <span>🌐</span>
                                 <span>{currentLanguage}</span>
                                 <span>▼</span>
                             </button>
-                            <div className={`absolute top-full right-0 mt-2 w-48 ${isDark ? 'bg-[#181818] border-[#222]' : 'bg-white border-gray-200'} border rounded-lg shadow-lg z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200`}>
+                            <div className={`absolute top-full right-0 mt-2 w-48 ${isDark ? 'bg-[#222052]' : 'bg-[#7c3aed]'} rounded-lg shadow-lg z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200`}>
                                 {Object.keys(LANGUAGE_MAPPING)
                                     .filter(
                                         (name) => BACKEND_LANGUAGE_MAP[LANGUAGE_MAPPING[name]]
@@ -615,8 +620,12 @@ const CourseViewer = () => {
                                             key={languageName}
                                             className={`px-4 py-2 text-sm cursor-pointer ${
                                                 currentLanguage === languageName
-                                                    ? "bg-[#ece9ff] dark:bg-[#18182b] text-[#7c3aed] dark:text-[#a78bfa]"
-                                                    : `${isDark ? 'text-[#f8f8f8] hover:bg-[#222]' : 'text-[#080808] hover:bg-gray-100'}`
+                                                    ? isDark 
+                                                        ? "bg-[#2d2a6e] text-[#a78bfa]"
+                                                        : "bg-[#6d28d9] text-white"
+                                                    : isDark 
+                                                        ? "text-[#f8f8f8] hover:bg-[#2d2a6e]"
+                                                        : "text-white hover:bg-[#6d28d9]"
                                             }`}
                                             onClick={() => {
                                                 if (currentLanguage !== languageName) {
@@ -628,7 +637,7 @@ const CourseViewer = () => {
                                             currentLanguage === languageName ? (
                                                 <span className="flex items-center">
                                                     <svg
-                                                        className="animate-spin -ml-1 mr-2 h-3 w-3 text-[#7c3aed] dark:text-[#a78bfa]"
+                                                        className="animate-spin -ml-1 mr-2 h-3 w-3 text-[#a78bfa]"
                                                         xmlns="http://www.w3.org/2000/svg"
                                                         fill="none"
                                                         viewBox="0 0 24 24"
@@ -656,7 +665,7 @@ const CourseViewer = () => {
                                     ))}
                             </div>
                         </div>
-                        <div className={`text-sm ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}`}>
+                        <div className={`px-4 py-2 ${isDark ? 'bg-[#2d2a6e] text-[#f8f8f8]' : 'bg-[#6d28d9] text-white'} rounded-lg text-sm`}>
                             {currentSlide + 1} / {flattenedContent.length}
                         </div>
                     </div>
@@ -664,11 +673,11 @@ const CourseViewer = () => {
             </motion.nav>
 
             {/* Progress Bar */}
-            <div className={`w-full ${isDark ? 'bg-[#222052]' : 'bg-[#f8f8f8]'} h-2`}>
+            <div className={`w-full ${isDark ? 'bg-[#222052]' : 'bg-[#7c3aed]'} h-1`}>
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${((currentSlide + 1) / flattenedContent.length) * 100}%` }}
-                    className={`h-full ${isDark ? 'bg-[#f8f8f8]' : 'bg-[#080808]'}`}
+                    className={`h-full ${isDark ? 'bg-[#a78bfa]' : 'bg-white'}`}
                     transition={{ duration: 0.5 }}
                 />
             </div>
@@ -681,7 +690,7 @@ const CourseViewer = () => {
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -50 }}
-                        className={`${isDark ? 'bg-[#222052] border-[#f8f8f8]/20' : 'bg-[#f8f8f8] border-[#080808]/20'} border rounded-2xl p-8`}
+                        className={`${isDark ? 'bg-[#181818] border-[#333]' : 'bg-white border-gray-200'} border rounded-xl shadow-lg p-6`}
                     >
                         <div className="text-4xl mb-6 text-center">{currentContent.emoji || '📖'}</div>
                         <h2 className={`text-3xl font-bold ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'} mb-6 text-center`}>
@@ -741,7 +750,7 @@ const CourseViewer = () => {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handlePrevSlide}
                                 disabled={currentSlide === 0}
-                                className={`px-6 py-3 border ${isDark ? 'border-[#f8f8f8]/30 text-[#f8f8f8]' : 'border-[#080808]/30 text-[#080808]'} rounded-lg disabled:opacity-50 disabled:cursor-not-allowed`}
+                                className={`px-6 py-3 border ${isDark ? 'border-[#a78bfa] text-[#a78bfa] hover:bg-[#2d2a6e]' : 'border-[#7c3aed] text-[#7c3aed] hover:bg-[#f3f0ff]'} rounded-lg disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 ← <TranslatedText>Previous</TranslatedText>
                             </motion.button>
@@ -749,7 +758,7 @@ const CourseViewer = () => {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleNextSlide}
-                                className={`px-6 py-3 ${isDark ? 'bg-[#f8f8f8] text-[#030303]' : 'bg-[#080808] text-[#f8f8f8]'} rounded-lg font-medium`}
+                                className={`px-6 py-3 ${isDark ? 'bg-[#7c3aed] hover:bg-[#6d28d9]' : 'bg-[#a78bfa] hover:bg-[#8b5cf6]'} text-white rounded-lg font-medium`}
                             >
                                 {currentSlide === flattenedContent.length - 1 ? 
                                     <TranslatedText>Complete Course</TranslatedText> : 
@@ -762,7 +771,7 @@ const CourseViewer = () => {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className={`${isDark ? 'bg-[#222052] border-[#f8f8f8]/20' : 'bg-[#f8f8f8] border-[#080808]/20'} border rounded-2xl p-8`}
+                        className={`${isDark ? 'bg-[#181818] border-[#333]' : 'bg-white border-gray-200'} border rounded-xl shadow-lg p-6`}
                     >
                         <h2 className={`text-3xl font-bold ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'} mb-6 text-center`}>
                             🧠 <TranslatedText>Quiz Time!</TranslatedText>
@@ -773,7 +782,7 @@ const CourseViewer = () => {
 
                         <div className="space-y-6">
                             {quizData.questions.map((question, index) => (
-                                <div key={index} className={`border ${isDark ? 'border-[#f8f8f8]/20' : 'border-[#080808]/20'} rounded-lg p-6`}>
+                                <div key={index} className={`border ${isDark ? 'border-[#333]' : 'border-gray-200'} rounded-lg p-6`}>
                                     <h3 className={`text-xl font-semibold ${isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'} mb-4`}>
                                         {index + 1}. {question.question}
                                     </h3>
@@ -791,7 +800,7 @@ const CourseViewer = () => {
                                                         ...quizAnswers,
                                                         [index]: parseInt(e.target.value)
                                                     })}
-                                                    className={isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}
+                                                    className={isDark ? 'text-[#a78bfa]' : 'text-[#7c3aed]'}
                                                 />
                                                 <span className={isDark ? 'text-[#f8f8f8]' : 'text-[#080808]'}>{option}</span>
                                             </label>
@@ -807,7 +816,7 @@ const CourseViewer = () => {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleQuizSubmit}
                                 disabled={Object.keys(quizAnswers).length !== quizData.questions.length}
-                                className={`px-8 py-3 ${isDark ? 'bg-[#f8f8f8] text-[#030303]' : 'bg-[#080808] text-[#f8f8f8]'} rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
+                                className={`px-8 py-3 ${isDark ? 'bg-[#7c3aed] hover:bg-[#6d28d9]' : 'bg-[#a78bfa] hover:bg-[#8b5cf6]'} text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <TranslatedText>Submit Quiz</TranslatedText>
                             </motion.button>
@@ -838,7 +847,7 @@ const CourseViewer = () => {
                 toastStyle={{
                     backgroundColor: isDark ? '#222052' : '#f8f8f8',
                     color: isDark ? '#f8f8f8' : '#080808',
-                    border: isDark ? "1px solid #222" : "1px solid #e5e7eb",
+                    border: isDark ? "1px solid #333" : "1px solid #e5e7eb",
                 }}
             />
         </motion.div>

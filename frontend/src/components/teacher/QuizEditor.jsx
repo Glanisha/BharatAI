@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTheme } from "../../context/ThemeContext";
 
 const defaultQuestion = {
   question: "",
@@ -14,6 +15,7 @@ const QuizEditor = ({
   onChange,
 }) => {
   const [questions, setQuestions] = useState(quiz.questions || []);
+  const { isDark } = useTheme();
 
   const addQuestion = (type = "mcq") => {
     const newQ =
@@ -43,21 +45,39 @@ const QuizEditor = ({
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-neutral-50 dark:bg-[#101010] rounded-lg shadow p-4 mt-4 border border-neutral-200 dark:border-[#222]">
+    <div
+      className={`w-full max-w-2xl mx-auto rounded-lg shadow p-4 mt-4 border
+    ${isDark ? "bg-[#101010] border-[#222]" : "bg-white border-neutral-200"}
+  `}
+    >
       <div className="flex items-center gap-2 mb-4">
-        <span className="font-semibold text-lg text-[#080808] dark:text-[#f8f8f8]">
+        <span
+          className={`font-semibold text-lg ${
+            isDark ? "text-[#f8f8f8]" : "text-[#080808]"
+          }`}
+        >
           Quiz
         </span>
         <button
           type="button"
-          className="flex items-center gap-1 px-2 py-1 rounded bg-white dark:bg-[#181818] border border-neutral-200 dark:border-[#222] hover:bg-neutral-100 dark:hover:bg-[#222] text-sm transition text-[#7c3aed] dark:text-[#a78bfa]"
+          className={`flex items-center gap-1 px-2 py-1 rounded border text-sm transition
+          ${
+            isDark
+              ? "bg-[#181818] border-[#222] hover:bg-[#222] text-[#a78bfa]"
+              : "bg-white border-neutral-200 hover:bg-neutral-100 text-[#7c3aed]"
+          }`}
           onClick={() => addQuestion("mcq")}
         >
           <FaPlus /> MCQ
         </button>
         <button
           type="button"
-          className="flex items-center gap-1 px-2 py-1 rounded bg-white dark:bg-[#181818] border border-neutral-200 dark:border-[#222] hover:bg-neutral-100 dark:hover:bg-[#222] text-sm transition text-[#7c3aed] dark:text-[#a78bfa]"
+          className={`flex items-center gap-1 px-2 py-1 rounded border text-sm transition
+          ${
+            isDark
+              ? "bg-[#181818] border-[#222] hover:bg-[#222] text-[#a78bfa]"
+              : "bg-white border-neutral-200 hover:bg-neutral-100 text-[#7c3aed]"
+          }`}
           onClick={() => addQuestion("truefalse")}
         >
           <FaPlus /> True/False
@@ -71,7 +91,13 @@ const QuizEditor = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="mb-6 bg-white dark:bg-[#181818] rounded p-4 shadow-sm border border-neutral-200 dark:border-[#222]"
+            className={`mb-6 rounded p-4 shadow-sm border
+            ${
+              isDark
+                ? "bg-[#181818] border-[#222]"
+                : "bg-white border-neutral-200"
+            }
+          `}
           >
             <div className="flex items-center gap-2 mb-2">
               <input
@@ -81,7 +107,12 @@ const QuizEditor = ({
                   updateQuestion(idx, { ...q, question: e.target.value })
                 }
                 placeholder="Question"
-                className="flex-1 px-3 py-2 rounded border border-neutral-200 dark:border-[#222] bg-neutral-50 dark:bg-[#101010] text-[#080808] dark:text-[#f8f8f8] focus:outline-none focus:ring-2 focus:ring-[#7c3aed]/10 dark:focus:ring-[#a78bfa]/10 transition"
+                className={`flex-1 px-3 py-2 rounded border focus:outline-none focus:ring-2 text-sm transition
+                ${
+                  isDark
+                    ? "border-[#222] bg-[#101010] text-[#f8f8f8] focus:ring-[#a78bfa]/10"
+                    : "border-neutral-200 bg-neutral-50 text-[#080808] focus:ring-[#7c3aed]/10"
+                }`}
               />
               <select
                 value={q.type}
@@ -102,7 +133,12 @@ const QuizEditor = ({
                     });
                   }
                 }}
-                className="px-2 py-1 rounded border border-neutral-200 dark:border-[#222] bg-neutral-50 dark:bg-[#101010] text-[#080808] dark:text-[#f8f8f8] text-sm"
+                className={`px-2 py-1 rounded border text-sm
+                ${
+                  isDark
+                    ? "border-[#222] bg-[#101010] text-[#f8f8f8]"
+                    : "border-neutral-200 bg-neutral-50 text-[#080808]"
+                }`}
               >
                 <option value="mcq">MCQ</option>
                 <option value="truefalse">True/False</option>
@@ -111,7 +147,12 @@ const QuizEditor = ({
                 type="button"
                 onClick={() => removeQuestion(idx)}
                 title="Delete"
-                className="p-2 rounded hover:bg-red-100 dark:hover:bg-[#222] text-red-600 dark:text-red-400 transition"
+                className={`p-2 rounded transition
+                ${
+                  isDark
+                    ? "hover:bg-[#222] text-red-400"
+                    : "hover:bg-red-100 text-red-600"
+                }`}
               >
                 <FaTrash />
               </button>
@@ -129,7 +170,12 @@ const QuizEditor = ({
                         updateQuestion(idx, { ...q, options: newOpts });
                       }}
                       placeholder={`Option ${oidx + 1}`}
-                      className="flex-1 px-2 py-1 rounded border border-neutral-200 dark:border-[#222] bg-neutral-50 dark:bg-[#101010] text-[#080808] dark:text-[#f8f8f8] text-sm"
+                      className={`flex-1 px-2 py-1 rounded border text-sm
+                      ${
+                        isDark
+                          ? "border-[#222] bg-[#101010] text-[#f8f8f8]"
+                          : "border-neutral-200 bg-neutral-50 text-[#080808]"
+                      }`}
                     />
                     <input
                       type="radio"
@@ -139,7 +185,9 @@ const QuizEditor = ({
                         updateQuestion(idx, { ...q, correctAnswer: oidx })
                       }
                       title="Mark as correct"
-                      className="accent-[#7c3aed] dark:accent-[#a78bfa]"
+                      className={`accent-[#7c3aed] ${
+                        isDark ? "dark:accent-[#a78bfa]" : ""
+                      }`}
                     />
                   </div>
                 ))}
@@ -158,9 +206,13 @@ const QuizEditor = ({
                       onChange={() =>
                         updateQuestion(idx, { ...q, correctAnswer: oidx })
                       }
-                      className="accent-[#7c3aed] dark:accent-[#a78bfa]"
+                      className={`accent-[#7c3aed] ${
+                        isDark ? "dark:accent-[#a78bfa]" : ""
+                      }`}
                     />
-                    <span className="text-[#080808] dark:text-[#f8f8f8]">
+                    <span
+                      className={isDark ? "text-[#f8f8f8]" : "text-[#080808]"}
+                    >
                       {opt}
                     </span>
                   </label>
