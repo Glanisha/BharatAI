@@ -382,38 +382,15 @@ RESPOND WITH VALID JSON ONLY - NO MARKDOWN:
   }
 
   enhanceImageUrls(imageKeywords, topicTitle) {
-  // Extract relevant keywords from the topic title
-  const keywords = this.extractTopicKeywords(topicTitle);
-  
-  // Use Unsplash Source API with topic-specific keywords
-  const baseUrl = 'https://source.unsplash.com/800x600/?';
-  
-  // Create multiple variations with different keywords
-  const imageUrls = [
-    `${baseUrl}${keywords.primary}`,
-    `${baseUrl}${keywords.secondary}`,
-  ];
-  
-  return imageUrls;
-}
-
-extractTopicKeywords(topicTitle) {
-  // Remove common words and extract meaningful keywords
-  const commonWords = ['topic', 'section', 'introduction', 'part', 'chapter', 'lesson'];
-  const words = topicTitle.toLowerCase()
-    .replace(/[^\w\s]/g, '')
-    .split(' ')
-    .filter(word => word.length > 2 && !commonWords.includes(word));
-  
-  // Create primary and secondary keyword combinations
-  const primary = words.slice(0, 2).join('+') || 'education';
-  const secondary = words.length > 2 ? words.slice(1, 3).join('+') : words.join('+') + '+learning';
-  
-  return {
-    primary,
-    secondary: secondary || 'study+guide'
-  };
-}
+    // Use Lorem Picsum with different IDs for variety
+    const imageIds = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700];
+    
+    // Get 2 random image IDs
+    const shuffled = imageIds.sort(() => 0.5 - Math.random());
+    const selectedIds = shuffled.slice(0, 2);
+    
+    return selectedIds.map(id => `https://picsum.photos/id/${id}/800/600`);
+  }
 
   generateDefaultMermaid(topicTitle) {
     const keywords = this.extractKeywords(topicTitle);
