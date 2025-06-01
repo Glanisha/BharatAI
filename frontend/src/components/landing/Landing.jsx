@@ -5,7 +5,7 @@ import HeroSection from "./HeroSection";
 import FeaturesGrid from "./FeaturesGrid";
 import VideoSection from "./VideoSection";
 import TestimonialsMarquee from "./TestimonialsMarquee";
-import CTASection from "./CtaSection";
+import CTASection from "./CTASection";
 import Footer from "./Footer";
 
 const Landing = () => {
