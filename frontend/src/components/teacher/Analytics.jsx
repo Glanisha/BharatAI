@@ -305,7 +305,7 @@ const Analytics = () => {
               <Tooltip content={<CustomTooltip />} />
               <Bar 
                 dataKey="totalStudents" 
-                fill="url(#colorGradient1)" 
+                fill={colors.primary}
                 radius={[4, 4, 0, 0]}
               />
               <defs>
