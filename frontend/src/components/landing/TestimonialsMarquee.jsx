@@ -245,7 +245,7 @@ const TestimonialsMarquee = () => {
       </div>
 
       {/* Fixed CSS Animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes marquee-up {
           0% {
             transform: translateY(0);
