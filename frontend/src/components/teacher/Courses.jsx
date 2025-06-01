@@ -9,6 +9,7 @@ import {
   FaUnlock,
   FaCopy,
   FaCheck,
+  FaBook,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -35,6 +36,7 @@ const Courses = ({ setActiveTab }) => {
           }
         );
         const data = await res.json();
+        console.log("Fetched courses:", data);
         if (data.success) {
           setCourses(data.courses);
         }
@@ -75,192 +77,220 @@ const Courses = ({ setActiveTab }) => {
   };
 
   return (
-    <div className={`p-6 ${isDark ? "bg-neutral-900" : "bg-neutral-50"}`}>
-      <div className="flex items-center justify-between mb-6">
-        <h1
-          className={`text-2xl font-bold ${
-            isDark ? "text-neutral-50" : "text-neutral-900"
-          }`}
-        >
-          My Courses
-        </h1>
+    <div className={`p-6 min-h-[80vh] ${isDark ? 'bg-[#030303]' : 'bg-gray-50'}`}>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className={`text-3xl font-bold mb-1 ${isDark ? 'text-neutral-50' : 'text-gray-900'}`}>My Courses</h1>
+          <p className={isDark ? 'text-neutral-400' : 'text-gray-600'}>Manage and track your course content</p>
+        </div>
         <button
           onClick={() => setActiveTab("create-course")}
-          className="flex items-center gap-2 px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
         >
           <FaPlus /> New Course
         </button>
       </div>
       {loading ? (
-        <div className="flex items-center justify-center min-h-[200px]">
-          <div className="animate-spin h-8 w-8 border-2 border-indigo-700 border-t-transparent rounded-full"></div>
+        <div className="flex items-center justify-center min-h-[300px]">
+          <div className={`animate-spin h-10 w-10 border-3 ${isDark ? 'border-indigo-700' : 'border-indigo-500'} border-t-transparent rounded-full`}></div>
         </div>
       ) : courses.length === 0 ? (
-        <div className="text-neutral-400 text-center py-12">
-          No courses found.
+        <div className="text-center py-16">
+          <FaBook className={`text-6xl mx-auto mb-4 ${isDark ? 'text-neutral-600' : 'text-gray-400'}`} />
+          <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>
+            No courses found
+          </h3>
+          <p className={isDark ? 'text-neutral-500' : 'text-gray-500'}>
+            Create your first course to get started
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {courses.map((course, i) => (
-            <motion.div
-              key={course.id || course._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.07 }}
-              className={`${
-                isDark
-                  ? "bg-neutral-800 border border-neutral-700"
-                  : "bg-neutral-100 border border-neutral-200"
-              } rounded-lg shadow p-5 flex flex-col gap-3`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">
-                    {course.isPrivate ? (
-                      <FaLock className="text-indigo-500" />
-                    ) : (
-                      <FaUnlock className="text-green-500" />
-                    )}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {courses.map((course, i) => {
+            const enrolled =
+              typeof course.enrolledStudents === "number"
+                ? course.enrolledStudents
+                : Array.isArray(course.enrolledStudents)
+                ? course.enrolledStudents.length
+                : 0;
+            const topics = countTopics(course.contentTree);
+            return (
+              <motion.div
+                key={course.id || course._id}
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: i * 0.1, type: "spring", stiffness: 300 }}
+                whileHover={{ y: -4, scale: 1.02 }}
+                className={`rounded-2xl shadow-xl border p-6 flex flex-col gap-4 hover:shadow-2xl transition-all duration-300 ${
+                  isDark 
+                    ? 'border-neutral-800 bg-gradient-to-br from-[#1a1a1d] to-[#16161a]' 
+                    : 'border-gray-200 bg-gradient-to-br from-white to-gray-50'
+                }`}
+              >
+                {/* Header with lock icon and title */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="text-2xl flex-shrink-0">
+                      {course.isPrivate ? (
+                        <FaLock className="text-indigo-400" />
+                      ) : (
+                        <FaUnlock className="text-green-400" />
+                      )}
+                    </span>
+                    <div className="min-w-0">
+                      <h2
+                        className={`text-lg font-bold truncate ${isDark ? 'text-neutral-50' : 'text-gray-900'}`}
+                        title={course.title}
+                      >
+                        {course.title}
+                      </h2>
+                      {course.isPublished === false && (
+                        <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-medium">
+                          Draft
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats Row */}
+                <div className={`flex items-center justify-between py-3 px-4 rounded-xl border ${
+                  isDark 
+                    ? 'bg-[#0f0f10] border-neutral-800' 
+                    : 'bg-gray-100 border-gray-200'
+                }`}>
+                  <div className="flex items-center gap-2">
+                    <FaUserGraduate className="text-indigo-400 text-sm" />
+                    <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{enrolled}</span>
+                    <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>students</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                    <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{topics}</span>
+                    <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>topics</span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                {course.description && (
+                  <p className={`text-sm line-clamp-2 leading-relaxed ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>
+                    {course.description}
+                  </p>
+                )}
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                    isDark 
+                      ? 'bg-indigo-900/50 text-indigo-300 border-indigo-800' 
+                      : 'bg-indigo-100 text-indigo-700 border-indigo-200'
+                  }`}>
+                    {course.category}
                   </span>
-                  <h2
-                    className={`text-lg font-semibold truncate ${
-                      isDark ? "text-neutral-50" : "text-neutral-900"
-                    }`}
-                  >
-                    {course.title}
-                  </h2>
-                  {course.isPublished === false && (
-                    <span className="ml-2 px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 text-xs font-medium">
-                      Unpublished
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                    isDark 
+                      ? 'bg-neutral-800 text-neutral-300 border-neutral-700' 
+                      : 'bg-gray-200 text-gray-700 border-gray-300'
+                  }`}>
+                    {course.language}
+                  </span>
+                  {Array.isArray(course.tags) &&
+                    course.tags.slice(0, 2).map((tag) => (
+                      <span
+                        key={tag}
+                        className={`px-3 py-1 rounded-full text-xs border ${
+                          isDark 
+                            ? 'bg-neutral-900 text-neutral-400 border-neutral-800' 
+                            : 'bg-gray-100 text-gray-600 border-gray-200'
+                        }`}
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  {Array.isArray(course.tags) && course.tags.length > 2 && (
+                    <span className={`px-3 py-1 rounded-full text-xs border ${
+                      isDark 
+                        ? 'bg-neutral-900 text-neutral-400 border-neutral-800' 
+                        : 'bg-gray-100 text-gray-600 border-gray-200'
+                    }`}>
+                      +{course.tags.length - 2}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <span
-                    className={`flex items-center gap-1 font-semibold ${
-                      isDark ? "text-indigo-200" : "text-indigo-700"
-                    }`}
-                  >
-                    <FaUserGraduate />{" "}
-                    {typeof course.enrolledStudents === "number"
-                      ? course.enrolledStudents
-                      : Array.isArray(course.enrolledStudents)
-                      ? course.enrolledStudents.length
-                      : 0}
-                  </span>
-                  <span
-                    className={isDark ? "text-neutral-400" : "text-neutral-500"}
-                  >
-                    {countTopics(course.contentTree)} topics
-                  </span>
-                </div>
-              </div>
-              <div
-                className={`text-xs truncate max-w-xs ${
-                  isDark ? "text-neutral-400" : "text-neutral-500"
-                }`}
-              >
-                {course.description}
-              </div>
-              <div className="flex flex-wrap gap-2 mt-1">
-                <span
-                  className={`px-2 py-0.5 rounded ${
-                    isDark
-                      ? "bg-indigo-900 text-indigo-200"
-                      : "bg-indigo-100 text-indigo-700"
-                  } text-xs font-medium`}
-                >
-                  {course.category}
-                </span>
-                <span
-                  className={`px-2 py-0.5 rounded ${
-                    isDark
-                      ? "bg-neutral-900 text-neutral-50 border border-neutral-700"
-                      : "bg-neutral-50 text-neutral-900 border border-neutral-200"
-                  } text-xs font-medium`}
-                >
-                  {course.language}
-                </span>
-                {Array.isArray(course.tags) &&
-                  course.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className={`px-2 py-0.5 rounded ${
-                        isDark
-                          ? "bg-neutral-800 text-neutral-200"
-                          : "bg-neutral-100 text-neutral-700"
-                      } text-xs`}
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-              </div>
-              <div className="flex items-center gap-2 mt-2">
-                <button
-                  onClick={() =>
-                    navigate(`/teacher/courses/${course.id || course._id}/edit`)
-                  }
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded ${
-                    isDark
-                      ? "bg-indigo-900 text-indigo-200 hover:bg-indigo-800"
-                      : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
-                  } text-xs font-medium transition`}
-                >
-                  <FaEdit /> Edit
-                </button>
-                <button
-                  onClick={() =>
-                    navigate(`/teacher/courses/${course.id || course._id}/view`)
-                  }
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded ${
-                    isDark
-                      ? "bg-neutral-900 text-neutral-50 hover:bg-neutral-800"
-                      : "bg-neutral-50 text-neutral-900 hover:bg-neutral-200"
-                  } text-xs font-medium transition`}
-                >
-                  <FaEye /> View
-                </button>
-                {course.isPrivate && course.courseCode && (
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2 mt-2">
                   <button
                     onClick={() =>
-                      handleCopy(course.courseCode, course.id || course._id)
+                      navigate(`/teacher/courses/${course.id || course._id}/edit`)
                     }
-                    className={`flex items-center gap-1 px-3 py-1.5 rounded ${
-                      isDark
-                        ? "bg-neutral-900 text-indigo-200 hover:bg-indigo-800"
-                        : "bg-neutral-50 text-indigo-700 hover:bg-indigo-100"
-                    } text-xs font-medium transition`}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 border ${
+                      isDark 
+                        ? 'bg-indigo-900/50 text-indigo-300 hover:bg-indigo-800/50 border-indigo-800 hover:border-indigo-700' 
+                        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border-indigo-200 hover:border-indigo-300'
+                    }`}
                   >
-                    {copiedId === (course.id || course._id) ? (
-                      <>
-                        <FaCheck /> Copied
-                      </>
-                    ) : (
-                      <>
-                        <FaCopy /> {course.courseCode}
-                      </>
-                    )}
+                    <FaEdit /> Edit
                   </button>
-                )}
-              </div>
-              <div
-                className={`flex justify-between items-center mt-2 text-xs ${
-                  isDark ? "text-neutral-500" : "text-neutral-400"
-                }`}
-              >
-                <span>
-                  Created:{" "}
-                  {course.createdAt
-                    ? new Date(course.createdAt).toLocaleDateString()
-                    : "N/A"}
-                </span>
-                <span>
-                  {course.isPrivate ? "Private" : "Public"}
-                  {course.isPublished === false ? " • Unpublished" : ""}
-                </span>
-              </div>
-            </motion.div>
-          ))}
+                  <button
+                    onClick={() =>
+                      navigate(`/teacher/courses/${course.id || course._id}/view`)
+                    }
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 border ${
+                      isDark 
+                        ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700 border-neutral-700' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-300'
+                    }`}
+                  >
+                    <FaEye /> View
+                  </button>
+                  {course.isPrivate && course.courseCode && (
+                    <button
+                      onClick={() =>
+                        handleCopy(course.courseCode, course.id || course._id)
+                      }
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 border ${
+                        isDark 
+                          ? 'bg-neutral-800 text-indigo-300 hover:bg-indigo-900/30 border-neutral-700 hover:border-indigo-800' 
+                          : 'bg-gray-100 text-indigo-600 hover:bg-indigo-50 border-gray-300 hover:border-indigo-200'
+                      }`}
+                    >
+                      {copiedId === (course.id || course._id) ? (
+                        <>
+                          <FaCheck className="text-green-400" /> Copied
+                        </>
+                      ) : (
+                        <>
+                          <FaCopy /> {course.courseCode}
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className={`flex justify-between items-center pt-3 border-t text-xs ${
+                  isDark 
+                    ? 'border-neutral-800 text-neutral-500' 
+                    : 'border-gray-200 text-gray-500'
+                }`}>
+                  <span>
+                    {course.createdAt
+                      ? new Date(course.createdAt).toLocaleDateString()
+                      : "N/A"}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        course.isPrivate ? "bg-orange-500" : "bg-green-500"
+                      }`}
+                    ></div>
+                    {course.isPrivate ? "Private" : "Public"}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -47,49 +47,38 @@ const Overview = () => {
   }, []);
 
   return (
-    <div className={`p-6 ${isDark ? "bg-neutral-900" : "bg-neutral-50"}`}>
-      <h1
-        className={`text-2xl font-bold mb-6 ${
-          isDark ? "text-neutral-50" : "text-neutral-900"
-        }`}
-      >
-        Overview
-      </h1>
+    <div className={`p-6 min-h-[80vh] ${isDark ? 'bg-[#030303]' : 'bg-gray-50'}`}>
+      <h1 className={`text-2xl font-bold mb-8 ${isDark ? 'text-neutral-50' : 'text-gray-900'}`}>Overview</h1>
       {loading ? (
         <div className="flex items-center justify-center min-h-[200px]">
-          <div className="animate-spin h-8 w-8 border-2 border-indigo-700 border-t-transparent rounded-full"></div>
+          <div className={`animate-spin h-8 w-8 border-2 ${isDark ? 'border-indigo-700' : 'border-indigo-500'} border-t-transparent rounded-full`}></div>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8 max-w-2xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className={`flex items-center gap-4 p-5 rounded-lg shadow ${
-                isDark ? "bg-neutral-800" : "bg-neutral-100"
+              whileHover={{ scale: 1.03 }}
+              className={`flex items-center gap-5 p-7 rounded-2xl shadow-lg border transition-all duration-200 ${
+                isDark 
+                  ? 'border-neutral-800 bg-[#111112]' 
+                  : 'border-gray-200 bg-white'
               }`}
             >
-              <span
-                className={`text-3xl ${
-                  isDark ? "text-neutral-50" : "text-neutral-900"
-                }`}
-              >
+              <span className={`text-4xl p-3 rounded-full shadow ${
+                isDark 
+                  ? 'bg-indigo-900 text-indigo-200' 
+                  : 'bg-indigo-100 text-indigo-600'
+              }`}>
                 <FaBook />
               </span>
               <div>
-                <div
-                  className={`text-2xl font-bold ${
-                    isDark ? "text-neutral-50" : "text-neutral-900"
-                  }`}
-                >
+                <div className={`text-3xl font-bold ${isDark ? 'text-neutral-50' : 'text-gray-900'}`}>
                   {courses.length}
                 </div>
-                <div
-                  className={`text-sm ${
-                    isDark ? "text-neutral-400" : "text-neutral-500"
-                  }`}
-                >
+                <div className={`text-base mt-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
                   Total Courses
                 </div>
               </div>
@@ -98,109 +87,75 @@ const Overview = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className={`flex items-center gap-4 p-5 rounded-lg shadow ${
-                isDark ? "bg-neutral-800" : "bg-neutral-100"
+              whileHover={{ scale: 1.03 }}
+              className={`flex items-center gap-5 p-7 rounded-2xl shadow-lg border transition-all duration-200 ${
+                isDark 
+                  ? 'border-neutral-800 bg-[#111112]' 
+                  : 'border-gray-200 bg-white'
               }`}
             >
-              <span
-                className={`text-3xl ${
-                  isDark ? "text-neutral-50" : "text-neutral-900"
-                }`}
-              >
+              <span className={`text-4xl p-3 rounded-full shadow ${
+                isDark 
+                  ? 'bg-indigo-900 text-indigo-200' 
+                  : 'bg-indigo-100 text-indigo-600'
+              }`}>
                 <FaUserGraduate />
               </span>
               <div>
-                <div
-                  className={`text-2xl font-bold ${
-                    isDark ? "text-neutral-50" : "text-neutral-900"
-                  }`}
-                >
+                <div className={`text-3xl font-bold ${isDark ? 'text-neutral-50' : 'text-gray-900'}`}>
                   {totalStudents}
                 </div>
-                <div
-                  className={`text-sm ${
-                    isDark ? "text-neutral-400" : "text-neutral-500"
-                  }`}
-                >
+                <div className={`text-base mt-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
                   Total Students
                 </div>
               </div>
             </motion.div>
           </div>
-          {/* Animated Horizontal Bar Chart: Students per Course */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-            className={`${
-              isDark ? "bg-neutral-800" : "bg-neutral-100"
-            } rounded-lg shadow p-6`}
-          >
-            <div
-              className={`mb-4 text-lg font-semibold ${
-                isDark ? "text-neutral-50" : "text-neutral-900"
-              }`}
-            >
-              Students per Course
-            </div>
-            <div className="space-y-3">
-              {courses.length === 0 && (
-                <div className={`text-neutral-400 text-sm`}>
-                  No courses found.
-                </div>
-              )}
-              {courses.map((course, i) => {
+          {/* Modern Card Grid for Courses */}
+          <div className={`mb-2 text-lg font-semibold ${isDark ? 'text-neutral-50' : 'text-gray-900'}`}>
+            Courses & Enrollments
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {courses.length === 0 ? (
+              <div className={`col-span-full text-center py-8 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                No courses found.
+              </div>
+            ) : (
+              courses.map((course, i) => {
                 const count =
                   typeof course.enrolledStudents === "number"
                     ? course.enrolledStudents
                     : Array.isArray(course.enrolledStudents)
                     ? course.enrolledStudents.length
                     : 0;
-                const max = Math.max(
-                  ...courses.map((c) =>
-                    Array.isArray(c.enrolledStudents)
-                      ? c.enrolledStudents.length
-                      : 0
-                  ),
-                  1
-                );
-                const widthPercent = Math.max(10, (count / max) * 100);
-
                 return (
-                  <div
+                  <motion.div
                     key={course.id || course._id}
-                    className="flex items-center gap-3"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 + i * 0.07 }}
+                    className={`rounded-xl shadow p-5 flex flex-col gap-2 hover:shadow-xl transition ${
+                      isDark 
+                        ? 'bg-[#18181b] border border-neutral-800' 
+                        : 'bg-white border border-gray-200'
+                    }`}
                   >
-                    <span
-                      className={`truncate max-w-[120px] text-xs sm:text-sm ${
-                        isDark ? "text-neutral-50" : "text-neutral-900"
-                      }`}
+                    <div
+                      className={`font-semibold truncate ${isDark ? 'text-neutral-50' : 'text-gray-900'}`}
+                      title={course.title}
                     >
-                      {course.title.length > 18
-                        ? course.title.slice(0, 18) + "…"
-                        : course.title}
-                    </span>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${widthPercent}%` }}
-                      transition={{ delay: 0.2 + i * 0.07, type: "spring" }}
-                      className={`h-4 rounded ${
-                        isDark ? "bg-indigo-300" : "bg-indigo-600"
-                      } shadow-sm`}
-                      style={{ minWidth: 32 }}
-                    />
-                    <span
-                      className={`text-xs sm:text-sm font-semibold w-8 text-right ${
-                        isDark ? "text-indigo-200" : "text-indigo-700"
-                      }`}
-                    >
-                      {count}
-                    </span>
-                  </div>
+                      {course.title}
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <FaUserGraduate className={isDark ? 'text-indigo-400' : 'text-indigo-500'} />
+                      <span className={`font-bold ${isDark ? 'text-neutral-200' : 'text-gray-800'}`}>{count}</span>
+                      <span className={`text-xs ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>students</span>
+                    </div>
+                  </motion.div>
                 );
-              })}
-            </div>
-          </motion.div>
+              })
+            )}
+          </div>
         </>
       )}
     </div>

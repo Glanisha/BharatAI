@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import { SidebarProvider } from "../../context/SidebarContext";
@@ -13,7 +13,10 @@ import "react-toastify/dist/ReactToastify.css";
 
 const TeacherDashboard = () => {
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview");
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(
+    location.state?.activeTab || "overview"
+  );
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
