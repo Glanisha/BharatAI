@@ -1,16 +1,22 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "../../context/ThemeContext";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
   const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const navigate = useNavigate();
 
   const tabs = [
     { id: "dashboard", label: "Dashboard", image: "/api/placeholder/600/400" },
     { id: "courses", label: "Courses", image: "/api/placeholder/600/400" },
     { id: "analytics", label: "Analytics", image: "/api/placeholder/600/400" },
-    { id: "multi-lingual", label: "Multilingual", image: "../../../public/multiLingual.png" },
+    {
+      id: "multi-lingual",
+      label: "Multilingual",
+      image: "../../../public/multiLingual.png",
+    },
   ];
 
   return (
@@ -58,6 +64,7 @@ const HeroSection = () => {
                 ? "bg-[#4a4494] text-[#f8f8f8] hover:bg-[#3d3a7a]"
                 : "bg-[#222052] text-[#f8f8f8] hover:bg-[#1a1840]"
             }`}
+            onClick={() => navigate("/signup")}
           >
             Start Teaching
           </motion.button>
@@ -72,6 +79,11 @@ const HeroSection = () => {
                     : "border-[#222052] text-[#222052] hover:bg-[#222052]/10"
                 }
               `}
+            onClick={() =>
+              document
+                .getElementById("demo-video")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
           >
             Watch Demo
           </motion.button>

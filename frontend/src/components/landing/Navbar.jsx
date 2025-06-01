@@ -95,7 +95,7 @@ const Navbar = () => {
               whileTap={{ scale: 0.95 }}
               className="px-4 py-2 bg-[#222052] text-[#f8f8f8] rounded-full text-sm font-medium hover:bg-[#222052]/90 transition-colors duration-200"
               onClick={() => {
-                navigate("/signup");
+                navigate("/login");
               }}
             >
               Get Started
