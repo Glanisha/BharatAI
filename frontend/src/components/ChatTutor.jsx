@@ -3,6 +3,42 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaPaperPlane, FaRobot, FaUser, FaTimes } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 
+// Content parser utility
+const parseContent = (content) => {
+  if (!content) return content;
+  
+  // Parse markdown-style formatting
+  let parsed = content
+    // Bold text **text** or __text__
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/__(.*?)__/g, '<strong>$1</strong>')
+    // Italic text *text* or _text_
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/_(.*?)_/g, '<em>$1</em>')
+    // Code blocks ```code```
+    .replace(/```(.*?)```/gs, '<pre class="bg-gray-100 dark:bg-gray-800 p-2 rounded text-sm overflow-x-auto"><code>$1</code></pre>')
+    // Inline code `code`
+    .replace(/`(.*?)`/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-sm">$1</code>')
+    // Line breaks
+    .replace(/\n/g, '<br/>')
+    // Links [text](url)
+    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-[#7c3aed] hover:underline" target="_blank" rel="noopener noreferrer">$1</a>');
+  
+  return parsed;
+};
+
+// Component to render parsed content
+const MessageContent = ({ content, className = "" }) => {
+  const parsedContent = parseContent(content);
+  
+  return (
+    <div 
+      className={`text-sm leading-relaxed ${className}`}
+      dangerouslySetInnerHTML={{ __html: parsedContent }}
+    />
+  );
+};
+
 const ChatTutor = ({ courseId, isOpen, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -11,11 +47,31 @@ const ChatTutor = ({ courseId, isOpen, onClose }) => {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    if (isOpen) {
-      loadChatHistory();
-      sendWelcomeMessage();
-    }
-  }, [isOpen, courseId]);
+  if (isOpen) {
+    loadChatHistory().then(() => {
+      // Send welcome message only if no history was loaded
+      setTimeout(() => {
+        setMessages(prev => {
+          if (prev.length === 0) {
+            const welcomeMessage = {
+              id: Date.now(),
+              type: 'bot',
+              content: "Hello! I'm your **AI study assistant**. 📚 I can help you with:\n\n• Course content and concepts\n• Explanations in **English, Hindi, and other Indian languages**\n• Problem solving and practice\n\nHow can I help you today?",
+              timestamp: new Date(),
+              suggestions: [
+                'What topics are in this course?',
+                'I need help with a concept',
+                'Can you explain in Hindi?'
+              ]
+            };
+            return [welcomeMessage];
+          }
+          return prev;
+        });
+      }, 100);
+    });
+  }
+}, [isOpen, courseId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -44,14 +100,25 @@ const ChatTutor = ({ courseId, isOpen, onClose }) => {
     }
   };
 
-  const sendWelcomeMessage = () => {
-  const welcomeMessage = {
-    id: Date.now(),
-    type: 'bot',
-    content: "Hello! I'm your AI study assistant. 📚 I can help you with course content, explain concepts, and answer questions in English, Hindi, and other Indian languages. How can I help you today?",
-    timestamp: new Date()
-  };
-  setMessages([welcomeMessage]);
+const sendWelcomeMessage = () => {
+  // Only send welcome if no messages exist
+  setMessages(prev => {
+    if (prev.length === 0) {
+      const welcomeMessage = {
+        id: Date.now(),
+        type: 'bot',
+        content: "Hello! I'm your AI study assistant. 📚 I can help you with course content, explain concepts, and answer questions in English, Hindi, and other Indian languages. How can I help you today?",
+        timestamp: new Date(),
+        suggestions: [
+          'What topics are in this course?',
+          'I need help with a concept',
+          'Can you explain in Hindi?'
+        ]
+      };
+      return [welcomeMessage];
+    }
+    return prev;
+  });
 };
 
   const sendMessage = async () => {
@@ -183,9 +250,7 @@ const ChatTutor = ({ courseId, isOpen, onClose }) => {
           }
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {message.content}
-                </p>
+                <MessageContent content={message.content} />
                 
                 {/* Suggestions */}
                 {message.suggestions && message.suggestions.length > 0 && (
