@@ -319,13 +319,17 @@ const CourseEditor = () => {
     return (
       <div key={node.id} className="mb-1">
         <div
-          className={`flex items-center gap-2 p-2 rounded cursor-pointer transition ${
-            isSelected
-              ? "bg-[#ece9ff] dark:bg-[#18182b] border border-[#7c3aed]"
-              : isDark
-              ? "hover:bg-[#222]"
-              : "hover:bg-neutral-200"
-          }`}
+          className={`flex items-center gap-2 p-2 rounded cursor-pointer transition
+        ${
+          isSelected
+            ? isDark
+              ? "bg-[#18182b] border border-[#7c3aed] text-[#a78bfa]"
+              : "bg-[#ece9ff] border border-[#7c3aed] text-[#7c3aed]"
+            : isDark
+            ? "hover:bg-[#222] text-[#f8f8f8]"
+            : "hover:bg-neutral-100 text-[#080808]"
+        }
+      `}
           style={{ marginLeft: `${level * 20}px` }}
           onClick={() => setSelectedNode(node.id)}
         >
@@ -344,9 +348,7 @@ const CourseEditor = () => {
 
           {node.type === "section" ? <FaFolder /> : <FaFileAlt />}
 
-          <span className="flex-1 text-sm font-medium text-[#080808] dark:text-[#f8f8f8]">
-            {node.title}
-          </span>
+          <span className="flex-1 text-sm font-medium">{node.title}</span>
 
           {node.type === "section" && (
             <button
@@ -445,10 +447,10 @@ const CourseEditor = () => {
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         ${
           isDark
-            ? "bg-[#101010] border-[#222]"
-            : "bg-neutral-50 border-gray-200"
+            ? "bg-[#101010] border-[#222] text-[#f8f8f8]"
+            : "bg-white border-gray-200 text-[#080808] shadow-md"
         }
-        border-r shadow-lg md:shadow-none`}
+        border-r md:shadow-none`}
       style={{ minHeight: "100vh", maxWidth: "100vw" }}
     >
       <div
