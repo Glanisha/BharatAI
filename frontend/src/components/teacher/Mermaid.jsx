@@ -10,15 +10,29 @@ const Mermaid = ({ code, onChange }) => {
   const [error, setError] = useState("");
   const [generating, setGenerating] = useState(false);
   const [diagramHtml, setDiagramHtml] = useState("");
+  // Use a media query to detect dark mode for SSR safety
+  const [isDark, setIsDark] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : false
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e) => setIsDark(e.matches);
+    mq.addEventListener("change", handler);
+    setIsDark(mq.matches);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   useEffect(() => {
     mermaid.initialize({
       startOnLoad: true,
-      theme: "dark",
+      theme: isDark ? "dark" : "default",
       securityLevel: "loose",
       fontFamily: "monospace",
     });
-  }, []);
+  }, [isDark]);
 
   useEffect(() => {
     if (!code || code.trim().length === 0) {
@@ -37,7 +51,6 @@ const Mermaid = ({ code, onChange }) => {
           .replace(/\n\s*\n/g, "\n")
           .trim();
 
-        // Ensure newline after diagram type (graph/flowchart) and direction (TD/LR/RL/BT)
         cleanedCode = cleanedCode.replace(
           /^(flowchart|graph)\s+([A-Za-z]+)\s*/i,
           (match, p1, p2) => `${p1} ${p2}\n`
@@ -47,7 +60,14 @@ const Mermaid = ({ code, onChange }) => {
           .toString(36)
           .substr(2, 9)}`;
 
-        // Async render
+        // Set theme dynamically
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: isDark ? "dark" : "default",
+          securityLevel: "loose",
+          fontFamily: "monospace",
+        });
+
         await mermaid.parse(cleanedCode);
         const { svg } = await mermaid.render(diagramId, cleanedCode);
 
@@ -68,7 +88,7 @@ const Mermaid = ({ code, onChange }) => {
     return () => {
       cancelled = true;
     };
-  }, [code]);
+  }, [code, isDark]);
 
   // Render mermaid diagram
   const renderDiagram = (code) => {
@@ -162,7 +182,9 @@ const Mermaid = ({ code, onChange }) => {
 
   return (
     <motion.div
-      className="w-full max-w-2xl mx-auto bg-white dark:bg-neutral-900 rounded-xl shadow p-6 mt-6"
+      className={`w-full max-w-2xl mx-auto rounded-xl shadow p-6 mt-6 ${
+        isDark ? "bg-neutral-900" : "bg-neutral-50 border border-neutral-100"
+      }`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -174,7 +196,12 @@ const Mermaid = ({ code, onChange }) => {
           whileHover={{ scale: 1.05 }}
           onClick={() => setShowEditor((v) => !v)}
           title="Edit Mermaid Code"
-          className="flex items-center gap-1 px-3 py-1 rounded bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-sm transition"
+          className={`flex items-center gap-1 px-3 py-1 rounded text-sm transition
+            ${
+              isDark
+                ? "bg-neutral-800 hover:bg-neutral-700 text-neutral-50"
+                : "bg-white border border-neutral-200 hover:bg-neutral-100 text-[#7c3aed]"
+            }`}
         >
           <FaEdit /> {showEditor ? "Hide Editor" : "Edit Code"}
         </motion.button>
@@ -184,7 +211,12 @@ const Mermaid = ({ code, onChange }) => {
           onChange={(e) => setDesc(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
           placeholder="Describe diagram (e.g. flowchart of making tea)"
-          className="flex-1 px-3 py-1 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 text-sm"
+          className={`flex-1 px-3 py-1 rounded border text-sm
+            ${
+              isDark
+                ? "border-neutral-700 bg-neutral-900 text-neutral-50"
+                : "border-neutral-200 bg-white text-[#080808] placeholder:text-neutral-400"
+            }`}
           disabled={generating}
         />
         <motion.button
@@ -209,7 +241,12 @@ const Mermaid = ({ code, onChange }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="w-full px-3 py-2 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 text-sm mb-2 font-mono"
+            className={`w-full px-3 py-2 rounded border mb-2 font-mono text-sm
+              ${
+                isDark
+                  ? "border-neutral-700 bg-neutral-900 text-neutral-50"
+                  : "border-neutral-200 bg-white text-[#080808] placeholder:text-neutral-400"
+              }`}
             value={code}
             onChange={(e) => onChange(e.target.value)}
             rows={8}
@@ -219,11 +256,20 @@ const Mermaid = ({ code, onChange }) => {
       </AnimatePresence>
 
       <div className="flex items-center justify-between mt-2 mb-1">
-        <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+        <span
+          className={`text-xs font-semibold ${
+            isDark ? "text-neutral-400" : "text-neutral-500"
+          }`}
+        >
           Preview
         </span>
         <button
-          className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-100"
+          className={`flex items-center gap-1 text-xs transition
+            ${
+              isDark
+                ? "text-indigo-300 hover:text-indigo-100"
+                : "text-[#7c3aed] hover:text-indigo-700"
+            }`}
           onClick={() => {
             navigator.clipboard.writeText(code);
           }}
@@ -233,7 +279,11 @@ const Mermaid = ({ code, onChange }) => {
         </button>
       </div>
 
-      <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded mb-2 overflow-auto border border-neutral-100 dark:border-neutral-700">
+      <div
+        className={`bg-neutral-50 dark:bg-neutral-800 p-4 rounded mb-2 overflow-auto border ${
+          isDark ? "border-neutral-700" : "border-neutral-200"
+        }`}
+      >
         <AnimatePresence>
           {code && (
             <motion.div
