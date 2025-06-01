@@ -3,6 +3,7 @@ const User = require("../models/User");
 const multer = require("multer");
 const pdfParse = require("pdf-parse");
 const Progress = require("../models/Progress");
+const GroqCourseGenerator = require("../services/groqService");
 
 // Configure multer for file upload
 const storage = multer.memoryStorage();
@@ -38,7 +39,7 @@ const createCourse = async (req, res) => {
       isPrivate,
       password,
       tags,
-      contentTree, // new nested content structure
+      contentTree,
       estimatedTime
     } = req.body;
     const instructorId = req.userId;
@@ -80,8 +81,17 @@ const createCourse = async (req, res) => {
       });
     }
 
-    // Generate structured content from PDF and save it
-    const generatedContentTree = generateContentTreeFromPdf(pdfContent);
+    // Prepare course details for content generation
+    const courseDetails = {
+      title,
+      description,
+      category,
+      language,
+      estimatedTime: parseInt(estimatedTime) || 60
+    };
+
+    // Generate structured content from PDF using courseDetails
+    const generatedContentTree = await generateContentTreeFromPdf(pdfContent, courseDetails);
 
     // Parse tags if they exist
     let parsedTags = [];
@@ -135,16 +145,16 @@ const createCourse = async (req, res) => {
       instructor: instructorId,
       isPrivate: isPrivateCourse,
       tags: parsedTags,
-      pdfContent, // Keep for reference
-      contentTree: contentTree || generatedContentTree, // Save generated content
-      estimatedTime: estimatedTime || 60
+      pdfContent,
+      contentTree: contentTree || generatedContentTree,
+      estimatedTime: courseDetails.estimatedTime
     };
 
     // Add private course specific fields
     if (isPrivateCourse) {
       courseData.courseCode = courseCode;
       courseData.password = password;
-      courseData.isPublished = false; // Private courses start unpublished
+      courseData.isPublished = false;
     }
 
     // Create course
@@ -152,7 +162,7 @@ const createCourse = async (req, res) => {
 
     const responseData = {
       success: true,
-      message: "Course created successfully",
+      message: "Course created successfully with AI-generated content",
       course: {
         id: course._id,
         title: course.title,
@@ -168,7 +178,7 @@ const createCourse = async (req, res) => {
     // Include course code only for private courses
     if (course.isPrivate) {
       responseData.course.courseCode = course.courseCode;
-      responseData.message = `Private course created successfully! Course Code: ${course.courseCode}`;
+      responseData.message = `Private course created successfully with AI-generated content! Course Code: ${course.courseCode}`;
     }
 
     res.status(201).json(responseData);
@@ -198,7 +208,6 @@ const createCourse = async (req, res) => {
     });
   }
 };
-
 // Update an existing course (support both old and new structure)
 const updateCourse = async (req, res) => {
   console.log("Updating course...");
@@ -889,7 +898,23 @@ const countTotalSlides = (contentTree) => {
 };
 
 // Helper function to generate contentTree from PDF
-const generateContentTreeFromPdf = (pdfContent) => {
+const generateContentTreeFromPdf = async (pdfContent, courseDetails) => {
+  try {
+    const groqGenerator = new GroqCourseGenerator();
+    // Pass both pdfContent AND courseDetails to the generator
+    const generatedContent = await groqGenerator.generateCourseStructure(pdfContent, courseDetails);
+    
+    console.log('Generated content from Lyzr:', JSON.stringify(generatedContent, null, 2));
+    return generatedContent;
+  } catch (error) {
+    console.error('Lyzr generation failed, using fallback:', error);
+    // Also pass courseDetails to the fallback
+    return generateBasicContentTreeFromPdf(pdfContent, courseDetails);
+  }
+};
+
+// Update the fallback function to accept courseDetails
+const generateBasicContentTreeFromPdf = (pdfContent, courseDetails = {}) => {
   // Split PDF content into sections
   const paragraphs = pdfContent
     .split("\n\n")
@@ -920,8 +945,14 @@ const generateContentTreeFromPdf = (pdfContent) => {
       title: `Topic ${topicCounter}`,
       type: 'topic',
       content: content.replace(/\n/g, "<br>"),
-      videoUrls: [],
-      imageUrls: [],
+      videoUrls: [
+        "https://www.youtube.com/results?search_query=tutorial+learning",
+        "https://www.youtube.com/results?search_query=education+explained"
+      ],
+      imageUrls: [
+        "https://source.unsplash.com/800x600/?education",
+        "https://source.unsplash.com/800x600/?learning"
+      ],
       mermaid: '',
       quiz: {
         questions: index % 5 === 4 ? [
@@ -930,6 +961,7 @@ const generateContentTreeFromPdf = (pdfContent) => {
             type: "mcq",
             options: ["Concept A", "Concept B", "Concept C", "Concept D"],
             correctAnswer: 0,
+            explanation: "This covers the main concept of the topic."
           }
         ] : [],
         difficulty: index < 5 ? "basic" : index < 10 ? "intermediate" : "advanced",
@@ -1082,6 +1114,7 @@ const getEmojiForCategory = (category) => {
   };
   return emojis[category] || "📚"; // Default to book emoji
 };
+
 module.exports = {
   createCourse,
   updateCourse,
