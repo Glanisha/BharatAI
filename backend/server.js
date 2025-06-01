@@ -21,6 +21,7 @@ const corsOptions = {
     "http://localhost:3000",
     "http://localhost:5173", // Vite default port
     "http://localhost:4173", // Vite preview port
+    "https://egurukul.vercel.app",
   ],
   credentials: true,
   optionsSuccessStatus: 200,
