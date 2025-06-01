@@ -43,21 +43,21 @@ const QuizEditor = ({
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white dark:bg-[#101010] rounded-lg shadow p-4 mt-4">
+    <div className="w-full max-w-2xl mx-auto bg-neutral-50 dark:bg-[#101010] rounded-lg shadow p-4 mt-4 border border-neutral-200 dark:border-[#222]">
       <div className="flex items-center gap-2 mb-4">
         <span className="font-semibold text-lg text-[#080808] dark:text-[#f8f8f8]">
           Quiz
         </span>
         <button
           type="button"
-          className="flex items-center gap-1 px-2 py-1 rounded bg-[#f8f8f8] dark:bg-[#181818] hover:bg-gray-100 dark:hover:bg-[#222] text-sm transition"
+          className="flex items-center gap-1 px-2 py-1 rounded bg-white dark:bg-[#181818] border border-neutral-200 dark:border-[#222] hover:bg-neutral-100 dark:hover:bg-[#222] text-sm transition text-[#7c3aed] dark:text-[#a78bfa]"
           onClick={() => addQuestion("mcq")}
         >
           <FaPlus /> MCQ
         </button>
         <button
           type="button"
-          className="flex items-center gap-1 px-2 py-1 rounded bg-[#f8f8f8] dark:bg-[#181818] hover:bg-gray-100 dark:hover:bg-[#222] text-sm transition"
+          className="flex items-center gap-1 px-2 py-1 rounded bg-white dark:bg-[#181818] border border-neutral-200 dark:border-[#222] hover:bg-neutral-100 dark:hover:bg-[#222] text-sm transition text-[#7c3aed] dark:text-[#a78bfa]"
           onClick={() => addQuestion("truefalse")}
         >
           <FaPlus /> True/False
@@ -71,7 +71,7 @@ const QuizEditor = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="mb-6 bg-[#f8f8f8] dark:bg-[#181818] rounded p-4 shadow-sm"
+            className="mb-6 bg-white dark:bg-[#181818] rounded p-4 shadow-sm border border-neutral-200 dark:border-[#222]"
           >
             <div className="flex items-center gap-2 mb-2">
               <input
@@ -81,7 +81,7 @@ const QuizEditor = ({
                   updateQuestion(idx, { ...q, question: e.target.value })
                 }
                 placeholder="Question"
-                className="flex-1 px-3 py-2 rounded border border-gray-200 dark:border-[#222] bg-white dark:bg-[#101010] text-[#080808] dark:text-[#f8f8f8] focus:outline-none focus:ring-2 focus:ring-[#080808]/10 dark:focus:ring-[#f8f8f8]/10 transition"
+                className="flex-1 px-3 py-2 rounded border border-neutral-200 dark:border-[#222] bg-neutral-50 dark:bg-[#101010] text-[#080808] dark:text-[#f8f8f8] focus:outline-none focus:ring-2 focus:ring-[#7c3aed]/10 dark:focus:ring-[#a78bfa]/10 transition"
               />
               <select
                 value={q.type}
@@ -102,7 +102,7 @@ const QuizEditor = ({
                     });
                   }
                 }}
-                className="px-2 py-1 rounded border border-gray-200 dark:border-[#222] bg-white dark:bg-[#101010] text-[#080808] dark:text-[#f8f8f8] text-sm"
+                className="px-2 py-1 rounded border border-neutral-200 dark:border-[#222] bg-neutral-50 dark:bg-[#101010] text-[#080808] dark:text-[#f8f8f8] text-sm"
               >
                 <option value="mcq">MCQ</option>
                 <option value="truefalse">True/False</option>
@@ -129,7 +129,7 @@ const QuizEditor = ({
                         updateQuestion(idx, { ...q, options: newOpts });
                       }}
                       placeholder={`Option ${oidx + 1}`}
-                      className="flex-1 px-2 py-1 rounded border border-gray-200 dark:border-[#222] bg-white dark:bg-[#101010] text-[#080808] dark:text-[#f8f8f8] text-sm"
+                      className="flex-1 px-2 py-1 rounded border border-neutral-200 dark:border-[#222] bg-neutral-50 dark:bg-[#101010] text-[#080808] dark:text-[#f8f8f8] text-sm"
                     />
                     <input
                       type="radio"
@@ -139,7 +139,7 @@ const QuizEditor = ({
                         updateQuestion(idx, { ...q, correctAnswer: oidx })
                       }
                       title="Mark as correct"
-                      className="accent-[#080808] dark:accent-[#f8f8f8]"
+                      className="accent-[#7c3aed] dark:accent-[#a78bfa]"
                     />
                   </div>
                 ))}
@@ -158,7 +158,7 @@ const QuizEditor = ({
                       onChange={() =>
                         updateQuestion(idx, { ...q, correctAnswer: oidx })
                       }
-                      className="accent-[#080808] dark:accent-[#f8f8f8]"
+                      className="accent-[#7c3aed] dark:accent-[#a78bfa]"
                     />
                     <span className="text-[#080808] dark:text-[#f8f8f8]">
                       {opt}

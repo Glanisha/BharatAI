@@ -1,32 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'react-toastify';
-import { 
-  FaArrowLeft, 
-  FaSave, 
-  FaPlus, 
-  FaTrash, 
-  FaChevronDown, 
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-toastify";
+import {
+  FaArrowLeft,
+  FaSave,
+  FaPlus,
+  FaTrash,
+  FaChevronDown,
   FaChevronRight,
+  FaChevronLeft,
   FaEdit,
   FaEye,
   FaQuestionCircle,
   FaFolder,
   FaFileAlt,
-} from 'react-icons/fa';
-import QuizEditor from './QuizEditor';
-import Mermaid from './Mermaid';
+  FaBars,
+} from "react-icons/fa";
+import QuizEditor from "./QuizEditor";
+import Mermaid from "./Mermaid";
+import { ThemeToggle } from "../landing/ThemeToggle";
+import { useTheme } from "../../context/ThemeContext";
 
 const CourseEditor = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const { isDark } = useTheme();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
   const [expandedNodes, setExpandedNodes] = useState(new Set());
-  const [activeContentTab, setActiveContentTab] = useState('content');
+  const [activeContentTab, setActiveContentTab] = useState("content");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     fetchCourse();
@@ -34,13 +40,15 @@ const CourseEditor = () => {
 
   const fetchCourse = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const response = await fetch(
-        `${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/content`,
+        `${
+          import.meta.env.VITE_NODE_BASE_API_URL
+        }/api/courses/${courseId}/content`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       const data = await response.json();
@@ -50,31 +58,31 @@ const CourseEditor = () => {
         if (!data.course.contentTree || data.course.contentTree.length === 0) {
           const defaultTree = [
             {
-              id: 'section-1',
-              title: 'Introduction',
-              type: 'section',
-              content: '',
+              id: "section-1",
+              title: "Introduction",
+              type: "section",
+              content: "",
               children: [
                 {
-                  id: 'topic-1',
-                  title: 'Welcome',
-                  type: 'topic',
-                  content: '<p>Welcome to this course!</p>',
+                  id: "topic-1",
+                  title: "Welcome",
+                  type: "topic",
+                  content: "<p>Welcome to this course!</p>",
                   videoUrls: [],
                   imageUrls: [],
-                  mermaid: '',
+                  mermaid: "",
                   quiz: {
                     questions: [],
-                    difficulty: 'basic'
+                    difficulty: "basic",
                   },
-                  children: []
-                }
-              ]
-            }
+                  children: [],
+                },
+              ],
+            },
           ];
-          setCourse(prev => ({ ...prev, contentTree: defaultTree }));
-          setExpandedNodes(new Set(['section-1']));
-          setSelectedNode('topic-1');
+          setCourse((prev) => ({ ...prev, contentTree: defaultTree }));
+          setExpandedNodes(new Set(["section-1"]));
+          setSelectedNode("topic-1");
         } else {
           // Auto-expand first section and select first topic
           const firstSection = data.course.contentTree[0];
@@ -85,10 +93,10 @@ const CourseEditor = () => {
           }
         }
       } else {
-        toast.error('Failed to load course');
+        toast.error("Failed to load course");
       }
     } catch (error) {
-      toast.error('Error loading course');
+      toast.error("Error loading course");
     } finally {
       setLoading(false);
     }
@@ -96,7 +104,7 @@ const CourseEditor = () => {
 
   const findFirstTopic = (nodes) => {
     for (const node of nodes) {
-      if (node.type === 'topic') return node;
+      if (node.type === "topic") return node;
       if (node.children) {
         const found = findFirstTopic(node.children);
         if (found) return found;
@@ -108,8 +116,8 @@ const CourseEditor = () => {
   const addVideoUrl = (nodeId) => {
     const node = findNodeById(course?.contentTree || [], nodeId);
     if (node) {
-      const newVideoUrls = [...(node.videoUrls || []), ''];
-      updateNode(nodeId, 'videoUrls', newVideoUrls);
+      const newVideoUrls = [...(node.videoUrls || []), ""];
+      updateNode(nodeId, "videoUrls", newVideoUrls);
     }
   };
 
@@ -118,7 +126,7 @@ const CourseEditor = () => {
     if (node) {
       const newVideoUrls = [...(node.videoUrls || [])];
       newVideoUrls[index] = url;
-      updateNode(nodeId, 'videoUrls', newVideoUrls);
+      updateNode(nodeId, "videoUrls", newVideoUrls);
     }
   };
 
@@ -126,15 +134,15 @@ const CourseEditor = () => {
     const node = findNodeById(course?.contentTree || [], nodeId);
     if (node) {
       const newVideoUrls = (node.videoUrls || []).filter((_, i) => i !== index);
-      updateNode(nodeId, 'videoUrls', newVideoUrls);
+      updateNode(nodeId, "videoUrls", newVideoUrls);
     }
   };
 
   const addImageUrl = (nodeId) => {
     const node = findNodeById(course?.contentTree || [], nodeId);
     if (node) {
-      const newImageUrls = [...(node.imageUrls || []), ''];
-      updateNode(nodeId, 'imageUrls', newImageUrls);
+      const newImageUrls = [...(node.imageUrls || []), ""];
+      updateNode(nodeId, "imageUrls", newImageUrls);
     }
   };
 
@@ -143,7 +151,7 @@ const CourseEditor = () => {
     if (node) {
       const newImageUrls = [...(node.imageUrls || [])];
       newImageUrls[index] = url;
-      updateNode(nodeId, 'imageUrls', newImageUrls);
+      updateNode(nodeId, "imageUrls", newImageUrls);
     }
   };
 
@@ -151,21 +159,21 @@ const CourseEditor = () => {
     const node = findNodeById(course?.contentTree || [], nodeId);
     if (node) {
       const newImageUrls = (node.imageUrls || []).filter((_, i) => i !== index);
-      updateNode(nodeId, 'imageUrls', newImageUrls);
+      updateNode(nodeId, "imageUrls", newImageUrls);
     }
   };
 
   const saveCourse = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const response = await fetch(
         `${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             title: course.title,
@@ -173,19 +181,19 @@ const CourseEditor = () => {
             contentTree: course.contentTree,
             category: course.category,
             language: course.language,
-            tags: course.tags
-          })
+            tags: course.tags,
+          }),
         }
       );
       const data = await response.json();
       if (data.success) {
-        toast.success('Course saved successfully!');
+        toast.success("Course saved successfully!");
         navigate(`/teacher/courses/${courseId}/view`);
       } else {
-        toast.error('Failed to save course');
+        toast.error("Failed to save course");
       }
     } catch (error) {
-      toast.error('Error saving course');
+      toast.error("Error saving course");
     } finally {
       setSaving(false);
     }
@@ -194,37 +202,37 @@ const CourseEditor = () => {
   const addSection = () => {
     const newSection = {
       id: `section-${Date.now()}`,
-      title: 'New Section',
-      type: 'section',
-      content: '',
-      children: []
+      title: "New Section",
+      type: "section",
+      content: "",
+      children: [],
     };
-    setCourse(prev => ({
+    setCourse((prev) => ({
       ...prev,
-      contentTree: [...(prev.contentTree || []), newSection]
+      contentTree: [...(prev.contentTree || []), newSection],
     }));
-    setExpandedNodes(prev => new Set([...prev, newSection.id]));
+    setExpandedNodes((prev) => new Set([...prev, newSection.id]));
     setSelectedNode(newSection.id);
   };
 
   const addTopic = (parentId) => {
     const newTopic = {
       id: `topic-${Date.now()}`,
-      title: 'New Topic',
-      type: 'topic',
-      content: '<p>Enter your content here...</p>',
+      title: "New Topic",
+      type: "topic",
+      content: "<p>Enter your content here...</p>",
       videoUrls: [],
       imageUrls: [],
-      mermaid: '',
+      mermaid: "",
       quiz: {
         questions: [],
-        difficulty: 'basic'
+        difficulty: "basic",
       },
-      children: []
+      children: [],
     };
 
     const updateNodeChildren = (nodes) => {
-      return nodes.map(node => {
+      return nodes.map((node) => {
         if (node.id === parentId) {
           return { ...node, children: [...(node.children || []), newTopic] };
         }
@@ -235,17 +243,17 @@ const CourseEditor = () => {
       });
     };
 
-    setCourse(prev => ({
+    setCourse((prev) => ({
       ...prev,
-      contentTree: updateNodeChildren(prev.contentTree || [])
+      contentTree: updateNodeChildren(prev.contentTree || []),
     }));
-    setExpandedNodes(prev => new Set([...prev, parentId]));
+    setExpandedNodes((prev) => new Set([...prev, parentId]));
     setSelectedNode(newTopic.id);
   };
 
   const updateNode = (nodeId, field, value) => {
     const updateNodeInTree = (nodes) => {
-      return nodes.map(node => {
+      return nodes.map((node) => {
         if (node.id === nodeId) {
           return { ...node, [field]: value };
         }
@@ -256,15 +264,15 @@ const CourseEditor = () => {
       });
     };
 
-    setCourse(prev => ({
+    setCourse((prev) => ({
       ...prev,
-      contentTree: updateNodeInTree(prev.contentTree || [])
+      contentTree: updateNodeInTree(prev.contentTree || []),
     }));
   };
 
   const deleteNode = (nodeId) => {
     const deleteNodeFromTree = (nodes) => {
-      return nodes.filter(node => {
+      return nodes.filter((node) => {
         if (node.id === nodeId) return false;
         if (node.children) {
           node.children = deleteNodeFromTree(node.children);
@@ -273,9 +281,9 @@ const CourseEditor = () => {
       });
     };
 
-    setCourse(prev => ({
+    setCourse((prev) => ({
       ...prev,
-      contentTree: deleteNodeFromTree(prev.contentTree || [])
+      contentTree: deleteNodeFromTree(prev.contentTree || []),
     }));
     setSelectedNode(null);
   };
@@ -292,7 +300,7 @@ const CourseEditor = () => {
   };
 
   const toggleExpanded = (nodeId) => {
-    setExpandedNodes(prev => {
+    setExpandedNodes((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(nodeId)) {
         newSet.delete(nodeId);
@@ -313,8 +321,10 @@ const CourseEditor = () => {
         <div
           className={`flex items-center gap-2 p-2 rounded cursor-pointer transition ${
             isSelected
-              ? 'bg-[#ece9ff] dark:bg-[#18182b] border border-[#7c3aed]'
-              : 'hover:bg-gray-100 dark:hover:bg-[#222]'
+              ? "bg-[#ece9ff] dark:bg-[#18182b] border border-[#7c3aed]"
+              : isDark
+              ? "hover:bg-[#222]"
+              : "hover:bg-neutral-200"
           }`}
           style={{ marginLeft: `${level * 20}px` }}
           onClick={() => setSelectedNode(node.id)}
@@ -331,14 +341,14 @@ const CourseEditor = () => {
             </button>
           )}
           {!hasChildren && <div className="w-4" />}
-          
-          {node.type === 'section' ? <FaFolder /> : <FaFileAlt />}
-          
+
+          {node.type === "section" ? <FaFolder /> : <FaFileAlt />}
+
           <span className="flex-1 text-sm font-medium text-[#080808] dark:text-[#f8f8f8]">
             {node.title}
           </span>
-          
-          {node.type === 'section' && (
+
+          {node.type === "section" && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -350,7 +360,7 @@ const CourseEditor = () => {
               <FaPlus />
             </button>
           )}
-          
+
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -362,10 +372,10 @@ const CourseEditor = () => {
             <FaTrash />
           </button>
         </div>
-        
+
         {isExpanded && hasChildren && (
           <div>
-            {node.children.map(child => renderTreeNode(child, level + 1))}
+            {node.children.map((child) => renderTreeNode(child, level + 1))}
           </div>
         )}
       </div>
@@ -375,24 +385,28 @@ const CourseEditor = () => {
   // Helper function to flatten contentTree into navigable slides
   const flattenContentTree = (contentTree) => {
     const flattened = [];
-    
+
     const traverse = (nodes) => {
       for (const node of nodes) {
-        if (node.type === 'topic') {
+        if (node.type === "topic") {
           // Convert topic to slide format with all media
           const slide = {
             title: node.title,
-            content: node.content || '<p>No content available</p>',
-            type: node.quiz?.questions?.length > 0 ? 'quiz_checkpoint' : 'lesson',
-            difficulty: node.quiz?.difficulty || 'basic',
-            emoji: '📖',
+            content: node.content || "<p>No content available</p>",
+            type:
+              node.quiz?.questions?.length > 0 ? "quiz_checkpoint" : "lesson",
+            difficulty: node.quiz?.difficulty || "basic",
+            emoji: "📖",
             videoUrls: node.videoUrls || [],
             imageUrls: node.imageUrls || [],
-            mermaid: node.mermaid || '',
-            quiz: node.quiz?.questions?.length > 0 ? {
-              id: node.id,
-              questions: node.quiz.questions
-            } : null
+            mermaid: node.mermaid || "",
+            quiz:
+              node.quiz?.questions?.length > 0
+                ? {
+                    id: node.id,
+                    questions: node.quiz.questions,
+                  }
+                : null,
           };
           flattened.push(slide);
         }
@@ -401,142 +415,257 @@ const CourseEditor = () => {
         }
       }
     };
-    
+
     traverse(contentTree);
-    return flattened.length > 0 ? flattened : [{
-      title: 'Welcome',
-      content: '<p>Course content will be available soon.</p>',
-      type: 'lesson',
-      difficulty: 'basic',
-      emoji: '👋',
-      videoUrls: [],
-      imageUrls: [],
-      mermaid: ''
-    }];
+    return flattened.length > 0
+      ? flattened
+      : [
+          {
+            title: "Welcome",
+            content: "<p>Course content will be available soon.</p>",
+            type: "lesson",
+            difficulty: "basic",
+            emoji: "👋",
+            videoUrls: [],
+            imageUrls: [],
+            mermaid: "",
+          },
+        ];
   };
+
+  // Back button handler: go to dashboard with Courses tab active
+  const handleBack = () => {
+    navigate("/teacher-dashboard", { state: { activeTab: "courses" } });
+  };
+
+  // Responsive sidebar toggle
+  const Sidebar = (
+    <div
+      className={`fixed md:static z-30 top-0 left-0 h-full w-full md:w-80 transition-transform duration-200
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        ${
+          isDark
+            ? "bg-[#101010] border-[#222]"
+            : "bg-neutral-50 border-gray-200"
+        }
+        border-r shadow-lg md:shadow-none`}
+      style={{ minHeight: "100vh", maxWidth: "100vw" }}
+    >
+      <div
+        className={`flex items-center justify-between p-4 border-b ${
+          isDark ? "border-[#222]" : "border-gray-200"
+        }`}
+      >
+        <span className="font-bold text-lg text-[#7c3aed]">Course Content</span>
+        <button
+          className="md:hidden p-2 rounded hover:bg-neutral-200 dark:hover:bg-[#181818] transition"
+          onClick={() => setSidebarOpen(false)}
+        >
+          <FaChevronLeft
+            className={isDark ? "text-[#f8f8f8]" : "text-[#7c3aed]"}
+          />
+        </button>
+      </div>
+      <div className="p-4">
+        <button
+          onClick={addSection}
+          className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-[#7c3aed] text-white rounded-lg hover:bg-[#5b21b6] transition mb-4"
+        >
+          <FaPlus />
+          <span>Add New Section</span>
+        </button>
+        <div>{course?.contentTree?.map((node) => renderTreeNode(node))}</div>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8f8f8] dark:bg-[#030303]">
-        <motion.div className="flex items-center space-x-2 text-[#080808] dark:text-[#f8f8f8]">
-          <div className="animate-spin h-6 w-6 border-2 border-[#7c3aed] border-t-transparent rounded-full"></div>
-          <span>Loading course editor...</span>
-        </motion.div>
+      <div
+        className={`min-h-screen flex flex-col ${
+          isDark ? "bg-[#030303]" : "bg-[#f8f8f8]"
+        }`}
+      >
+        {/* Top bar with theme toggle */}
+        <div
+          className={`w-full flex items-center justify-between px-6 py-4 border-b ${
+            isDark ? "bg-[#101010] border-[#222]" : "bg-white border-gray-200"
+          }`}
+        >
+          <button
+            onClick={handleBack}
+            className={`p-2 rounded ${
+              isDark
+                ? "hover:bg-[#181818] text-[#f8f8f8]"
+                : "hover:bg-neutral-200 text-[#7c3aed]"
+            } transition`}
+          >
+            <FaArrowLeft />
+          </button>
+          <ThemeToggle />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <motion.div
+            className={`flex items-center space-x-2 ${
+              isDark ? "text-[#f8f8f8]" : "text-[#080808]"
+            }`}
+          >
+            <div className="animate-spin h-6 w-6 border-2 border-[#7c3aed] border-t-transparent rounded-full"></div>
+            <span>Loading course editor...</span>
+          </motion.div>
+        </div>
       </div>
     );
   }
 
-  const selectedNodeData = selectedNode ? findNodeById(course?.contentTree || [], selectedNode) : null;
+  const selectedNodeData = selectedNode
+    ? findNodeById(course?.contentTree || [], selectedNode)
+    : null;
 
   return (
-    <div className="min-h-screen bg-[#f8f8f8] dark:bg-[#030303]">
-      {/* Header */}
-      <div className="bg-white dark:bg-[#101010] border-b border-gray-200 dark:border-[#222] px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => navigate(`/teacher/courses/${courseId}/view`)}
-              className="p-2 rounded hover:bg-gray-100 dark:hover:bg-[#181818] text-[#080808] dark:text-[#f8f8f8]"
-            >
-              <FaArrowLeft />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-[#080808] dark:text-[#f8f8f8]">
-                Edit Course: {course?.title}
-              </h1>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => navigate(`/teacher/courses/${courseId}/view`)}
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-[#222] text-[#080808] dark:text-[#f8f8f8] rounded-lg hover:bg-gray-50 dark:hover:bg-[#181818] transition"
-            >
-              <FaEye />
-              <span>Preview</span>
-            </button>
-            <button
-              onClick={saveCourse}
-              disabled={saving}
-              className="flex items-center space-x-2 px-4 py-2 bg-[#7c3aed] text-white rounded-lg hover:bg-[#5b21b6] transition disabled:opacity-50"
-            >
-              <FaSave />
-              <span>{saving ? 'Saving...' : 'Save Course'}</span>
-            </button>
-          </div>
+    <div
+      className={`min-h-screen flex flex-col ${
+        isDark ? "bg-[#030303]" : "bg-[#f8f8f8]"
+      }`}
+    >
+      {/* Top bar with theme toggle */}
+      <div
+        className={`w-full flex items-center justify-between px-6 py-4 border-b ${
+          isDark ? "bg-[#101010] border-[#222]" : "bg-white border-gray-200"
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleBack}
+            className={`p-2 rounded ${
+              isDark
+                ? "hover:bg-[#181818] text-[#f8f8f8]"
+                : "hover:bg-neutral-200 text-[#7c3aed]"
+            }`}
+          >
+            <FaArrowLeft />
+          </button>
+          <button
+            className="md:hidden p-2 rounded hover:bg-neutral-200 dark:hover:bg-[#181818] transition"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <FaBars className={isDark ? "text-[#f8f8f8]" : "text-[#7c3aed]"} />
+          </button>
         </div>
+        <ThemeToggle />
       </div>
 
-      <div className="flex">
-        {/* Sidebar - Content Tree */}
-        <div className="w-80 bg-white dark:bg-[#101010] border-r border-gray-200 dark:border-[#222] h-screen overflow-y-auto">
-          <div className="p-4 border-b border-gray-200 dark:border-[#222]">
-            <button
-              onClick={addSection}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-[#7c3aed] text-white rounded-lg hover:bg-[#5b21b6] transition"
+      <div className="flex flex-1 relative">
+        {/* Sidebar */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              initial={{ x: -320, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -320, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="z-30"
             >
-              <FaPlus />
-              <span>Add New Section</span>
-            </button>
-          </div>
-          
-          <div className="p-4">
-            <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
-              Course Content
-            </h3>
-            {course?.contentTree?.map(node => renderTreeNode(node))}
-          </div>
-        </div>
+              {Sidebar}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {/* Overlay for mobile (now fills the screen with sidebar) */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-20 md:hidden"
+            style={{ background: "rgba(0,0,0,0)" }}
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
         {/* Main Editor */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-6 md:ml-0">
           {selectedNodeData ? (
             <div className="max-w-4xl mx-auto">
-              <div className="bg-white dark:bg-[#101010] rounded-lg shadow border border-gray-200 dark:border-[#222] p-6">
+              <div
+                className={`rounded-lg shadow border ${
+                  isDark
+                    ? "bg-[#101010] border-[#222]"
+                    : "bg-white border-gray-200"
+                } p-6`}
+              >
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-[#080808] dark:text-[#f8f8f8]">
-                    Edit {selectedNodeData.type === 'section' ? 'Section' : 'Topic'}
+                  <h2
+                    className={`text-2xl font-bold ${
+                      isDark ? "text-[#f8f8f8]" : "text-[#080808]"
+                    }`}
+                  >
+                    Edit{" "}
+                    {selectedNodeData.type === "section" ? "Section" : "Topic"}
                   </h2>
-                  <span className={`px-3 py-1 rounded text-sm ${
-                    selectedNodeData.type === 'section' 
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                      : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded text-sm ${
+                      selectedNodeData.type === "section"
+                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                    }`}
+                  >
                     {selectedNodeData.type}
                   </span>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#080808] dark:text-[#f8f8f8] mb-2">
+                    <label
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-[#f8f8f8]" : "text-[#080808]"
+                      } mb-2`}
+                    >
                       Title
                     </label>
                     <input
                       type="text"
                       value={selectedNodeData.title}
-                      onChange={(e) => updateNode(selectedNode, 'title', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-[#222] rounded-lg bg-white dark:bg-[#181818] text-[#080808] dark:text-[#f8f8f8] focus:ring-2 focus:ring-[#7c3aed] focus:border-transparent"
+                      onChange={(e) =>
+                        updateNode(selectedNode, "title", e.target.value)
+                      }
+                      className={`w-full px-4 py-2 border rounded-lg ${
+                        isDark
+                          ? "border-[#222] bg-[#181818] text-[#f8f8f8]"
+                          : "border-gray-300 bg-white text-[#080808]"
+                      }`}
                     />
                   </div>
 
-                  {selectedNodeData.type === 'topic' && (
+                  {selectedNodeData.type === "topic" && (
                     <>
                       {/* Content Tabs */}
-                      <div className="border-b border-gray-200 dark:border-[#222] mb-6">
+                      <div
+                        className={`border-b mb-6 ${
+                          isDark ? "border-[#222]" : "border-gray-200"
+                        }`}
+                      >
                         <div className="flex space-x-8">
                           {[
-                            { id: 'content', label: 'Text Content', icon: '📝' },
-                            { id: 'media', label: 'Media', icon: '🎥' },
-                            { id: 'diagram', label: 'Diagrams', icon: '📊' },
-                            { id: 'quiz', label: 'Quiz', icon: '❓' }
-                          ].map(tab => (
+                            {
+                              id: "content",
+                              label: "Text Content",
+                              icon: "📝",
+                            },
+                            { id: "media", label: "Media", icon: "🎥" },
+                            { id: "diagram", label: "Diagrams", icon: "📊" },
+                            { id: "quiz", label: "Quiz", icon: "❓" },
+                          ].map((tab) => (
                             <button
                               key={tab.id}
                               onClick={() => setActiveContentTab(tab.id)}
-                              className={`flex items-center space-x-2 py-3 border-b-2 transition ${
-                                activeContentTab === tab.id
-                                  ? 'border-[#7c3aed] text-[#7c3aed] dark:text-[#a78bfa]'
-                                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-[#080808] dark:hover:text-[#f8f8f8]'
-                              }`}
+                              className={`flex items-center space-x-2 py-3 border-b-2 transition font-medium
+                                ${
+                                  activeContentTab === tab.id
+                                    ? isDark
+                                      ? "border-[#7c3aed] text-[#7c3aed] dark:text-[#a78bfa] bg-[#18182b]"
+                                      : "border-[#7c3aed] text-[#7c3aed] bg-neutral-100"
+                                    : isDark
+                                    ? "border-transparent text-gray-400 hover:text-[#f8f8f8] hover:bg-[#181818]"
+                                    : "border-transparent text-gray-600 hover:text-[#080808] hover:bg-neutral-100"
+                                }
+                              `}
                             >
                               <span>{tab.icon}</span>
                               <span>{tab.label}</span>
@@ -546,27 +675,53 @@ const CourseEditor = () => {
                       </div>
 
                       {/* Tab Content */}
-                      {activeContentTab === 'content' && (
+                      {activeContentTab === "content" && (
                         <div>
-                          <label className="block text-sm font-medium text-[#080808] dark:text-[#f8f8f8] mb-2">
+                          <label
+                            className={`block text-sm font-medium ${
+                              isDark ? "text-[#f8f8f8]" : "text-[#080808]"
+                            } mb-2`}
+                          >
                             Content
                           </label>
                           <textarea
-                            value={selectedNodeData.content?.replace(/<[^>]*>/g, '') || ''}
-                            onChange={(e) => updateNode(selectedNode, 'content', `<p>${e.target.value.replace(/\n/g, '</p><p>')}</p>`)}
+                            value={
+                              selectedNodeData.content?.replace(
+                                /<[^>]*>/g,
+                                ""
+                              ) || ""
+                            }
+                            onChange={(e) =>
+                              updateNode(
+                                selectedNode,
+                                "content",
+                                `<p>${e.target.value.replace(
+                                  /\n/g,
+                                  "</p><p>"
+                                )}</p>`
+                              )
+                            }
                             rows={8}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-[#222] rounded-lg bg-white dark:bg-[#181818] text-[#080808] dark:text-[#f8f8f8] focus:ring-2 focus:ring-[#7c3aed] focus:border-transparent resize-none"
+                            className={`w-full px-4 py-3 border rounded-lg resize-none ${
+                              isDark
+                                ? "border-[#222] bg-[#181818] text-[#f8f8f8]"
+                                : "border-gray-300 bg-white text-[#080808]"
+                            }`}
                             placeholder="Enter your content here..."
                           />
                         </div>
                       )}
 
-                      {activeContentTab === 'media' && (
+                      {activeContentTab === "media" && (
                         <div className="space-y-6">
                           {/* Video URLs */}
                           <div>
                             <div className="flex items-center justify-between mb-3">
-                              <label className="block text-sm font-medium text-[#080808] dark:text-[#f8f8f8]">
+                              <label
+                                className={`block text-sm font-medium ${
+                                  isDark ? "text-[#f8f8f8]" : "text-[#080808]"
+                                }`}
+                              >
                                 Video URLs
                               </label>
                               <button
@@ -578,30 +733,51 @@ const CourseEditor = () => {
                               </button>
                             </div>
                             <div className="space-y-2">
-                              {(selectedNodeData.videoUrls || []).map((url, index) => (
-                                <div key={index} className="flex items-center space-x-2">
-                                  <input
-                                    type="url"
-                                    value={url}
-                                    onChange={(e) => updateVideoUrl(selectedNode, index, e.target.value)}
-                                    placeholder="https://youtube.com/watch?v=..."
-                                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-[#222] rounded bg-white dark:bg-[#181818] text-[#080808] dark:text-[#f8f8f8] text-sm"
-                                  />
-                                  <button
-                                    onClick={() => removeVideoUrl(selectedNode, index)}
-                                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                              {(selectedNodeData.videoUrls || []).map(
+                                (url, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center space-x-2"
                                   >
-                                    ×
-                                  </button>
-                                </div>
-                              ))}
+                                    <input
+                                      type="url"
+                                      value={url}
+                                      onChange={(e) =>
+                                        updateVideoUrl(
+                                          selectedNode,
+                                          index,
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="https://youtube.com/watch?v=..."
+                                      className={`flex-1 px-3 py-2 border rounded text-sm ${
+                                        isDark
+                                          ? "border-[#222] bg-[#181818] text-[#f8f8f8]"
+                                          : "border-gray-300 bg-white text-[#080808]"
+                                      }`}
+                                    />
+                                    <button
+                                      onClick={() =>
+                                        removeVideoUrl(selectedNode, index)
+                                      }
+                                      className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                )
+                              )}
                             </div>
                           </div>
 
                           {/* Image URLs */}
                           <div>
                             <div className="flex items-center justify-between mb-3">
-                              <label className="block text-sm font-medium text-[#080808] dark:text-[#f8f8f8]">
+                              <label
+                                className={`block text-sm font-medium ${
+                                  isDark ? "text-[#f8f8f8]" : "text-[#080808]"
+                                }`}
+                              >
                                 Image URLs
                               </label>
                               <button
@@ -613,54 +789,87 @@ const CourseEditor = () => {
                               </button>
                             </div>
                             <div className="space-y-2">
-                              {(selectedNodeData.imageUrls || []).map((url, index) => (
-                                <div key={index} className="flex items-center space-x-2">
-                                  <input
-                                    type="url"
-                                    value={url}
-                                    onChange={(e) => updateImageUrl(selectedNode, index, e.target.value)}
-                                    placeholder="https://example.com/image.jpg"
-                                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-[#222] rounded bg-white dark:bg-[#181818] text-[#080808] dark:text-[#f8f8f8] text-sm"
-                                  />
-                                  <button
-                                    onClick={() => removeImageUrl(selectedNode, index)}
-                                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                              {(selectedNodeData.imageUrls || []).map(
+                                (url, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center space-x-2"
                                   >
-                                    ×
-                                  </button>
-                                </div>
-                              ))}
+                                    <input
+                                      type="url"
+                                      value={url}
+                                      onChange={(e) =>
+                                        updateImageUrl(
+                                          selectedNode,
+                                          index,
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="https://example.com/image.jpg"
+                                      className={`flex-1 px-3 py-2 border rounded text-sm ${
+                                        isDark
+                                          ? "border-[#222] bg-[#181818] text-[#f8f8f8]"
+                                          : "border-gray-300 bg-white text-[#080808]"
+                                      }`}
+                                    />
+                                    <button
+                                      onClick={() =>
+                                        removeImageUrl(selectedNode, index)
+                                      }
+                                      className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                )
+                              )}
                             </div>
                           </div>
                         </div>
                       )}
 
-                      {activeContentTab === 'diagram' && (
+                      {activeContentTab === "diagram" && (
                         <div>
                           <Mermaid
-                            code={selectedNodeData.mermaid || ''}
-                            onChange={(mermaid) => updateNode(selectedNode, 'mermaid', mermaid)}
+                            code={selectedNodeData.mermaid || ""}
+                            onChange={(mermaid) =>
+                              updateNode(selectedNode, "mermaid", mermaid)
+                            }
                           />
                         </div>
                       )}
 
-                      {activeContentTab === 'quiz' && (
+                      {activeContentTab === "quiz" && (
                         <div>
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-[#080808] dark:text-[#f8f8f8]">
+                            <h3
+                              className={`text-lg font-semibold ${
+                                isDark ? "text-[#f8f8f8]" : "text-[#080808]"
+                              }`}
+                            >
                               Quiz Questions
                             </h3>
-                            {(!selectedNodeData.quiz?.questions || selectedNodeData.quiz.questions.length === 0) && (
+                            {(!selectedNodeData.quiz?.questions ||
+                              selectedNodeData.quiz.questions.length === 0) && (
                               <button
-                                onClick={() => updateNode(selectedNode, 'quiz', {
-                                  questions: [{
-                                    question: 'Sample question?',
-                                    type: 'mcq',
-                                    options: ['Option A', 'Option B', 'Option C', 'Option D'],
-                                    correctAnswer: 0
-                                  }],
-                                  difficulty: 'basic'
-                                })}
+                                onClick={() =>
+                                  updateNode(selectedNode, "quiz", {
+                                    questions: [
+                                      {
+                                        question: "Sample question?",
+                                        type: "mcq",
+                                        options: [
+                                          "Option A",
+                                          "Option B",
+                                          "Option C",
+                                          "Option D",
+                                        ],
+                                        correctAnswer: 0,
+                                      },
+                                    ],
+                                    difficulty: "basic",
+                                  })
+                                }
                                 className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                               >
                                 <FaQuestionCircle />
@@ -668,11 +877,13 @@ const CourseEditor = () => {
                               </button>
                             )}
                           </div>
-                          
+
                           {selectedNodeData.quiz?.questions?.length > 0 && (
                             <QuizEditor
                               quiz={selectedNodeData.quiz}
-                              onChange={(quiz) => updateNode(selectedNode, 'quiz', quiz)}
+                              onChange={(quiz) =>
+                                updateNode(selectedNode, "quiz", quiz)
+                              }
                             />
                           )}
                         </div>
@@ -680,16 +891,45 @@ const CourseEditor = () => {
                     </>
                   )}
                 </div>
+                <div className="flex justify-end mt-8 space-x-3">
+                  <button
+                    onClick={() =>
+                      navigate(`/teacher/courses/${courseId}/view`)
+                    }
+                    className={`flex items-center space-x-2 px-4 py-2 border rounded-lg transition font-medium
+                      ${
+                        isDark
+                          ? "border-[#222] text-[#f8f8f8] hover:bg-[#181818]"
+                          : "border-gray-300 text-[#7c3aed] hover:bg-neutral-100"
+                      }`}
+                  >
+                    <FaEye />
+                    <span>Preview</span>
+                  </button>
+                  <button
+                    onClick={saveCourse}
+                    disabled={saving}
+                    className="flex items-center space-x-2 px-4 py-2 bg-[#7c3aed] text-white rounded-lg hover:bg-[#5b21b6] transition disabled:opacity-50"
+                  >
+                    <FaSave />
+                    <span>{saving ? "Saving..." : "Save Course"}</span>
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
             <div className="max-w-4xl mx-auto">
               <div className="text-center py-12">
-                <h3 className="text-xl font-semibold text-[#080808] dark:text-[#f8f8f8] mb-4">
+                <h3
+                  className={`text-xl font-semibold ${
+                    isDark ? "text-[#f8f8f8]" : "text-[#080808]"
+                  } mb-4`}
+                >
                   Select a section or topic to edit
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Choose an item from the content tree on the left to start editing.
+                <p className={`text-gray-600 dark:text-gray-400`}>
+                  Choose an item from the content tree on the left to start
+                  editing.
                 </p>
               </div>
             </div>
