@@ -12,7 +12,7 @@ const VideoSection = () => {
         isDark ? "bg-[#080808]" : "bg-[#f8f8f8]"
       }`}
     >
-      <div className="max-w-4xl mx-auto text-center mb-10">
+      <div className="max-w-5xl mx-auto text-center mb-10">
         <motion.h2
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -39,16 +39,17 @@ const VideoSection = () => {
         initial={{ opacity: 0, scale: 0.98 }}
         whileInView={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className={`relative rounded-2xl overflow-hidden shadow-lg mx-auto max-w-3xl border ${
+        className={`relative rounded-2xl overflow-hidden shadow-lg mx-auto max-w-4xl border ${
           isDark ? "bg-[#181818] border-[#23234a]" : "bg-white border-[#e5e7eb]"
         }`}
       >
         <div className="aspect-video w-full">
           <iframe
             className="w-full h-full"
-            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+            src="https://www.youtube.com/embed/5evUR-tcGFA?si=FuYXQXwAbG5RutoF"
             title="E-Gurukul Demo"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
             allowFullScreen
             style={{ borderRadius: "1rem" }}
           />
