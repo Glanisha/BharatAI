@@ -36,7 +36,6 @@ const Courses = ({ setActiveTab }) => {
           }
         );
         const data = await res.json();
-        console.log("Fetched courses:", data);
         if (data.success) {
           setCourses(data.courses);
         }

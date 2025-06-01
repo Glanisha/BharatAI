@@ -121,9 +121,7 @@ const StudentStats = () => {
                 }
             });
             const data = await response.json();
-            console.log("Stats response:", data);
             if (data.success) {
-                console.log("Fetched stats:", data.stats);
                 setStats(data.stats);
                 setShareableLink(data.shareableLink);
             }

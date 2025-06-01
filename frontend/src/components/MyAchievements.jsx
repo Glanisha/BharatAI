@@ -37,7 +37,6 @@ const MyAchievements = () => {
       if (data.success) {
         setAchievements(data.achievements);
         setAchievementStats(data.stats);
-        console.log("Fetched my achievements:", data.achievements);
       } else {
         toast.error("Failed to load achievements");
       }

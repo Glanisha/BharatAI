@@ -192,9 +192,6 @@ const CourseViewer = () => {
                 })
             });
             
-            if (response.ok) {
-                console.log(`Updated study time: +${timeSpentMinutes} minutes`);
-            }
         } catch (error) {
             console.error('Error updating study time:', error);
         }
@@ -214,7 +211,7 @@ const CourseViewer = () => {
                 const flattened = flattenContentTree(data.course.contentTree || []);
                 setFlattenedContent(flattened);
             }
-            console.log('Course data:', data.course);
+            
         } catch (error) {
             toast.error(<TranslatedText>Failed to load course content</TranslatedText>);
         } finally {
@@ -318,7 +315,6 @@ const CourseViewer = () => {
             
             const data = await response.json();
             if (data.success) {
-                console.log('Course marked as completed!');
                 setUserProgress(prev => ({ ...prev, isCompleted: true }));
             } else {
                 console.error('Failed to mark course as completed:', data.message);
@@ -340,12 +336,6 @@ const CourseViewer = () => {
             const safeSlideIndex = Math.max(0, Math.min(slideIndex, flattenedContent.length - 1));
             const completedSlides = Math.max(safeSlideIndex + 1, userProgress?.completedSlides || 0);
 
-            console.log('Updating progress:', {
-                currentSlide: safeSlideIndex,
-                completedSlides: completedSlides,
-                totalSlides: flattenedContent.length
-            });
-
             const response = await fetch(`${import.meta.env.VITE_NODE_BASE_API_URL}/api/courses/${courseId}/progress`, {
                 method: 'PUT',
                 headers: {
@@ -359,7 +349,6 @@ const CourseViewer = () => {
             });
             
             const data = await response.json();
-            console.log('Progress update response:', data); // Debug log
             
             if (data.success) {
                 setUserProgress(data.progress);
@@ -392,7 +381,6 @@ const CourseViewer = () => {
             });
 
             const data = await response.json();
-            console.log('Quiz submission response:', data); // Debug log
             
             if (data.success) {
                 toast.success(<TranslatedText>Quiz completed! Score: {score}/{totalQuestions} ({percentage.toFixed(1)}%)</TranslatedText>);
