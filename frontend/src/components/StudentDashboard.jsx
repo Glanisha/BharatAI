@@ -588,7 +588,7 @@ const StudentDashboard = () => {
           <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-[#222]">
             {!collapsed && (
               <h1 className="font-bold text-[#080808] dark:text-[#f8f8f8]">
-                <TranslatedText>EduPlatform</TranslatedText>
+                <TranslatedText>E-Gurukul</TranslatedText>
               </h1>
             )}
             <button
