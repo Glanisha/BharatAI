@@ -58,19 +58,16 @@
   border: 1px solid rgba(8, 8, 8, 0.2);
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
+/* Thin, dark scrollbars */
+body::-webkit-scrollbar {
+  width: 1px;
+  background: transparent; /* Remove white background */
 }
-
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
+body::-webkit-scrollbar-thumb {
+  background: #080808;
+  border-radius: 8px;
 }
-
-::-webkit-scrollbar-thumb {
-  @apply bg-[#222052]/30 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-[#222052]/50;
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #080808 transparent; /* Remove white background */
 }
