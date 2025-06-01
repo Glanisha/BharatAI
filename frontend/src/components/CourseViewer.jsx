@@ -5,6 +5,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import mermaid from 'mermaid';
 import { TranslatedText } from './TranslatedText';
 import { useTheme } from '../context/ThemeContext';
+import ChatTutor from './ChatTutor';
 
 // Maps frontend codes to backend full names
 const BACKEND_LANGUAGE_MAP = {
@@ -52,6 +53,7 @@ const CourseViewer = () => {
     const { isDark } = useTheme();
     const [currentLanguage, setCurrentLanguage] = useState("English");
     const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
+    const [showChat, setShowChat] = useState(false);
 
     useEffect(() => {
         fetchCourseContent();
@@ -822,6 +824,21 @@ const CourseViewer = () => {
                     </motion.div>
                 )}
             </main>
+            <div className="fixed bottom-4 right-4 z-40">
+  <button
+    onClick={() => setShowChat(true)}
+    className="w-14 h-14 bg-[#7c3aed] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+  >
+    🤖
+  </button>
+</div>
+
+{/* Chat Component */}
+<ChatTutor 
+  courseId={courseId} 
+  isOpen={showChat} 
+  onClose={() => setShowChat(false)} 
+/>
 
             <ToastContainer
                 position="top-right"
