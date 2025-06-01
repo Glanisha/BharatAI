@@ -46,9 +46,9 @@ const Mermaid = ({ code, onChange }) => {
     async function renderMermaid() {
       try {
         let cleanedCode = code
-          .replace(/[^\x20-\x7E\n\r\t]/g, "")
-          .replace(/\s+/g, " ")
-          .replace(/\n\s*\n/g, "\n")
+          .replace(/[^\x20-\x7E\n\r\t]/g, "") // Remove non-printable
+          .replace(/\r\n/g, "\n") // Normalize line endings
+          .replace(/\n{3,}/g, "\n\n") // Remove excessive blank lines
           .trim();
 
         cleanedCode = cleanedCode.replace(

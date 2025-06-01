@@ -4,7 +4,6 @@ const { generateMermaidDiagram } = require("../services/geminiService");
 
 const router = express.Router();
 
-// Improved Mermaid syntax validator
 const validateMermaidSyntax = (code) => {
   // Check for line breaks (essential for Mermaid)
   if (!code.includes("\n")) {

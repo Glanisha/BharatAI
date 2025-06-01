@@ -5,7 +5,7 @@ import HeroSection from "./HeroSection";
 import FeaturesGrid from "./FeaturesGrid";
 import VideoSection from "./VideoSection";
 import TestimonialsMarquee from "./TestimonialsMarquee";
-import CtaSection from "./CTASection";
+import CTASection from "./CtaSection";
 import Footer from "./Footer";
 
 const Landing = () => {
@@ -20,7 +20,7 @@ const Landing = () => {
         <FeaturesGrid />
         <VideoSection />
         <TestimonialsMarquee />
-        <CtaSection ref={ctaRef} />
+        <CTASection ref={ctaRef} />
         <Footer />
       </div>
     </ThemeProvider>
