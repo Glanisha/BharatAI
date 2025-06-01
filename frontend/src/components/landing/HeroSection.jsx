@@ -9,9 +9,9 @@ const HeroSection = () => {
   const navigate = useNavigate();
 
   const tabs = [
-    { id: "dashboard", label: "Dashboard", image: "/api/placeholder/600/400" },
-    { id: "courses", label: "Courses", image: "/api/placeholder/600/400" },
-    { id: "analytics", label: "Analytics", image: "/api/placeholder/600/400" },
+    { id: "dashboard", label: "Dashboard", image: "/dashboard.png" },
+    { id: "courses", label: "Courses", image: "/courses.png" },
+    { id: "analytics", label: "Analytics", image: "/analytics.png" },
     {
       id: "multi-lingual",
       label: "Multilingual",
@@ -180,7 +180,7 @@ const HeroSection = () => {
                 <img
                   src={tabs.find((tab) => tab.id === activeTab)?.image}
                   alt={`${activeTab} preview`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-fill"
                   style={{ padding: 0 }}
                 />
               </motion.div>
