@@ -10,6 +10,7 @@ const HeroSection = () => {
     { id: "dashboard", label: "Dashboard", image: "/api/placeholder/600/400" },
     { id: "courses", label: "Courses", image: "/api/placeholder/600/400" },
     { id: "analytics", label: "Analytics", image: "/api/placeholder/600/400" },
+    { id: "multi-lingual", label: "Multilingual", image: "../../../public/multiLingual.png" },
   ];
 
   return (
