@@ -72,13 +72,14 @@ const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const navigate = useNavigate();
 
+  // Apply dark mode class to document element
   useEffect(() => {
-    localStorage.setItem("darkMode", darkMode);
     if (darkMode) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
+    localStorage.setItem("darkMode", darkMode);
   }, [darkMode]);
 
   useEffect(() => {
@@ -554,7 +555,7 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-white dark:bg-[#101010] overflow-hidden">
+    <div className={`flex h-screen ${darkMode ? 'dark' : ''} bg-white dark:bg-[#101010] overflow-hidden`}>
       {/* Sidebar */}
       <aside
         className={`sticky top-0 flex flex-col justify-between h-screen bg-white dark:bg-[#101010] border-r border-gray-200 dark:border-[#222] transition-all duration-200
