@@ -117,10 +117,6 @@ const Courses = ({ setActiveTab }) => {
             return (
               <motion.div
                 key={course.id || course._id}
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: i * 0.1, type: "spring", stiffness: 300 }}
-                whileHover={{ y: -4, scale: 1.02 }}
                 className={`rounded-2xl shadow-xl border p-6 flex flex-col gap-4 hover:shadow-2xl transition-all duration-300 ${
                   isDark 
                     ? 'border-neutral-800 bg-gradient-to-br from-[#1a1a1d] to-[#16161a]' 
