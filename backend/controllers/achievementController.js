@@ -1,5 +1,5 @@
 const Achievement = require('../models/Achievement');
-const UserAchievement = require('../models/UserAchievement');
+const UserAchievement = require('../models/userAchievement');
 const Progress = require('../models/Progress');
 const Course = require('../models/Course');
 
