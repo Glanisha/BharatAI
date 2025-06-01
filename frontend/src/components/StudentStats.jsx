@@ -426,12 +426,6 @@ const StudentStats = () => {
                         </h3>
                         
                         <div className="space-y-3">
-                            <button
-                                onClick={copyToClipboard}
-                                className={`w-full p-3 rounded-lg ${isDark ? 'bg-[#222052] hover:bg-[#2a2564]' : 'bg-[#222052] hover:bg-[#2a2564]'} text-white transition flex items-center justify-center gap-2`}
-                            >
-                                📋 <TranslatedText>Copy Link</TranslatedText>
-                            </button>
                             
                             <div className="grid grid-cols-2 gap-3">
                                 <button
@@ -469,12 +463,6 @@ const StudentStats = () => {
                             >
                                 📸 <TranslatedText>Download as Image</TranslatedText>
                             </button>
-                        </div>
-                        
-                        <div className="mt-4 p-3 rounded-lg bg-gray-100 dark:bg-[#222]">
-                            <p className="text-xs text-gray-600 dark:text-gray-400 break-all">
-                                {shareableLink}
-                            </p>
                         </div>
                     </motion.div>
                 </motion.div>
