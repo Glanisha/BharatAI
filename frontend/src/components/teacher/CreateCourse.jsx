@@ -16,6 +16,7 @@ const categories = [
 ];
 
 const languages = [
+  "English",
   "Hindi",
   "Marathi",
   "Kannada",
@@ -23,7 +24,6 @@ const languages = [
   "Tamil",
   "Telugu",
   "Gujarati",
-  "English",
 ];
 
 const CreateCourse = ({setActiveTab}) => {
@@ -36,7 +36,7 @@ const CreateCourse = ({setActiveTab}) => {
     title: "",
     description: "",
     category: "",
-    language: "Hindi",
+    language: "English",
     isPrivate: false,
     password: "",
     tags: [],
