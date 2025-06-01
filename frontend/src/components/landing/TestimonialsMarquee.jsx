@@ -156,7 +156,7 @@ const TestimonialsMarquee = () => {
 
     return (
       <div
-        className="relative flex flex-col"
+        className="relative flex flex-col group"
         style={{
           overflow: "hidden",
           height: "320px",
@@ -166,6 +166,7 @@ const TestimonialsMarquee = () => {
           className="flex flex-col will-change-transform"
           style={{
             animation: `${animationName} 20s linear infinite`,
+            animationPlayState: "running",
           }}
         >
           {/* Create multiple sets for seamless infinite loop */}
@@ -261,6 +262,10 @@ const TestimonialsMarquee = () => {
             transform: translateY(0);
           }
         }
+
+
+        .group:hover .flex.flex-col.will-change-transform {
+        animation-play-state: paused !important;
       `}</style>
     </section>
   );
