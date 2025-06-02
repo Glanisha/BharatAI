@@ -17,3 +17,4 @@ async function generateMermaidDiagram(description) {
 }
 
 module.exports = { generateMermaidDiagram };
+
